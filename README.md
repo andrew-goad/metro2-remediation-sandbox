@@ -1,6 +1,6 @@
 # Metro 2 Remediation Sandbox: Synthetic Portfolio & Impact Engine 📊💎
 
-**How do you simulate high-stakes regulatory credit repairs without risking PII or compromising reporting integrity?** This modular PostgreSQL engine features a synthetic longitudinal tradeline generator (24-month PHP), a dynamic impact resolution engine, and audit-ready "Before & After" reporting.
+**How do you simulate high-stakes regulatory credit repairs without risking PII or compromising reporting integrity?** This modular PostgreSQL engine features a synthetic longitudinal tradeline generator, a dynamic impact resolution engine, and audit-ready "Before & After" reporting.
 
 ---
 
