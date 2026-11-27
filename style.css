@@ -223,7 +223,7 @@ summary { color: var(--teal); font-weight: 650 }
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: white;
   text-decoration: none;
   font-size: 17px;
@@ -231,13 +231,27 @@ summary { color: var(--teal); font-weight: 650 }
   line-height: 1.2;
   white-space: nowrap;
 }
-.portfolio-brand span {
+.portfolio-project {
+  margin-left: 4px;
   border-left: 1px solid #779096;
   padding-left: 12px;
   color: #d4e2e4;
   font-size: 14px;
   font-weight: 500;
 }
+.portfolio-monogram {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #8ba5ac;
+  background: #203f4d;
+  color: #fff;
+  font: normal 16px/1 Georgia, serif;
+  letter-spacing: -.08em;
+}
+@media (max-width: 599px) { .portfolio-project { display: none; } }
 .portfolio-contents { position: relative; margin: 0; padding: 0; border: 0; }
 .portfolio-contents > summary, .portfolio-contents[open] > summary {
   display: flex;
@@ -299,7 +313,5 @@ html:has(.portfolio-bar) { scroll-padding-top: 68px; }
 @media print { .portfolio-bar { display: none; } }
 @media (max-width: 360px) {
   .portfolio-row { gap: 6px; }
-  .portfolio-brand { gap: 6px; font-size: 16px; }
-  .portfolio-brand span { padding-left: 6px; font-size: 13px; }
   .portfolio-contents > summary, .portfolio-contents[open] > summary { gap: 7px; padding-inline: 6px; }
 }
