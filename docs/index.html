@@ -4,8 +4,30 @@
 <title>Five months to correct · Metro 2 Remediation Sandbox</title>
 <link rel="stylesheet" href="history.css"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="explorer.css">
 </head><body id="top"><a class="skip" href="#consumer-decision">Skip to the case</a>
-<header class="topbar"><div class="wrap head-inner"><a class="brand" href="https://github.com/andrew-goad"><span class="monogram" aria-hidden="true">AG</span><span>Andrew R. Goad</span></a>
-<nav aria-label="Portfolio navigation"><a href="#consumer-decision">Case study</a><a href="#explorer">Account explorer</a><a href="manual-review/index.html">Manual review</a><a href="https://github.com/andrew-goad/metro2-remediation-sandbox">GitHub</a></nav></div></header>
+<header class="portfolio-bar">
+  <div class="portfolio-row">
+    <a class="portfolio-brand" href="#top">Metro 2 <span>Credit reporting</span></a>
+    <details class="portfolio-contents" id="portfolio-contents">
+      <summary>Contents</summary>
+      <nav aria-label="Study contents">
+        <a href="#consumer-decision">Opening case · Account 24064</a>
+        <a href="#cure">Confirmed cure</a>
+        <a href="#dashboard-case">Charge-off reversal</a>
+        <a href="#scale-study">Portfolio results</a>
+        <a href="#explorer">Account explorer</a>
+        <a href="#manual-handoff">Monthly review</a>
+        <a href="#treatments">Treatment choices</a>
+        <a href="#guidance">Reporting field guide</a>
+        <a href="#bank-remediation">Furnisher responsibilities</a>
+        <a href="#generator">Synthetic portfolio generator</a>
+        <a href="#evidence">Code and evidence</a>
+        <a class="portfolio-tool" href="run.html">Run your own simulation</a>
+        <a href="manual-review/index.html">Manual review queue</a>
+        <a href="https://github.com/andrew-goad/metro2-remediation-sandbox">GitHub repository</a>
+      </nav>
+    </details>
+  </div>
+</header>
 <main><aside class="loaded-cohort" id="retained-route" hidden><div class="wrap">
 <strong id="ex-cohort"></strong><p>The Account explorer on this page reads your exported data. The featured cases and the 25,000-account queue use published study data.</p>
 <a href="#explorer">Explore the loaded accounts</a> · <a href="scale/index.html">Open the separate 25,000-account example</a>
@@ -18,7 +40,6 @@
 <div class="trace-grid"><div class="trace-group"><span class="trace-phase">Before</span><div class="trace-buttons"><button type="button" aria-controls="lead-month-detail" aria-pressed="false" aria-label="November 2023, 1 to 1" data-date="November 2023" data-why="November predates the bank issue. The customer was 30–59 days late. That accurate entry stays in the proposed history."><span>Nov</span><strong>1 → 1</strong></button></div></div><div class="trace-group"><span class="trace-phase">Bank issue</span><div class="trace-buttons"><button type="button" aria-controls="lead-month-detail" aria-pressed="false" aria-label="December 2023, 2 to D" data-date="December 2023" data-why="The issue begins. The original record shows 60–89 days past due. The bank proposes suppressing this affected month."><span>Dec</span><strong>2 → D</strong></button><button type="button" aria-controls="lead-month-detail" aria-pressed="false" aria-label="January 2024, 3 to D" data-date="January 2024" data-why="The issue ends while the original record shows 90–119 days past due. January is corrected. The case stays open for evidence after the issue."><span>Jan</span><strong>3 → D</strong></button></div></div><div class="trace-group"><span class="trace-phase">After issue</span><div class="trace-buttons"><button type="button" aria-controls="lead-month-detail" aria-pressed="true" aria-label="February 2024, 4 to D" data-date="February 2024" data-why="The issue has ended. February is still 120–149 days past due. The bank extends the correction into February while it watches for recovery."><span>Feb</span><strong>4 → D</strong></button><button type="button" aria-controls="lead-month-detail" aria-pressed="false" aria-label="March 2024, 5 to D" data-date="March 2024" data-why="March is 150–179 days past due. The credit impact continues, so the bank corrects March and checks the next original month."><span>Mar</span><strong>5 → D</strong></button><button type="button" aria-controls="lead-month-detail" aria-pressed="false" aria-label="April 2024, 6 to D" data-date="April 2024" data-why="April reaches 180 or more days past due. Three months have passed since the issue ended. All three were late. The next review needs May’s original performance."><span>Apr</span><strong>6 → D</strong></button></div></div></div>
 <p class="trace-key">1–6 = increasing delinquency · D = no history reported</p>
 <div class="trace-detail" id="lead-month-detail" aria-live="polite" aria-atomic="true"><h3>February 2024</h3><p>The issue has ended. February is still 120–149 days past due. The bank extends the correction into February while it watches for recovery.</p></div></figure></div></div>
-<nav class="contents" aria-label="In this study"><div class="wrap"><a href="#consumer-decision">The correction</a><a href="#cure">Confirmed cure</a><a href="#dashboard-case">Charge-off reversal</a><a href="#scale-study">Portfolio results</a><a href="#manual-handoff">Monthly review</a><a href="#guidance">Field guide</a><a href="run.html">Run a simulation</a><a href="#evidence">Code and evidence</a></div></nav>
 <div class="paper wrap">
 <section id="consumer-decision" class="lead-case" aria-labelledby="decision-title">
 <header><p class="eyebrow">Account 24064 · 25,000-account study</p>
@@ -268,5 +289,23 @@ LIMIT 6;</code></pre>
 <p>On April 14 I added the two SQL modules to the repository. Module 1 builds original month-by-month performance so a changed reporting code can never become evidence that a customer paid on time. Module 2’s version notes document a correction to the deletion rule. A later numeric performance code can show recovery from a major derogatory event even while the customer is still delinquent. The program’s final QA query specifically exercises that outcome.</p>
 <p>The remaining commits added and organized the dashboard and revised the README. Both SQL modules have retained their original published contents across the eight commits through the May 29 revision. <a href="https://github.com/andrew-goad/metro2-remediation-sandbox/commits/main/">Repository history</a> · <a href="https://github.com/andrew-goad/metro2-remediation-sandbox/blob/1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7/src/module_02_metro2_remediation_engine.sql#L71-L118">Version notes</a> · <a href="https://github.com/andrew-goad/metro2-remediation-sandbox/blob/1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7/src/module_02_metro2_remediation_engine.sql#L1697-L1715">Module 2 recovery check</a></p><p>The corrected November policy applies the same reversal test to every major event, including charge-off. It records the dates of the latest in-window severe event and the first subsequent original numeric mark. The dated source history shows their codes. The intervening rule requiring confirmed cure for charge-offs is documented in the comparison. <a href="review.html">Read the code changelog and audit</a></p></details><details><summary>Reproduce the revised 1,000-account study</summary><p>Use the included PowerShell launcher with <code>-AccountCount 1000</code>. The revised engine produced 1,000 decisions covering 35,395 original account-months. It proposed 461 monthly substitutions across 175 accounts, 22 whole-tradeline deletions, and 133 ongoing cure reviews. <a href="downloads/Metro2_PowerShell_Study.zip">Download the current SQL and launcher</a></p></details><details><summary>Explore a retained metro2_lab run</summary><p>Use the read-only DBeaver query to export every account with a final remediation result, its original history, and its proposed treatment. The export records the Module 1 blueprint count separately. The Windows instructions also show how to produce the same file directly with PostgreSQL. <a href="downloads/Metro2_DBeaver_Export.zip" download>Download the query, builder and instructions</a>.</p></details><p class="source"><a href="repository.html">Repository preview</a> · <a href="release.html">Release preview</a> · <a href="code/generator.html">Module 1 · Synthetic generator</a> · <a href="code/engine.html">Module 2 · Remediation engine</a> · <a href="https://github.com/andrew-goad/metro2-remediation-sandbox">Project repository</a></p></section>
 
-</div></main><footer class="end"><div class="wrap"><span>Andrew R. Goad · Consumer credit analytics</span><a href="#top">Back to top</a></div></footer>
+</div></main><footer class="end"><div class="wrap"><span><a href="https://github.com/andrew-goad">Andrew R. Goad</a> · Consumer credit analytics</span><a href="#top">Back to top</a></div></footer>
+<script>
+(() => {
+  const contents = document.getElementById('portfolio-contents');
+  const trigger = contents.querySelector('summary');
+
+  document.addEventListener('click', (event) => {
+    if (contents.open && (!contents.contains(event.target) || event.target.closest('a[href]'))) {
+      contents.open = false;
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && contents.open) {
+      contents.open = false;
+      trigger.focus();
+    }
+  });
+})();
+</script>
 <script src="lead-case.js"></script><script src="history.js"></script><script src="data.js"></script><script src="cure.js"></script><script src="field25.js"></script><script src="explorer.js"></script></body></html>

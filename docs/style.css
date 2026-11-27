@@ -37,7 +37,7 @@ pre code { overflow-wrap: normal }
 .monogram { align-items: center; justify-content: center; display: inline-flex; width: 33px; height: 33px; background: var(--dark); color: #fff; font: normal 1.05rem var(--serif); letter-spacing: -.11em; padding-right: 2px }
 .topbar nav { gap: 25px }
 .topbar nav a { font-weight: 600; font-size: .90rem; color: var(--ink); text-decoration: none }
-.topbar nav a:hover, .contents a:hover { text-decoration: underline }
+.topbar nav a:hover { text-decoration: underline }
 .mast { background: #f2f6f4; border-bottom: 1px solid var(--line) }
 .hero { display: grid; grid-template-columns: 1.32fr 1fr; align-items: center; gap: clamp(35px,5vw,80px); padding-block: clamp(38px,5.7vw,84px) }
 .eyebrow, .plot-kicker { color: var(--teal); font-size: .82rem; text-transform: uppercase; letter-spacing: .105em; font-weight: 700; margin-bottom: 14px }
@@ -62,9 +62,6 @@ figure { margin: 0 }
 .finding { border-top: 1px solid #4e6c79; padding-top: 15px; margin: 20px 0 0; font-size: .93rem; color: #e4eeeb }
 .finding strong { color: #fee2ac }
 .outcome-link { display: inline-block; color: #cbe8e1 }
-.contents { background: white; border-bottom: 1px solid var(--line) }
-.contents>.wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding-block: 15px }
-.contents a { color: #344f59; font-size: .91rem; font-weight: 600; text-decoration: none }
 .paper>section { padding: clamp(42px, 5vw, 72px) 0; border-bottom: 1px solid var(--line); min-width: 0 }
 .paper>section:last-child { border: 0 }
 .source, .mx-citation, figcaption, .compact-caption { font-size: .92rem; color: var(--muted) }
@@ -115,13 +112,12 @@ summary { color: var(--teal); font-weight: 650 }
   .monogram { height: 28px; width: 28px }
   h1 { max-width: 15ch }
   .outcomes { padding: 21px }
-  .contents>.wrap { gap: 6px 15px }
   .methodbox { grid-template-columns: 1fr }
   .routes li, .field-guide>div { grid-template-columns: 1fr; gap: 5px }
   .queue, .guide-note { padding: 16px }
 }
 @media print {
-  .topbar nav, .skip, .contents, .actions, .end { display: none }
+  .topbar nav, .skip, .actions, .end { display: none }
   .hero { display: block }
   .outcomes { border: 1px solid gray; margin-top: 15px }
   .outcomes, .outcomes * { color: black !important }
@@ -203,3 +199,107 @@ summary { color: var(--teal); font-weight: 650 }
 @media (min-width:681px) and (max-width:960px){.hero{grid-template-columns:.9fr 1.1fr}.trace-grid{gap:5px}.trace-phase{font-size:.78rem}}
 @media (max-width:680px){.hero{grid-template-columns:1fr}.lead-trace{padding:18px}.hero h1{max-width:15ch}.trace-detail{min-height:auto}}
 @media (max-width:410px){.trace-grid{column-gap:4px}.trace-buttons{gap:2px}.trace-buttons strong{font-size:.79rem}.trace-phase{font-size:.76rem}.lead-trace{padding:15px}}
+
+/* Landing-page navigation shared visually with the CDS and MSBF studies. */
+.portfolio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #132d38;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+}
+.portfolio-row {
+  max-width: 1200px;
+  min-height: 56px;
+  padding-inline: clamp(16px, 4vw, 48px);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.portfolio-brand {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.portfolio-brand span {
+  border-left: 1px solid #779096;
+  padding-left: 12px;
+  color: #d4e2e4;
+  font-size: 14px;
+  font-weight: 500;
+}
+.portfolio-contents { position: relative; margin: 0; padding: 0; border: 0; }
+.portfolio-contents > summary, .portfolio-contents[open] > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 8px;
+  margin: 0;
+  border-radius: 6px;
+  color: white;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.2;
+  list-style: none;
+  cursor: pointer;
+}
+.portfolio-contents > summary::-webkit-details-marker { display: none; }
+.portfolio-contents > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+.portfolio-contents[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+.portfolio-contents > summary:hover, .portfolio-contents[open] > summary { background: #244451; }
+.portfolio-bar :focus-visible { outline: 2px solid #f1bf76; outline-offset: 2px; }
+.portfolio-contents nav {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(320px, calc(100vw - 2 * clamp(16px, 4vw, 48px)));
+  max-height: calc(100vh - 72px);
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border: 1px solid #c8d5d7;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px #132d382b;
+}
+.portfolio-contents nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: #132d38;
+  font: 500 15px/1.35 system-ui, sans-serif;
+  text-decoration: none;
+}
+.portfolio-contents nav a:hover, .portfolio-contents nav a:focus-visible { background: #edf4f3; }
+.portfolio-contents nav a:focus-visible { outline-color: #136963; outline-offset: -2px; }
+.portfolio-contents nav .portfolio-tool { border-top: 1px solid #ccd9d9; border-radius: 0; }
+body:has(> .portfolio-bar) > .skip { z-index: 11; }
+html:has(.portfolio-bar) { scroll-padding-top: 68px; }
+@media print { .portfolio-bar { display: none; } }
+@media (max-width: 360px) {
+  .portfolio-row { gap: 6px; }
+  .portfolio-brand { gap: 6px; font-size: 16px; }
+  .portfolio-brand span { padding-left: 6px; font-size: 13px; }
+  .portfolio-contents > summary, .portfolio-contents[open] > summary { gap: 7px; padding-inline: 6px; }
+}
