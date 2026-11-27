@@ -1,0 +1,120 @@
+{
+  "pass": true,
+  "studies": [
+    {
+      "database": "metro_review_gate_1000",
+      "cure_months": 3,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "snapshot_utc": "2026-11-27T15:57:11Z",
+      "export_sha256": "5048f3c78177042a535c320f136e8fa5fd8758214f0775ef0282e327994e0a9b"
+    },
+    {
+      "database": "metro_review_gate_1000_cure4",
+      "cure_months": 4,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "snapshot_utc": "2026-11-27T15:57:11Z",
+      "export_sha256": "8d5eba720105964609a1637024a4e2ac6ad851b685adc35d556a275196b41e18"
+    }
+  ],
+  "identical_input_sha256": {
+    "account_ids": "67d4ff71d43921d5739f387da09746f405e425b07d727e4c69d029461d1f051f",
+    "source_account_fields": "51781344e26700c60aa929e855073aa8ea367bf972e02531a9fc01566fc32f8b",
+    "original_dated_months": "9461c57371b1e57dcc9ef2aa537251224fd9cd57f7ba2078ab6316fc057b705e",
+    "incident_dates": "7dc4314f0fa15f4e26c516059a71aa634511d8ce1b78c0c6d99013f7066ee620"
+  },
+  "first": {
+    "accounts": 1000,
+    "represented_months": 35395,
+    "confirmed_cures": 555,
+    "monthly_cure_reviews": 133,
+    "monthly_edits": 461,
+    "field_research": 0,
+    "explicit_dofd_clears": 100,
+    "accounts_with_monthly_edits": 175,
+    "NO_IMPACT_CLEAN_PHP_HISTORY": 803,
+    "SIMPLE_DELINQUENCY_PHP_CLEANUP": 172,
+    "FULL_DEROGATORY_PHP_CLEANUP": 3,
+    "TRADELINE_DELETION": 22
+  },
+  "second": {
+    "accounts": 1000,
+    "represented_months": 35395,
+    "confirmed_cures": 494,
+    "monthly_cure_reviews": 147,
+    "monthly_edits": 496,
+    "field_research": 0,
+    "explicit_dofd_clears": 109,
+    "accounts_with_monthly_edits": 188,
+    "NO_IMPACT_CLEAN_PHP_HISTORY": 789,
+    "SIMPLE_DELINQUENCY_PHP_CLEANUP": 185,
+    "FULL_DEROGATORY_PHP_CLEANUP": 3,
+    "TRADELINE_DELETION": 23
+  },
+  "accounts_changed_by_measure": {
+    "cure_start": 62,
+    "confirmed_through": 555,
+    "credit_through": 62,
+    "treatment": 14,
+    "cure_review": 14,
+    "review_reason": 30,
+    "monthly_edits": 13
+  },
+  "example": {
+    "account": 57,
+    "bank_start": "2024-05-01",
+    "bank_end": "2025-06-01",
+    "as_of": "2025-10-01",
+    "latest_original_month": "2025-09-01",
+    "original_history_newest_first": "000000000000100000000000000000000000000000000000000000000000",
+    "first": {
+      "threshold": 3,
+      "cure_start": "2025-07-01",
+      "confirmed_through": "2025-09-01",
+      "credit_through": "2025-06-01",
+      "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+      "cure_review": 0,
+      "review_reason": null,
+      "monthly_edits": 1
+    },
+    "second": {
+      "threshold": 4,
+      "cure_start": null,
+      "confirmed_through": null,
+      "credit_through": "2025-09-01",
+      "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+      "cure_review": 1,
+      "review_reason": "INSUFFICIENT_POST_IMPACT_HISTORY",
+      "monthly_edits": 1
+    }
+  },
+  "treatment_example": {
+    "account": 975,
+    "bank_start": "2023-09-01",
+    "bank_end": "2024-11-01",
+    "as_of": "2025-10-01",
+    "latest_original_month": "2025-09-01",
+    "original_history_newest_first": "L654321000000000000000000000000000000000000000000",
+    "first": {
+      "threshold": 3,
+      "cure_start": "2024-12-01",
+      "confirmed_through": "2025-02-01",
+      "credit_through": "2024-11-01",
+      "treatment": "NO_IMPACT_CLEAN_PHP_HISTORY",
+      "cure_review": 0,
+      "review_reason": null,
+      "monthly_edits": 0
+    },
+    "second": {
+      "threshold": 4,
+      "cure_start": null,
+      "confirmed_through": null,
+      "credit_through": "2025-09-01",
+      "treatment": "TRADELINE_DELETION",
+      "cure_review": 0,
+      "review_reason": null,
+      "monthly_edits": 0
+    }
+  }
+}

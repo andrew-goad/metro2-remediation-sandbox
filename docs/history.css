@@ -1,0 +1,62 @@
+.worked-cases .wc-switch { display:flex; flex-wrap:wrap; gap:.45rem; margin:1.35rem 0 .75rem }
+.worked-cases [hidden] { display:none !important }
+.worked-cases .wc-switch button {
+  color:#25504e; background:white; border:1px solid #91aaa3; border-radius:4px;
+  padding:.6rem .9rem; font:650 .95rem/1.3 var(--sans); min-height:44px;
+}
+.worked-cases .wc-switch button[aria-pressed=true] { background:var(--teal); border-color:var(--teal); color:white }
+.worked-cases .wc-key { color:var(--muted); font-size:.94rem; margin-bottom:1.25rem }
+.worked-cases .wc-record {
+  border:1px solid #c6d5d1; border-top:3px solid var(--teal); border-radius:5px;
+  padding:clamp(16px,2.5vw,30px); margin:.9rem 0;
+}
+.worked-cases .wc-record h3 { font:400 clamp(1.5rem,2.5vw,2.12rem)/1.16 var(--serif); letter-spacing:-.032em; margin:0 0 1.25rem }
+.worked-cases .wc-source { font-weight:650; color:var(--teal); font-size:.9rem; margin-bottom:.55rem }
+.worked-cases .wc-layout { display:grid; grid-template-columns:minmax(0, .88fr) minmax(0,1.12fr); gap:clamp(20px,3.8vw,52px) }
+.worked-cases h4, .worked-cases caption { font:650 1.02rem/1.35 var(--sans); margin:0 0 .55rem; text-align:left; color:var(--ink) }
+.worked-cases table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; line-height:1.4; }
+.worked-cases table :is(th,td) { text-align:left; vertical-align:top; padding:8px .55rem 8px 0; border-bottom:1px solid var(--line); font-size:.94rem }
+.worked-cases table thead th { color:var(--muted); font-size:.88rem }
+.worked-cases table th { font-weight:650 }
+.worked-cases td time { white-space:nowrap }
+.worked-cases .wc-dates p { margin:.7rem 0 0; font-size:.93rem; color:var(--muted) }
+.worked-cases .wc-sequence ol { list-style:none; padding:0; margin:0 }
+.worked-cases .wc-sequence li { display:grid; grid-template-columns:5.2rem 1fr; gap:.55rem; padding:.33rem 0; line-height:1.44; }
+.worked-cases .wc-date { color:var(--teal); font-weight:650; font-size:.93rem; }
+.worked-cases .wc-result { background:#edf4f1; padding:1rem 1.15rem; margin-top:1.15rem; border-left:3px solid var(--teal); }
+.worked-cases .wc-result p { max-width:88ch; margin:0 }
+.worked-cases .wc-result a { display:inline-block; margin-top:.55rem; font-size:.93rem; font-weight:650; }
+@media (max-width:760px) {
+  .worked-cases .wc-layout { grid-template-columns:1fr }
+}
+@media (max-width:380px) {
+  .worked-cases .wc-record { padding:12px; }
+  .worked-cases table :is(th,td) { padding-right:4px; font-size:.86rem; }
+  .worked-cases table td time { white-space:normal; }
+}
+@media print {
+  .worked-cases .wc-switch {display:none}
+  .worked-cases .wc-record[hidden] {display:block !important}
+}
+.worked-cases .wc-attribution, .worked-cases .wc-instructions { margin:.7rem 0 0; color:var(--muted); font-size:.92rem }
+.worked-cases .wc-month-reader { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,.85fr); gap:1rem; margin-top:1rem }
+.worked-cases .wc-month-group { margin-bottom:1rem }
+.worked-cases .wc-month-group:last-child { margin-bottom:0 }
+.worked-cases .wc-month-group h5 { font:650 .93rem/1.35 var(--sans); color:var(--muted); margin:0 0 .45rem }
+.worked-cases .wc-months { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.3rem }
+.worked-cases .wc-months button { display:grid; min-width:0; min-height:47px; align-content:center; gap:.1rem; padding:.3rem .08rem; background:#fff; color:var(--ink); border:1px solid #a2b9b2; border-radius:3px; }
+.worked-cases .wc-months button span { font-size:.8rem; font-weight:600 }
+.worked-cases .wc-months button b { font:.91rem/1.3 ui-monospace,Consolas,monospace }
+.worked-cases .wc-months button[aria-pressed=true] { color:#fff; background:#17374a; border-color:#17374a }
+.worked-cases .wc-reading { background:#17374a; color:#f0f8f5; align-self:start; padding:1.1rem; border-radius:4px; }
+.worked-cases .wc-reading h4 { color:white; font:normal 1.55rem/1.2 var(--serif); }
+.worked-cases .wc-reading dl { margin:.9rem 0; }
+.worked-cases .wc-reading dt { font-weight:650; font-size:.86rem; color:#b7d9d2; }
+.worked-cases .wc-reading dd { margin:0 0 .5rem; font-weight:650; color:#fbe1af; }
+.worked-cases .wc-reading p { margin:0; font-size:.95rem; }
+@media(max-width:860px) {
+  .worked-cases .wc-month-reader { grid-template-columns:1fr }
+}
+@media(max-width:560px) {
+  .worked-cases .wc-months { grid-template-columns:repeat(4,minmax(0,1fr)) }
+}

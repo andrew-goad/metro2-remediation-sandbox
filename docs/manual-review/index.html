@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Review unresolved credit-reporting corrections from the 25,000-account synthetic Metro 2 study.">
+  <title>Monthly manual review · Metro 2 Remediation Sandbox</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="queue.css">
+  <script defer src="../scale/data.js"></script>
+  <script defer src="../scale/unpack.js"></script>
+  <script defer src="../field25.js"></script>
+  <script defer src="queue.js"></script>
+</head>
+<body>
+  <a class="skip" href="#queue">Skip to the review queue</a>
+  <header class="topbar"><div class="wrap head-inner">
+    <a class="brand" href="../index.html"><span class="monogram" aria-hidden="true">AG</span><span>Andrew R. Goad</span></a>
+    <a href="../index.html">Return to the study</a>
+  </div></header>
+  <main>
+    <div class="queue-mast"><div class="wrap queue-intro">
+      <div>
+        <p class="eyebrow">Metro 2 Remediation Sandbox · 25,000-account study</p>
+        <h1>Monthly manual review</h1>
+        <p class="deck">These open synthetic accounts received a proposed correction and still await cure. Some have returned from a severe status to ordinary payment reporting while still delinquent. Keep the bank-issue dates fixed and reassess cure when the next month of original performance is available.</p>
+      </div>
+      <div class="queue-download">
+        <h2>Reviewer files</h2>
+        <p>Take the full queue into Excel or import the same case rows as a CSV.</p>
+        <div class="actions">
+          <a class="button primary" href="../downloads/Metro2_Manual_Review_25000.xlsx" download>Download workbook</a>
+          <a class="button secondary" href="../downloads/Metro2_Manual_Review_25000.csv" download>Download CSV</a>
+        </div>
+      </div>
+    </div></div>
+    <section id="queue" class="wrap queue-body" aria-labelledby="queue-title">
+      <h2 id="queue-title">Review queue</h2>
+      <p class="queue-intro-note">Select a reason or look up an exact account ID. Cases are ordered by the next history month, then by account ID. That month identifies the evidence to request. Assignments and review deadlines are separate operational decisions.</p>
+      <noscript>Enable JavaScript to browse the queue or download a reviewer file above.</noscript>
+      <p id="queue-error" role="alert" hidden></p>
+      <div id="queue-app" data-study-snapshot="2026-11-27T15:12:16Z" hidden>
+        <div id="reason-controls" class="reason-controls" role="group" aria-label="Filter by review reason">
+          <button type="button" data-reason="" aria-pressed="true"><strong id="count-all"></strong><span>All flagged accounts</span></button>
+          <button type="button" data-reason="INSUFFICIENT_POST_IMPACT_HISTORY" aria-pressed="false"><strong id="count-short"></strong><span>Too little post-issue history</span></button>
+          <button type="button" data-reason="NO_CURE_OPEN_ACCOUNT" aria-pressed="false"><strong id="count-open"></strong><span>Enough history, cure unestablished</span></button>
+        </div>
+        <p class="queue-intro-note" id="queue-examples" hidden></p>
+        <div class="queue-workspace">
+          <div class="queue-accounts">
+            <form id="queue-lookup" class="lookup" role="search">
+              <label for="queue-id">Exact account ID</label>
+              <div><input id="queue-id" type="text" inputmode="numeric" autocomplete="off" placeholder="Account ID"><button type="submit">Find</button><button type="button" id="queue-reset">Reset</button></div>
+            </form>
+            <p id="queue-matches" class="queue-meta" role="status"></p>
+            <table id="queue-table"><caption class="visually-hidden">Accounts matching the selected reason and ID</caption>
+              <thead><tr><th scope="col">Account</th><th scope="col">Review reason</th><th scope="col">Next history</th></tr></thead>
+              <tbody id="queue-rows"></tbody>
+            </table>
+            <nav id="queue-pages" class="queue-pages" aria-label="Account pages">
+              <button type="button" id="queue-prev">Previous</button><span id="queue-page"></span><button type="button" id="queue-next">Next</button>
+            </nav>
+          </div>
+          <article id="queue-detail" class="queue-detail" aria-label="Selected account"></article>
+        </div>
+      </div>
+      <aside id="account-field-research" class="queue-exceptions" aria-labelledby="field-research-title" hidden>
+        <h3 id="field-research-title">Separate account-field research</h3>
+        <p id="field-research-count"></p><a href="../downloads/Metro2_Account_Field_Review_25000.csv" download>Download the account-field research CSV</a>
+      </aside>
+      <aside class="queue-exceptions" aria-labelledby="exceptions-title">
+        <h3 id="exceptions-title">Separate Field 25 research</h3>
+        <p>On 130 retained tradelines, a status or rating covered by the historical Field 25 rules calls for a date that is missing from the source. All 130 fall outside this cure-review queue. Verify the servicing history and applicable consumer indicators under the current guidance before establishing a date.</p>
+        <a href="../downloads/Metro2_Field25_Source_Exceptions_25000.csv" download>Download the 130 source exceptions</a> · <a href="../index.html#field-25">Read the Field 25 guidance</a>
+      </aside>
+    </section>
+  </main>
+  <footer class="end"><div class="wrap"><a href="../index.html#field-25">Field 25 and the stored date</a><a href="../scale/index.html">Explorer for all 25,000 accounts</a></div></footer>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Release preview · Metro 2 Remediation Sandbox</title><link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#content">Skip to content</a><header class="preview-head"><div class="wrap"><p class="eyebrow">GitHub release preview</p><nav class="actions" aria-label="Project previews"><a href="index.html">Teaching page</a><a href="repository.html">Repository</a><a href="release.html">Release</a><a href="manual-review/index.html">Manual review</a></nav></div></header>
+<main id="content" class="preview-body"><h1 id="metro-2-remediation-sandbox">Metro 2 Remediation Sandbox</h1>
+<p><strong>Private release candidate for owner review · November 27, 2026</strong></p>
+<p>A two-month bank issue led to five proposed monthly corrections on account 24064. The customer was late before the error and continued falling behind after it ended. This PostgreSQL study shows how a bank can protect the consumer, preserve accurate history, and decide what requires another month of review.</p>
+<p><a href="run.html">Run your own simulation</a> · <a href="index.html#consumer-decision">Read the opening case</a> · <a href="scale/index.html#account=24064">Inspect all 13 months</a> · <a href="manual-review/index.html#account=24064">Open the reviewer’s handoff</a></p>
+<h2 id="three-decisions-to-follow">Three decisions to follow</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Decision</th>
+<th>What the evidence shows</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Correct now and keep reviewing.</strong> Account 24064</td>
+<td>Preserve November 2023’s accurate late mark. Correct December through April, including three late months after the issue ended. On the May 1 record, the bank elects current status and clears the active delinquency date. The next review needs May history from the June 1 snapshot.</td>
+</tr>
+<tr class="even">
+<td><strong>Close the review after an observed cure.</strong> Account 175</td>
+<td>The bank issue ended in March 2025. April still needed correction. Three original current months from May through July confirm cure effective in May. July’s history becomes visible in the August 1 snapshot. <a href="index.html#cure">Follow the cure</a></td>
+</tr>
+<tr class="odd">
+<td><strong>Retain a tradeline after a modeled charge-off reversal.</strong> Account 327</td>
+<td>A March charge-off was followed by a return to ordinary delinquency in April. With the reversal, nine affected entries receive cleanup. September supplies just one current month, so monthly review continues. <a href="index.html#dashboard-case">Compare the severe-event cases</a></td>
+</tr>
+</tbody>
+</table>
+<p>For the field-level example, look at account 17899. One issue month makes the distinction between as-of status, prior payment history, and a proposed delinquency-date clear easy to see. <a href="index.html#field-25">Field 25 guide</a></p>
+<h2 id="study-results">Study results</h2>
+<table>
+<thead>
+<tr class="header">
+<th>25,000 synthetic accounts</th>
+<th style="text-align: right;">Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keep history as reported</td>
+<td style="text-align: right;">20,506</td>
+</tr>
+<tr class="even">
+<td>Correct affected monthly history</td>
+<td style="text-align: right;">4,028</td>
+</tr>
+<tr class="odd">
+<td>Propose whole-tradeline deletion</td>
+<td style="text-align: right;">466</td>
+</tr>
+<tr class="even">
+<td>Monthly substitutions across retained accounts</td>
+<td style="text-align: right;">11,071</td>
+</tr>
+<tr class="odd">
+<td>Accounts continuing in monthly review</td>
+<td style="text-align: right;">3,048</td>
+</tr>
+<tr class="even">
+<td>Proposed DOFD clears within that review queue</td>
+<td style="text-align: right;">2,340</td>
+</tr>
+</tbody>
+</table>
+<p>The first three outcomes partition the population. Monthly substitutions count individual history entries. Of the 4,028 accounts receiving monthly corrections, 3,048 stay in review. Of those, 2,340 have a proposed delinquency-date clear.</p>
+<p><a href="requirements.html">Business requirements</a> · <a href="validation.html">Validation results and test evidence</a> · <a href="review.html#changelog">Changelog</a></p>
+<h2 id="test-a-strategy-before-production">Test a strategy before production</h2>
+<p>Choose the account count and cure threshold in the simulation guide. Copy its PowerShell commands, generate original records in a new PostgreSQL database and open a local explorer containing your accounts. The matched 1,000-account example holds every original month and incident date fixed. Requiring four current months instead of three increases monthly reviews from 133 to 147 and monthly substitutions from 461 to 496. On account 975 the longer window reaches a later unresolved charge-off. Proposed deletions rise from 22 to 23. <a href="run.html">Run your own simulation</a> · <a href="downloads/Metro2_Threshold_Comparison_1000.json">Matched comparison</a></p>
+<h2 id="release-assets">Release assets</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Asset</th>
+<th>What you can do</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="downloads/Metro2_Manual_Review_25000.xlsx">Review workbook</a> · <a href="downloads/Metro2_Manual_Review_25000.csv">Review CSV</a></td>
+<td>Inspect 3,048 open referrals, their evidence dates, field decisions and next original month.</td>
+</tr>
+<tr class="even">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">PowerShell study kit</a></td>
+<td>Generate a fresh population and run independent checks in PostgreSQL.</td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_25000_Results.zip">25,000-account results</a></td>
+<td>Reconcile counts, source versions and native run evidence.</td>
+</tr>
+<tr class="even">
+<td><a href="downloads/Metro2_DBeaver_Export.zip">DBeaver export kit</a></td>
+<td>Build an account explorer from an existing synthetic database.</td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_Field25_Source_Exceptions_25000.csv">Field 25 source exceptions</a></td>
+<td>Investigate 130 retained accounts whose source data already lacked a date called for by their observed status or rating.</td>
+</tr>
+<tr class="even">
+<td><a href="downloads/Metro2_Account_Field_Review_25000.csv">Account-field research CSV</a></td>
+<td>Assign 26 missing required payment ratings to servicing. Three status-65 accounts also need a missing required date. Controlled cases demonstrate how to investigate an uncertain onset or closure.</td>
+</tr>
+<tr class="odd">
+<td><a href="review.html#changelog">Code change log</a> · <a href="downloads/Metro2_SQL_Changes.patch">SQL changes</a></td>
+<td>Compare the candidate with the public source and trace the reason for each correction.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-changed-after-independent-audit">What changed after independent audit</h2>
+<p>The independent auditor closed the prior hold and reproduced the 25,000-account reference. Two additional findings concerned what happens after a correct run. An edited full viewer could yield a passing policy comparison, and choosing the stock three-month SQL could overwrite a four-month decision on the same incident.</p>
+<p>The updated tools verify the complete export and its run identity before replacing a saved comparison. The engine also checks the saved threshold before changing any incident tables. The 25,000-account reference data and their native run receipt are preserved. The 1,000-account comparison uses fresh exports. <a href="retest.html">Audit findings and developer retest</a> · <a href="validation.html">Validation documentation</a></p>
+<h2 id="before-public-release">Before public release</h2>
+<p>Andrew retains the decision to publish this candidate. The sandbox produces proposed decisions. Its ordinary Field 25 example uses the standard 426-character format. CDIA lists the 2026 CRRG; the detailed field examples were checked against the publicly reviewable 2020 edition and identified corroborating sources. A reviewer with authorized access can record any current-edition differences in the audit. <a href="index.html#reporting-clock">Field guide and sources</a> · <a href="https://www.cdiaonline.org/publications/">CDIA publications</a></p>
+</main><footer class="end"><div class="wrap">Andrew R. Goad · Consumer credit analytics <a href="index.html">Teaching page</a></div></footer></body></html>

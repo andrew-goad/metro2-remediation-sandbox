@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Validation results · Metro 2 Remediation Sandbox</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="evidence.css"></head>
+<body><a class="skip" href="#content">Skip to content</a><header class="preview-head"><div class="wrap"><p class="eyebrow">Metro 2 Remediation Sandbox · Project evidence</p><nav class="actions" aria-label="Project evidence"><a href="index.html">Teaching page</a><a href="requirements.html">Business requirements</a><a href="validation.html">Validation results</a><a href="review.html#changelog">Changelog</a></nav></div></header>
+<main id="content" class="preview-body evidence-body"><article><h1 id="validation-report--metro-2-remediation-sandbox">Validation report · Metro 2 remediation sandbox</h1>
+<p><strong>The final independent auditor rated the reviewed package “Ready after listed changes.”</strong> The final auditor independently cleared the teaching examples, ordinary study workflow and published counts for owner review. They reproduced two medium-severity failures when a viewer was altered or an operator selected the wrong cure rule for an existing incident. The fixes and their developer controls are recorded below. The independent disposition belongs to ZIP <code>a1c3b077f0e3…</code>. Andrew Goad retains the publication decision. <a href="#audit-findings">Audit findings</a> · <a href="#population-reconciliation">Population reconciliation</a> · <a href="#four-dated-cases">Four dated cases</a> · <a href="#run-the-checks">Run the checks</a> · <a href="#scope-and-sign-off">Scope and sign-off</a></p>
+<h2 id="what-was-tested">What was tested</h2>
+<p>The question was whether a bank’s proposed correction follows the <strong>original evidence available on the reporting date</strong>. That includes preserving accurate history before the incident, extending the review after the bank’s end date, recognizing when cure becomes observable and making a supported decision about each current account field. Continued processing also has to protect the previous decision if incoming evidence is stale. <a href="requirements.html">Business requirements</a> · <a href="review.html#changelog">Change log</a> · <a href="review.html#audit">Code audit</a></p>
+<p>The public Git baseline is <code>1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7</code>. The first independent review covered private ZIP <code>c946f81efe7a…</code>. The next covered <code>57390959d867…</code> with account-field policy V1. The final independent audit covered <code>a1c3b077f0e3…</code> with field policy <code>EVIDENCE_SCOPED_FIELDS_V2</code> and severe-event policy <code>REVERSAL_AWARE_SEVERE_V2</code>. Both policy identifiers remain applicable to this revision. PostgreSQL 16.2 and PowerShell 7.7.0 on Linux generated the recorded studies. <a href="downloads/Metro2_Retest_Evidence.zip">Retest evidence</a> · <a href="review.html#changelog">Source history</a></p>
+<div class="evidence-table"><table>
+<thead>
+<tr class="header">
+<th>Evidence and executed source</th>
+<th>SHA-256 prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="code/generator.html">Module 1 · generator</a></td>
+<td><code>8a10a6310df2</code></td>
+</tr>
+<tr class="even">
+<td>Retained 25,000-account Module 2 in the results archive, database <code>metro_episode_scoped_25000</code></td>
+<td><code>1a1566dee12d</code></td>
+</tr>
+<tr class="odd">
+<td><a href="code/engine.html">Current Module 2</a> · fresh 1,000-account default run and threshold-reuse tests</td>
+<td><code>5fffaaee2cf6</code></td>
+</tr>
+<tr class="even">
+<td>Fresh 1,000-account four-month run, configured Module 2</td>
+<td><code>f4f0181d4c8f</code></td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Full-export builder</a> / <a href="downloads/Metro2_PowerShell_Study.zip">threshold comparator</a></td>
+<td><code>72eea8abbee1</code> / <code>5aa2063e7b4c</code></td>
+</tr>
+<tr class="even">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Independent SQL verifier</a></td>
+<td><code>64f699cb28eb</code></td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Account-field research</a> / <a href="downloads/Metro2_PowerShell_Study.zip">Field 25 exceptions</a></td>
+<td><code>16cad8b3b39a</code> / <code>655ed6eb12fa</code></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong>How to read the 25,000-account result.</strong> Its receipt, source and output files come from the preceding measured study. The final auditor independently regenerated its five CSVs, matched all seven workbook XML components and reconciled all 300 printed QA rows. This revision retains that evidence with its executed Module 2. Its fresh 1,000-account comparisons and bounded continuing-incident tests use the revised source. The results archive includes the measured source under <code>audited_25000/</code> and explains the distinction in <code>RETAINED_25000.md</code>. <a href="downloads/Metro2_25000_Results.zip">Results and source lineage</a></p>
+<h2 id="audit-findings">Audit findings</h2>
+<p>The final audit verified all 79 entries in the reviewed package’s manifest and identified two additional paths outside the earlier control suites. The supporting evidence archive passed CRC checks and all 170 listed SHA-256 values matched. The source record for the final audit is the report titled <em>Ready after listed changes</em>, dated November 27, 2026. <a href="review.html#final-independent-audit-and-bounded-corrections">Audit history and evidence</a></p>
+<div class="evidence-table evidence-wide" tabindex="0" aria-label="Audit findings table" role="region"><table>
+<thead>
+<tr class="header">
+<th>Final-audit finding</th>
+<th>Reviewed-package observation</th>
+<th>Qualification for this revision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Saved threshold comparison</strong></td>
+<td>A changed review flag on account 57 yielded 146 reviews and a pass. Relabeling three-month rows as four yielded 133 versus 133 and a pass. Removing the first account in both files yielded a passing 999-account comparison against two 1,000-account declarations.</td>
+<td>Compare complete exports with their recorded export evidence. Check the actual account and month counts, thresholds and configured run identities before replacing a saved comparison. A full export with missing comparison evidence can still be opened as a viewer. <a href="downloads/Metro2_PowerShell_Study.zip">Study comparison</a></td>
+</tr>
+<tr class="even">
+<td><strong>Wrong SQL on the same incident</strong></td>
+<td>On a four-month study, running the stock three-month Module 2 closed account 57 without a new observation. The separate four-month verifier subsequently found 1,000 threshold mismatches.</td>
+<td>The reuse preflight must check the incoming threshold against both stored decisions for every account before rebuilding. Rerun the configured study SQL for subsequent months. Generate a separate fresh study to evaluate a different threshold. <a href="code/engine.html#L506">Reuse preflight</a> · <a href="run.html">Operator workflow</a></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong>Recorded results for the two final findings.</strong> On two fresh 1,000-account databases, the comparator returned 133 and 147 open reviews. The auditor’s altered-57, mislabeled-threshold and matched-999 inputs all failed. In each case the existing comparison retained its original SHA-256. The packaged comparator controls also cover resealed invalid inputs and output-file preservation. A separate reconstruction counted 88 insufficient-history and 45 open-without-cure cases at three months, and 107 and 40 at four months. Both fresh studies matched their audited counterparts on every source account field and all 35,395 dated original/proposed observations. A digest of complete rows and recorded export metadata checks file integrity. Preserve the originating receipt and trusted source independently when provenance matters. <a href="downloads/Metro2_Threshold_Comparison_1000.json">Recorded comparison</a> · <a href="downloads/Metro2_Retest_Evidence.zip">Retest evidence</a></p>
+<p>The native four-month same-cutoff replay kept 57 open at the October 1 cutoff. Running the wrong three-month SQL and seven cases of missing, inconsistent or altered saved threshold evidence all failed. Each rejection preserved the counts and complete-content fingerprints of the input, window, monthly-detail and final tables. A controlled fourth original zero in October closed 57 with July cure at the November 1 cutoff, with 35,396 observations across the refreshed population. A separate fresh three-month study confirmed July cure on the original October 1 cutoff. The public-schema bridge preserved all 27 test incidents. <a href="downloads/Metro2_PowerShell_Study.zip">Threshold reuse controls</a> · <a href="downloads/Metro2_Retest_Evidence.zip">Native retest evidence</a></p>
+<p>The existing 48 and 55 assertions passed on both the final-audit input and this revision in fresh PostgreSQL test databases. Earlier, the V1 release failed 42 of the 55. These prior suites establish regression coverage for the behavior they exercise. The altered comparisons and four-month live reruns require their own controls. <a href="downloads/Metro2_PowerShell_Study.zip">Developer controls</a> · <a href="downloads/Metro2_Retest_Evidence.zip">Native evidence</a></p>
+<h3 id="earlier-field-and-incident-findings">Earlier field and incident findings</h3>
+<p>The same 55 expectations ran on two isolated PostgreSQL instances. They comprise 27 field scenarios, 10 worklist checks, three corrupt-output challenges, 12 rejected input or rollback cases and three successful continuing-incident paths. The earlier V1 release passed 13. Its V2 successor passed 55. The first audit’s 48 checks also ran against both releases and both passed 48. The earlier 34 failures out of 48 belong to the first private audit target, <code>c946f81efe7a</code>. <a href="downloads/Metro2_PowerShell_Study.zip">Regression suite and comparison commands</a> · <a href="retest.html">Finding walkthrough</a></p>
+<div class="evidence-table"><table>
+<thead>
+<tr class="header">
+<th>Follow-up finding</th>
+<th>Observed acceptance result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Saved incident and processing cutoff.</strong> Moving 17899’s incident start back one month could suppress its accurate December delinquency. Reapplying an April cutoff could reopen a case already cured at the May cutoff. <a href="requirements.html#br-03">BR-03</a> · <a href="requirements.html#br-11">BR-11</a></td>
+<td>Continuing-incident runs compare the saved windows and prior per-account cutoffs before replacement. Contradictory copies, invalid days and a backward cutoff were rejected with prior decisions intact. Equal cutoffs and advances succeeded. A separate 27-account bridge from the public schema preserved every incident, including one account that advanced alongside 25 unchanged snapshots and a same-cutoff source correction.</td>
+</tr>
+<tr class="even">
+<td><strong>Field basis and closure.</strong> An old DOFD could be cleared after intervening current months, or across an original unknown month. An open-status proposal could disregard a reported closure date. <a href="requirements.html#br-07">BR-07</a> · <a href="requirements.html#br-08">BR-08</a></td>
+<td>To clear a supplied date, the original onset month must contain a numeric delinquency and the original adverse observations must continue through the corrected basis. An intervening current month separates episodes. An original <code>D</code> leaves continuity unproved. Contradictory closure timing keeps the source fields and refers them for servicing evidence. A corroborated pre-incident onset can still qualify when the episode continues through the affected month.</td>
+</tr>
+<tr class="odd">
+<td><strong>Missing historically required 17B.</strong> Status 13 with a missing rating left the conditional Field 25 decision unresolved. <a href="requirements.html#br-08">BR-08</a> · <a href="requirements.html#br-10">BR-10</a></td>
+<td>Retained records with a missing applicable rating enter servicing research even without a PHP change. With status 13 and unknown rating, obtain the rating to decide the historical date condition. Status 65 requires a date independently of rating. An absent date at 65 can therefore appear on both worklists. The controls covered all seven statuses in the historical screen, including legacy 05 and whitespace-only input.</td>
+</tr>
+<tr class="even">
+<td><strong>Export integrity.</strong> A fabricated deletion, invented onset, omitted clear or unsupported field change could appear in a reader’s copy. <a href="requirements.html#br-11">BR-11</a> · <a href="requirements.html#br-12">BR-12</a></td>
+<td>The current-policy converter reconstructs treatment, history changes, field eligibility and servicing research from original observations. Contradictory rows fail before the destination is replaced. Both the SELECT-only database path and the DBeaver CSV path are covered. An existing validated file survives failure. Older policy versions retain their source identity and narrower validation scope. <a href="downloads/Metro2_PowerShell_Study.zip">Export guide</a></td>
+</tr>
+</tbody>
+</table>
+</div><p>A separately expressed SQL verifier passed all <strong>22 controlled accounts and 91 account-months</strong> against literal expected field outcomes. It detected all <strong>13 deliberate mutations</strong>, including a falsely cleared earlier episode, omitted required-rating research and an invalid incident day copied into three tables. It passed standalone and inside the launcher’s read-only snapshot. A separate native engine comparison covered 37 cases, with 25 changed dispositions and 12 preserved outcomes. These sets overlap in subject matter and have separate denominators. In the results ZIP, the current receipts are <code>checks/followup/before-after.json</code>, <code>checks/followup/independent-verifier.json</code>, <code>checks/followup/engine-challenges.json</code> and <code>checks/followup/public-bridge.json</code>. <a href="downloads/Metro2_PowerShell_Study.zip">Independent verifier</a> · <a href="downloads/Metro2_Developer_Retest.json">Developer evidence</a></p>
+<p>The original audit checks remain part of the record. They cover unrelated post-cure fields, closed 61–65 and 13 with a later adverse episode, future-dated history, unsupported source marks, the 187-account reader copy, handoff deep links and historical 17B applicability. The earlier 14-account verifier suite covered 78 original months and 12 mutations. Its receipt describes the prior test generation. <a href="downloads/Metro2_PowerShell_Study.zip">Original controls and fixtures</a> · <a href="review.html#changelog">Code history</a></p>
+<h2 id="population-reconciliation">Population reconciliation</h2>
+<p>A cohort and account ID identify a case. A cure can be observed even when no correction was proposed. The data below come from separate native runs. The 1,000-account rows are fresh runs of the revised module. The 1-, 500- and 25,000-account rows retain the measured results of the preceding package. Each used three original current months after the bank issue unless shown otherwise. <a href="downloads/Metro2_25000_Results.zip">Study results</a></p>
+<div class="evidence-table evidence-wide" tabindex="0" aria-label="Population reconciliation table" role="region"><table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Accounts / cure months</th>
+<th style="text-align: right;">Original months</th>
+<th style="text-align: right;">No impact</th>
+<th style="text-align: right;">Simple cleanup</th>
+<th style="text-align: right;">Full cleanup</th>
+<th style="text-align: right;">Delete</th>
+<th style="text-align: right;">Edited months</th>
+<th style="text-align: right;">Cures</th>
+<th style="text-align: right;">Monthly reviews</th>
+<th style="text-align: right;">Date clears</th>
+<th style="text-align: right;">Date exceptions</th>
+<th style="text-align: right;">Field research</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1 / 3</td>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">500 / 3</td>
+<td style="text-align: right;">17,596</td>
+<td style="text-align: right;">405</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">290</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1,000 / 3</td>
+<td style="text-align: right;">35,395</td>
+<td style="text-align: right;">803</td>
+<td style="text-align: right;">172</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">461</td>
+<td style="text-align: right;">555</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1,000 / 4</td>
+<td style="text-align: right;">35,395</td>
+<td style="text-align: right;">789</td>
+<td style="text-align: right;">185</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">496</td>
+<td style="text-align: right;">494</td>
+<td style="text-align: right;">147</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25,000 / 3</td>
+<td style="text-align: right;">873,193</td>
+<td style="text-align: right;">20,506</td>
+<td style="text-align: right;">3,904</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">466</td>
+<td style="text-align: right;">11,071</td>
+<td style="text-align: right;">14,350</td>
+<td style="text-align: right;">3,048</td>
+<td style="text-align: right;">2,340</td>
+<td style="text-align: right;">130</td>
+<td style="text-align: right;">26</td>
+</tr>
+</tbody>
+</table>
+</div><p><strong>Threshold sensitivity.</strong> Requiring four consecutive current months in the same 1,000-account study lowered observed cures from 555 to 494. Fourteen additional accounts entered monthly review, and 35 additional monthly entries changed. Both runs used the same 35,395 original observations and account-level bank dates. Account 57 illustrates the decision. Its issue ran from May 2024 through June 2025. At the October 1, 2025 cutoff, original July, August and September were all current. With three required, July starts cure, September confirms it and credit impact ends in June. With four required, cure remains open and the review extends through September. Both runs propose one monthly change for this account. Reproduce the comparison by setting <code>-CureMonths 3</code> and <code>-CureMonths 4</code> on separate fresh study runs. <a href="run.html">Run and compare a study</a> · <a href="downloads/Metro2_Threshold_Comparison_1000.json">Paired threshold receipt</a></p>
+<p><strong>Why account 975 adds the 23rd deletion proposal.</strong> Both runs contain the same 49 observations, September 2021–September 2025. Every month of the September 2023–November 2024 bank issue was current. The next three observations, December 2024–February 2025, were also current. March–August deteriorated from <code>1</code> through <code>6</code>, followed by September’s charge-off <code>L</code>. Both October 1 source records carry 17A <code>97</code>, internal rating <code>L</code> and a March 1, 2025 DOFD. <a href="index.html#account=975">Open the three-month case</a> · <a href="run.html">Reproduce the comparison</a></p>
+<div class="evidence-table evidence-wide" tabindex="0" aria-label="Population reconciliation table" role="region"><table>
+<thead>
+<tr class="header">
+<th>Required current months</th>
+<th>Cure and credit-impact dates</th>
+<th>Decision at the October 1, 2025 cutoff</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Three</td>
+<td>Effective December 2024, confirmed February 2025, first knowable March 1. The credit window ends November 2024.</td>
+<td>The entire incident window was clean. The later charge-off is outside it. Keep status 97 and the March DOFD.</td>
+</tr>
+<tr class="even">
+<td>Four</td>
+<td>March’s <code>1</code> interrupts the three zeros. Cure start and confirmation remain unestablished. The credit window extends through September 2025.</td>
+<td>The unresolved September charge-off falls inside that window. The bank proposes whole-tradeline deletion (<code>DA</code>).</td>
+</tr>
+</tbody>
+</table>
+</div><p>Neither scenario changes an individual monthly byte. Neither has a monthly cure-queue item at the final cutoff. The three-month scenario has established cure. The four-month scenario has a deletion proposal, which has its own downstream disposition. The September event, separately observed March onset and original monthly record remain inspectable in both runs. The threshold and deletion election belong to the sandbox’s bank policy. <a href="requirements.html#br-06">Bank policy and evidence</a></p>
+<p><strong>All 25,000 DOFD decisions.</strong> Of 24,534 retained accounts, 2,434 kept a populated original date, 19,760 retained an empty date and 2,340 explicitly cleared a supplied date. No replacement date was set. The other 466 accounts received proposed tradeline deletion. All 2,340 clears had an observed numeric source onset and uninterrupted original adverse months through the corrected basis. All had an open source classification and a proposed status of 11. Of those dates, 329 came before the bank issue, 1,160 during it and 851 after the issue ended. The corresponding pre-incident delinquency stayed visible on all 329. The favorable current-field election and the monthly history correction are distinct actions. <a href="scale/index.html#account=17899">Account 17899</a> · <a href="downloads/Metro2_25000_Results.zip">Results</a></p>
+<p><strong>Three worklists.</strong> The monthly handoff has 3,048 rows, including 2,058 with insufficient follow-up and 990 open accounts without observed cure. The known Field 25 date exceptions total 130, with status counts 61 (12), 62 (35), 63 (13), 64 (66), 65 (3) and 97 (1). None were on the monthly queue. The separate field-research file has 26 missing historically required ratings, comprising 65 (3), 94 (9) and 95 (14). The three status-65 accounts appear on both source worklists. The other 23 have dates. The earlier release produced zero field-research rows on the same cohort. None of the 26 are on the monthly queue. Comparing the two 25,000-account runs, all 873,193 original/proposed monthly tuples and every effective 17A, 17B, DOFD and clear action matched. Apart from the policy version, the 26 new servicing reasons were the only changed account fields. <a href="downloads/Metro2_Manual_Review_25000.xlsx">Monthly workbook</a> · <a href="downloads/Metro2_Manual_Review_25000.csv">Monthly CSV</a> · <a href="downloads/Metro2_Field25_Source_Exceptions_25000.csv">Missing dates</a> · <a href="downloads/Metro2_Account_Field_Review_25000.csv">Field research</a></p>
+<p>The workbook check compares 73,152 source cells and 6,096 original/proposed rating-applicability notes in the 25,000-account handoff. Module 2’s ordered samples show the first 100 of 2,806 status changes, 4,028 PHP changes and 2,340 DOFD changes respectively. Account 17899 ranks 134th in the date sample query and is available in the full export. <a href="review.html#audit">QA definitions and readback</a> · <a href="downloads/Metro2_25000_Results.zip">Results</a></p>
+<h2 id="four-dated-cases">Four dated cases</h2>
+<p>The case checker reconstructs the dates and decisions from original monthly history. Bank and credit windows below are inclusive. The date of account information (DOAI) is one month after the newest payment history profile (PHP) month. Cure requires the first three consecutive <strong>original</strong> current months after bank impact ends. The first is its effective start. The third supplies confirmation when the next reporting cycle arrives. <a href="requirements.html#br-03">BR-03 through BR-06</a> · <a href="requirements.html#br-09">BR-09</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Case checker</a></p>
+<div class="evidence-table evidence-wide" tabindex="0" aria-label="Four dated cases table" role="region"><table>
+<thead>
+<tr class="header">
+<th>Account and cohort</th>
+<th>Bank issue → credit impact through</th>
+<th>Cure evidence and observed decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="scale/index.html#account=24064">24064 · 25,000</a></td>
+<td>Dec 2023–Jan 2024 → Apr 2024</td>
+<td>May 1 DOAI. Five adverse months changed, three after the issue. November’s pre-issue <code>1</code> remained. Status 84 → 11 explicitly cleared the November source date. No cure start or confirmation. May history is due on the June 1 record.</td>
+</tr>
+<tr class="even">
+<td><a href="index.html#account=175">175 · 1,000</a></td>
+<td>Apr 2024–Mar 2025 → Apr 2025</td>
+<td>Three months changed, including April after issue end. Original May–July zeros establish a May start and July confirmation, first observable August 1. The October 1 record is closed to monthly cure review.</td>
+</tr>
+<tr class="odd">
+<td><a href="index.html#account=327">327 · 1,000</a></td>
+<td>Dec 2024–Jan 2025 → Sep 2025</td>
+<td>March charge-off <code>L</code> fell in the extension. April <code>5</code> supplied a modeled reversal. Nine months changed, seven after issue end. September was the first original current month. October 1 had one of three, so review stayed open.</td>
+</tr>
+<tr class="even">
+<td><a href="scale/index.html#account=17899">17899 · 25,000</a></td>
+<td>Jan 2025 → Jan 2025</td>
+<td>February 1 DOAI. January’s newest byte changed from <code>1</code> to <code>D</code>. December’s second byte stayed <code>1</code>. The proposal moved 71 → 11 and explicitly cleared the December date. No post-issue observation existed. February history first arrives March 1.</td>
+</tr>
+</tbody>
+</table>
+</div><p>The later February–April sequences for 17899 in H1 and H3 are <strong>controlled continuations</strong>, separate from its observed February 1 record. For an unresolved severe event ending in deletion, <a href="index.html#account=987">account 987 in the 1,000-account study</a> supplies the comparison. The four checked account histories, edits, cutoff dates and dispositions are in <code>checks/featured-cases.json</code> in the <a href="downloads/Metro2_25000_Results.zip">results ZIP</a>.</p>
+<h2 id="run-the-checks">Run the checks</h2>
+<p>Use a PostgreSQL 15+ test server and its <code>psql</code> client. The PowerShell launcher creates a fresh database and a results folder. The Python regression runner creates and removes its own disposable databases. From a checkout or extracted study kit containing <code>src</code>, <code>tools</code> and <code>tests</code>, run the following in Windows PowerShell. Supply the appropriate test host, port and login. <a href="run.html">Study walkthrough</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Launcher options and authentication</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Regression instructions</a></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>powershell<span class="op">.</span><span class="fu">exe</span> <span class="op">-</span>NoProfile <span class="op">-</span>ExecutionPolicy Bypass <span class="op">-</span>File <span class="op">.</span>\tools\Run-Metro2Study<span class="op">.</span><span class="fu">ps1</span> <span class="op">-</span>AccountCount <span class="dv">25000</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">py</span> <span class="op">-</span><span class="dv">3</span> <span class="op">.</span>\tests\run_regression<span class="op">.</span><span class="fu">py</span> <span class="op">--</span>host localhost <span class="op">--</span>port <span class="dv">5432</span> <span class="op">--</span>user postgres <span class="op">--</span>prompt-password <span class="op">--</span>rolling-evidence <span class="op">.</span>\rolling-snapshots<span class="op">.</span><span class="fu">json</span> <span class="op">--</span>audit-evidence <span class="op">.</span>\counterexamples<span class="op">.</span><span class="fu">json</span> <span class="op">--</span>followup-evidence <span class="op">.</span>\followup<span class="op">.</span><span class="fu">json</span></span></code></pre></div>
+<p>Compare the run’s <code>totals.csv</code>, <code>outcomes.csv</code>, <code>policy_audit.json</code> and three worklists with the recorded results. <code>module2.log</code> contains the SQL readouts. From a checkout containing both Pages datasets, run the featured-case check separately. <a href="downloads/Metro2_PowerShell_Study.zip">PowerShell kit</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Read-only DBeaver export instructions</a></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>py <span class="op">-</span><span class="dv">3</span> <span class="op">.</span>\tests\verify_featured_cases<span class="op">.</span><span class="fu">py</span> <span class="op">--</span>output <span class="op">.</span>\featured-cases<span class="op">.</span><span class="fu">json</span></span></code></pre></div>
+<h2 id="scope-and-sign-off">Scope and sign-off</h2>
+<p>The study uses synthetic observations. The next original numeric month after a severe event is a reversal proxy. Servicing records establish actual reversal, causation, closure and delinquency onset. Actual bureau submission, acknowledgment, subsequent reporting and the resulting consumer file require independent evidence. The largest native run covered 25,000 accounts. Windows PowerShell 5.1 compatibility was reviewed in source. The recorded runs used PowerShell 7.7.0 on Linux. A single database snapshot cannot authenticate concurrent changes to every saved copy of a valid incident date. Compare a retained authoritative source when available. <a href="requirements.html#br-13">Operational responsibilities</a></p>
+<p>CDIA is the official source. The public 2020 Credit Reporting Resource Guide, printed pp. 4-10, 4-11, 4-15 and 4-16, supports the historical field examples. The current 2026 field pages require authorized access and were outside this validation. The model lacks consumer bankruptcy or receivership indicators and their associated dates. A missing required rating at 05 or 13 can leave the historical date condition unresolved. The current authorized guide and applicable source records govern an actual submission. <a href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">CDIA Metro 2 resources</a> · <a href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">2020 field definitions</a> · <a href="https://autodealerplus.com/dealerzone/metro2.pdf#page=70">Historical Field 25 hierarchy</a></p>
+<p><strong>Imported-rating perimeter.</strong> The missing-rating screen examines null and blank values where the inspected historical standard requires 17B. A nonblank <code>X</code> or <code>D</code> at status 13 can pass this scoped check. Its conditional Field 25 requirement remains unresolved. Before applying the sandbox to imported data, validate these values against the applicable 17B code set and obtain servicing evidence for unsupported ratings. The final auditor found zero such cases at historically required statuses in the reference populations. The field model does not assign an onset in their place. <a href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">Historical 17B definitions</a> · <a href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">Authoritative current access</a></p>
+<p><strong>Disposition.</strong> The independent final auditor closed the earlier findings within their stated scope and issued <em>Ready after listed changes</em> for the reviewed package. The two final corrections have separate developer qualification in this revision. The record contains no subsequent independent disposition on these revised bytes. Andrew Goad retains the publication decision. <a href="retest.html">Retest walkthrough</a> · <a href="downloads/Metro2_Independent_Audit_Prompt.md">Audit handoff</a></p>
+</article></main><footer class="end"><div class="wrap">Andrew R. Goad · Consumer credit analytics <a href="index.html#evidence">Project evidence</a></div></footer></body></html>

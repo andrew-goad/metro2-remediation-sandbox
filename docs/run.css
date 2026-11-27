@@ -1,0 +1,20 @@
+.run-hero {background:var(--wash);border-bottom:1px solid var(--line);padding:clamp(38px,6vw,78px) 0}
+.run-hero h1 {max-width:18ch;font-size:clamp(2.7rem,5vw,4.9rem)}
+.run-hero .deck {max-width:55ch}
+.run-body {max-width:920px;margin:auto;padding-block:clamp(30px,5vw,64px)}
+.run-body section {margin-bottom:3.5rem}
+.run-body h2 {font-size:clamp(1.8rem,3vw,2.5rem);margin-bottom:1rem}
+.run-form {background:var(--wash);border-top:3px solid var(--teal);border-radius:5px;padding:1.2rem clamp(.8rem,3vw,1.8rem);margin:1.4rem 0}
+.run-controls {display:flex;flex-wrap:wrap;gap:1rem 2rem;align-items:end}
+.run-controls label {display:grid;gap:.25rem;font-size:.94rem;font-weight:650}
+.run-controls input,.run-controls select {background:white;border:1px solid #78958e;border-radius:4px;padding:.45rem .65rem;max-width:100%;width:15rem}
+.run-form pre {font-size:.84rem;margin:.95rem 0}
+.run-form button {background:var(--ink);color:white;border:0;border-radius:4px;padding:.5rem .9rem;font-weight:650}
+.run-form button:disabled {opacity:.6}
+.run-form [role=status] {display:inline-block;margin:.5rem;font-size:.93rem}
+.run-table {border-collapse:collapse;width:100%;margin:1rem 0}
+.run-table th,.run-table td {padding:.65rem .6rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.run-table thead {background:var(--wash)}
+.run-table td:not(:first-child) {font-variant-numeric:tabular-nums}
+.run-files dt {font-weight:650}.run-files dd {margin:0 0 .8rem}
+@media(max-width:600px){.run-table th,.run-table td{padding:.5rem .35rem}.run-controls label{width:100%}.run-form [role=status]{margin-left:0}}

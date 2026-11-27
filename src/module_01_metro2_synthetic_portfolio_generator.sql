@@ -1,6 +1,6 @@
 /* ====================================================================================================
 PROGRAM:  Metro 2 Synthetic Portfolio Generator — (Version 2)
-SUBTITLE: Module 1: Longtitudinal Tradeline Sample Builder
+SUBTITLE: Module 1: Longitudinal Tradeline Sample Builder
 FILE:     module_01_metro2_synthetic_portfolio_generator.sql
 AUTHOR:   Andrew R Goad
 DB:       PostgreSQL 15+
@@ -56,6 +56,7 @@ JOB AID — HOW TO USE THIS SCRIPT
       SET search_path TO module1, public;
 
    This script creates the schema if needed and sets the search_path for the current session.
+   Run the complete script as one unit. A validation or build error rolls back the refresh.
 
 3) INPUTS TO EDIT
    Most users should only edit the INSERT INTO module1_params statement near the top.
@@ -79,7 +80,7 @@ JOB AID — HOW TO USE THIS SCRIPT
    The script validates the user inputs and raises an error immediately if:
       - sample_size <= 0
       - any percentage is outside [0, 1]
-      - percentages do not sum to 1.000000
+      - percentages differ from 1.000000 by more than the accepted tolerance, 0.000001
 
 5) MAIN OUTPUT TABLES
    A) metro2_account_blueprint
@@ -120,7 +121,7 @@ A) PAYMENT HISTORY PROFILE (PHP)
    - 24-byte string
    - leftmost byte = most recent month represented
    - rightmost byte = oldest month represented
-   - in this project, leftmost byte is assumed to be one month prior to DOAI
+   - PHP byte 1 is the month before DOAI. Account Status (17A) describes the account as of DOAI.
 
    Example:
       DOAI = 2025-10-01
@@ -129,7 +130,7 @@ A) PAYMENT HISTORY PROFILE (PHP)
 
 B) PHP BYTES MODELED HERE
    B = no reported history
-   D = suppressed
+   D = no payment history information available (used to suppress a month in this sandbox)
    0 = current
    1 = 30 DPD
    2 = 60 DPD
@@ -195,28 +196,16 @@ It is not intended to reproduce every edge case of a production Metro 2 furnishi
 --   - CREATE SCHEMA IF NOT EXISTS creates the schema only if it does not already exist
 --   - SET search_path tells PostgreSQL where to create/find unqualified objects for this session
 -- ====================================================================================================
+BEGIN;
 CREATE SCHEMA IF NOT EXISTS module1;
 SET search_path TO module1, public;
 
 
 -- ====================================================================================================
--- SECTION 1: RESET
+-- SECTION 1: RESET THE SESSION'S PARAMETER TABLE
 -- ====================================================================================================
--- Purpose:
---   Drop prior objects so the script can be rerun cleanly.
---
--- Why this exists:
---   Synthetic portfolio development is iterative. This lets the script behave like a full refresh.
---
--- SQL mechanics:
---   - DROP TABLE IF EXISTS avoids errors if the table is not already present
---   - We drop downstream tables first, then upstream tables
--- ====================================================================================================
-DROP TABLE IF EXISTS module1_params;
-DROP TABLE IF EXISTS metro2_final;
-DROP TABLE IF EXISTS metro2_sample;
-DROP TABLE IF EXISTS metro2_status_history;
-DROP TABLE IF EXISTS metro2_account_blueprint;
+-- A permanent table with the same name in public or module1 belongs to its owner.
+DROP TABLE IF EXISTS pg_temp.module1_params;
 
 
 -- ====================================================================================================
@@ -235,7 +224,7 @@ DROP TABLE IF EXISTS metro2_account_blueprint;
 --   - CREATE TEMP TABLE creates a temporary table that exists only in the current session
 --   - The INSERT statement below is the main user-editable configuration row
 -- ====================================================================================================
-CREATE TEMP TABLE module1_params (
+CREATE TEMP TABLE pg_temp.module1_params (
     sample_size   INTEGER NOT NULL,
     pct_current   NUMERIC(12,6) NOT NULL,
     pct_mild      NUMERIC(12,6) NOT NULL,
@@ -244,7 +233,7 @@ CREATE TEMP TABLE module1_params (
     pct_derog     NUMERIC(12,6) NOT NULL
 );
 
-INSERT INTO module1_params (
+INSERT INTO pg_temp.module1_params (
     sample_size,
     pct_current,
     pct_mild,
@@ -294,14 +283,14 @@ BEGIN
         pct_mod,
         pct_severe,
         pct_derog
-    INTO
+    INTO STRICT
         v_sample_size,
         v_pct_current,
         v_pct_mild,
         v_pct_mod,
         v_pct_severe,
         v_pct_derog
-    FROM module1_params;
+    FROM pg_temp.module1_params;
 
     v_sum := v_pct_current + v_pct_mild + v_pct_mod + v_pct_severe + v_pct_derog;
 
@@ -324,11 +313,17 @@ BEGIN
 
     IF ABS(v_sum - 1.000000) > 0.000001 THEN
         RAISE EXCEPTION
-            'MODULE 1 PARAMETER VALIDATION FAILED: profile percentages must sum to 1.000000. Current sum = % (current:% mild:% mod:% severe:% derog:%)',
+            'MODULE 1 PARAMETER VALIDATION FAILED: profile percentages must sum to 1.000000 within 0.000001. Current sum = % (current:% mild:% mod:% severe:% derog:%)',
             v_sum, v_pct_current, v_pct_mild, v_pct_mod, v_pct_severe, v_pct_derog;
     END IF;
 END $$;
 
+-- Only after validation succeeds, replace this module's four persistent outputs.
+-- PostgreSQL restores the prior tables if a later step fails in this transaction.
+DROP TABLE IF EXISTS module1.metro2_final;
+DROP TABLE IF EXISTS module1.metro2_sample;
+DROP TABLE IF EXISTS module1.metro2_status_history;
+DROP TABLE IF EXISTS module1.metro2_account_blueprint;
 
 -- ====================================================================================================
 -- SECTION 4: BUILD ACCOUNT BLUEPRINT
@@ -353,7 +348,7 @@ END $$;
 --   A CTE is like a temporary named result set used only within one query.
 --   We use CTEs here because each step builds logically on the prior step.
 -- ====================================================================================================
-CREATE TABLE metro2_account_blueprint AS
+CREATE TABLE module1.metro2_account_blueprint AS
 WITH
 -- --------------------------------------------------------------------------------------------
 -- CTE: params
@@ -364,7 +359,7 @@ WITH
 --   SELECT * FROM module1_params simply exposes the parameters for later CTEs.
 -- --------------------------------------------------------------------------------------------
 params AS (
-    SELECT * FROM module1_params
+    SELECT * FROM pg_temp.module1_params
 ),
 
 -- --------------------------------------------------------------------------------------------
@@ -377,15 +372,16 @@ params AS (
 --
 -- SQL mechanics:
 --   - FLOOR(sample_size * pct_x) converts percentages into counts
---   - cumulative cutoffs allow a CASE statement later to classify each account id into a bucket
+--   - thresholds use cumulative floors. The final bucket receives the remaining IDs.
+--   - a later rare-pattern override can change the final profile label. Resizing the study can move an ID into another bucket.
 -- --------------------------------------------------------------------------------------------
 profile_cutoffs AS (
     SELECT
         sample_size,
         FLOOR(sample_size * pct_current)::INT AS curr_cut,
-        FLOOR(sample_size * (pct_current + pct_mild))::INT AS mild_cut,
-        FLOOR(sample_size * (pct_current + pct_mild + pct_mod))::INT AS mod_cut,
-        FLOOR(sample_size * (pct_current + pct_mild + pct_mod + pct_severe))::INT AS severe_cut
+        LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild)))::INT AS mild_cut,
+        LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild + pct_mod)))::INT AS mod_cut,
+        LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild + pct_mod + pct_severe)))::INT AS severe_cut
     FROM params
 ),
 
@@ -429,7 +425,7 @@ base_accounts AS (
 --   - md5(text) produces a deterministic hash string
 --   - substr(..., 1, 7) takes part of the hash
 --   - the hex is converted into an integer using bit casting
---   - multiple seeds allow different types of behavior to vary independently
+--   - the eight suffixes select separate deterministic streams; seven hex digits range from zero through 268435455
 -- --------------------------------------------------------------------------------------------
 seeds AS (
     SELECT
@@ -820,7 +816,7 @@ dated AS (
         months_reporting,
         CASE
             WHEN active_flag = 1 THEN DATE '2025-10-01'
-            ELSE (DATE '2025-10-01' - ((1 + (account * 13 % 42)) * INTERVAL '1 month'))::date
+            ELSE (DATE '2025-10-01' - ((1 + (account::bigint * 13 % 42)) * INTERVAL '1 month'))::date
         END AS end_date
     FROM fitted
 ),
@@ -884,7 +880,7 @@ SELECT
 FROM blueprint
 ORDER BY account;
 
-CREATE INDEX ix_blueprint_account ON metro2_account_blueprint (account);
+CREATE UNIQUE INDEX ix_blueprint_account ON module1.metro2_account_blueprint (account);
 
 
 -- ====================================================================================================
@@ -906,7 +902,7 @@ CREATE INDEX ix_blueprint_account ON metro2_account_blueprint (account);
 --       1 = one month older
 --   - pattern placement uses perf_age and episode_start_age
 -- ====================================================================================================
-CREATE TABLE metro2_status_history AS
+CREATE TABLE module1.metro2_status_history AS
 WITH
 -- --------------------------------------------------------------------------------------------
 -- CTE: performance_months
@@ -930,7 +926,7 @@ performance_months AS (
             PARTITION BY a.account
             ORDER BY gs DESC
         ) - 1 AS perf_age
-    FROM metro2_account_blueprint a
+    FROM module1.metro2_account_blueprint a
     CROSS JOIN LATERAL generate_series(
         a.start_date - INTERVAL '1 month',
         a.end_date   - INTERVAL '1 month',
@@ -976,7 +972,7 @@ status_history_raw AS (
 --   Overlay suppression after raw pattern logic is created.
 --
 -- Why this exists:
---   Suppression is a visibility treatment layered on top of behavioral state.
+--   This original D means payment history was unavailable to the study. It supplies no evidence of current performance.
 -- --------------------------------------------------------------------------------------------
 SELECT
     account,
@@ -991,8 +987,8 @@ SELECT
 FROM status_history_raw
 ORDER BY account, byte_date DESC;
 
-CREATE INDEX ix_status_history_account_byte_date
-    ON metro2_status_history (account, byte_date DESC);
+CREATE UNIQUE INDEX ix_status_history_account_byte_date
+    ON module1.metro2_status_history (account, byte_date DESC);
 
 
 -- ====================================================================================================
@@ -1012,7 +1008,7 @@ CREATE INDEX ix_status_history_account_byte_date
 --   - COALESCE(..., 'B') fills missing older months with B
 --   - STRING_AGG assembles the 24 bytes into one PHP string
 -- ====================================================================================================
-CREATE TABLE metro2_sample AS
+CREATE TABLE module1.metro2_sample AS
 WITH
 -- --------------------------------------------------------------------------------------------
 -- CTE: snapshot_rows
@@ -1023,7 +1019,7 @@ snapshot_rows AS (
     SELECT
         a.account,
         gs::date AS date_of_account_information
-    FROM metro2_account_blueprint a
+    FROM module1.metro2_account_blueprint a
     CROSS JOIN LATERAL generate_series(
         a.start_date,
         a.end_date,
@@ -1066,14 +1062,14 @@ SELECT
     b.date_of_account_information,
     STRING_AGG(COALESCE(h.status, 'B'), '' ORDER BY b.pos) AS php
 FROM snapshot_bytes b
-LEFT JOIN metro2_status_history h
+LEFT JOIN module1.metro2_status_history h
     ON h.account = b.account
    AND h.byte_date = b.byte_date
 GROUP BY b.account, b.date_of_account_information
 ORDER BY b.account, b.date_of_account_information DESC;
 
-CREATE INDEX ix_sample_account_doai
-    ON metro2_sample (account, date_of_account_information DESC);
+CREATE UNIQUE INDEX ix_sample_account_doai
+    ON module1.metro2_sample (account, date_of_account_information DESC);
 
 
 -- ====================================================================================================
@@ -1088,7 +1084,7 @@ CREATE INDEX ix_sample_account_doai
 -- Major improvement vs Version 1:
 --   We derive this table directly from metro2_status_history rather than re-exploding metro2_sample.
 -- ====================================================================================================
-CREATE TABLE metro2_final AS
+CREATE TABLE module1.metro2_final AS
 WITH
 -- --------------------------------------------------------------------------------------------
 -- CTE: latest_status
@@ -1104,7 +1100,7 @@ latest_status AS (
         account,
         byte_date AS php_left_byte_date,
         status AS latest_byte
-    FROM metro2_status_history
+    FROM module1.metro2_status_history
     ORDER BY account, byte_date DESC
 ),
 
@@ -1122,7 +1118,7 @@ full_timeline AS (
         STRING_AGG(status, '' ORDER BY byte_date DESC) AS full_php,
         MAX(byte_date) AS php_left_byte_date,
         MIN(byte_date) AS php_right_byte_date
-    FROM metro2_status_history
+    FROM module1.metro2_status_history
     GROUP BY account
 ),
 
@@ -1138,7 +1134,7 @@ latest_doai AS (
     SELECT
         account,
         end_date AS latest_doai
-    FROM metro2_account_blueprint
+    FROM module1.metro2_account_blueprint
 ),
 
 -- --------------------------------------------------------------------------------------------
@@ -1171,7 +1167,7 @@ ordered_status AS (
             ORDER BY h.byte_date DESC
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) AS non_adverse_seen
-    FROM metro2_status_history h
+    FROM module1.metro2_status_history h
 ),
 
 -- --------------------------------------------------------------------------------------------
@@ -1186,7 +1182,8 @@ ordered_status AS (
 -- SQL mechanics:
 --   - Restrict to rows where non_adverse_seen = 0
 --     meaning we have not yet encountered a current/non-adverse break
---   - Among those rows, take the oldest delinquency byte_date (MIN byte_date)
+--   - Only numeric delinquency (1–6) supplies a date. A run of major codes alone can yield NULL.
+--   - An original D interrupts this synthetic run; an incomplete history cannot establish a real-world DOFD.
 -- --------------------------------------------------------------------------------------------
 current_adverse_run AS (
     SELECT
@@ -1214,7 +1211,7 @@ joined AS (
         l.latest_byte,
         c.date_of_first_delinquency,
         b.close_status_code
-    FROM metro2_account_blueprint b
+    FROM module1.metro2_account_blueprint b
     JOIN latest_doai d USING (account)
     JOIN full_timeline f USING (account)
     JOIN latest_status l USING (account)
@@ -1224,12 +1221,12 @@ joined AS (
 -- --------------------------------------------------------------------------------------------
 -- Final SELECT for metro2_final
 -- Purpose:
---   Map the latest state into Metro 2-like final fields.
+--   Model 17A as of latest_doai. The generator uses the previous month’s PHP as a proxy when current-cycle servicing data is unavailable.
 --
 -- Business logic:
 --   - close_status_code takes precedence over latest_byte when the account is closed
---   - payment rating uses synthetic conventions from this module
---   - DOFD only appears for currently adverse non-closed accounts
+--   - a latest original D on an open account supplies no 17A, 17B or DOFD under the generator rules
+--   - DOFD describes the active adverse run. Consumer Information Indicators and their Field 25 exceptions are outside these synthetic inputs.
 -- --------------------------------------------------------------------------------------------
 SELECT
     account,
@@ -1288,8 +1285,8 @@ SELECT
 FROM joined
 ORDER BY account;
 
-CREATE INDEX ix_final_account
-    ON metro2_final (account);
+CREATE UNIQUE INDEX ix_final_account
+    ON module1.metro2_final (account);
 
 
 -- ====================================================================================================
@@ -1310,7 +1307,7 @@ CREATE INDEX ix_final_account
 -- Why:
 --   Confirms the configured sample size and portfolio mix used for the run
 -- --------------------------------------------------------------------------------------------
-SELECT * FROM module1_params;
+SELECT * FROM pg_temp.module1_params;
 
 -- --------------------------------------------------------------------------------------------
 -- QA 2: Review the resulting profile mix
@@ -1322,7 +1319,7 @@ SELECT * FROM module1_params;
 SELECT
     profile_type,
     COUNT(*) AS account_count
-FROM metro2_account_blueprint
+FROM module1.metro2_account_blueprint
 GROUP BY profile_type
 ORDER BY profile_type;
 
@@ -1336,7 +1333,7 @@ ORDER BY profile_type;
 SELECT
     COALESCE(close_status_code, 'OPEN') AS close_status_code,
     COUNT(*) AS account_count
-FROM metro2_account_blueprint
+FROM module1.metro2_account_blueprint
 GROUP BY COALESCE(close_status_code, 'OPEN')
 ORDER BY close_status_code;
 
@@ -1346,7 +1343,7 @@ ORDER BY close_status_code;
 --   Lets users inspect the computational backbone directly
 -- --------------------------------------------------------------------------------------------
 SELECT *
-FROM metro2_status_history
+FROM module1.metro2_status_history
 ORDER BY account, byte_date DESC
 LIMIT 100;
 
@@ -1356,7 +1353,7 @@ LIMIT 100;
 --   Lets users inspect the synthetic input table account / DOAI / PHP
 -- --------------------------------------------------------------------------------------------
 SELECT *
-FROM metro2_sample
+FROM module1.metro2_sample
 ORDER BY account, date_of_account_information DESC
 LIMIT 100;
 
@@ -1366,7 +1363,7 @@ LIMIT 100;
 --   Lets users inspect the main deliverable of Module 1
 -- --------------------------------------------------------------------------------------------
 SELECT *
-FROM metro2_final
+FROM module1.metro2_final
 ORDER BY account
 LIMIT 100;
 
@@ -1376,7 +1373,7 @@ LIMIT 100;
 --   Specifically surfaces statuses 13 and 61–65
 -- --------------------------------------------------------------------------------------------
 SELECT *
-FROM metro2_final
+FROM module1.metro2_final
 WHERE account_status_17A IN ('13','61','62','63','64','65')
 ORDER BY account
 LIMIT 50;
@@ -1387,7 +1384,7 @@ LIMIT 50;
 --   Surfaces the rare remediation-style scenario included in the synthetic population
 -- --------------------------------------------------------------------------------------------
 SELECT *
-FROM metro2_final
+FROM module1.metro2_final
 WHERE profile_type = 'REVERSED_MAJOR_DEROG'
 ORDER BY account;
 
@@ -1399,7 +1396,7 @@ ORDER BY account;
 SELECT
     account_status_17A,
     COUNT(*) AS account_count
-FROM metro2_final
+FROM module1.metro2_final
 GROUP BY account_status_17A
 ORDER BY account_status_17A;
 
@@ -1419,7 +1416,9 @@ SELECT
     payment_rating_17B,
     date_of_first_delinquency,
     full_php
-FROM metro2_final
+FROM module1.metro2_final
 WHERE account_status_17A IN ('71','78','80','82','83','84','93','94','95','96','97')
 ORDER BY account
 LIMIT 100;
+
+COMMIT;

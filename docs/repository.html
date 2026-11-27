@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Repository preview · Metro 2 Remediation Sandbox</title><link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#content">Skip to content</a><header class="preview-head"><div class="wrap"><p class="eyebrow">GitHub repository preview</p><nav class="actions" aria-label="Project previews"><a href="index.html">Teaching page</a><a href="repository.html">Repository</a><a href="release.html">Release</a><a href="manual-review/index.html">Manual review</a></nav></div></header>
+<main id="content" class="preview-body"><h1 id="metro-2-remediation-sandbox">Metro 2 Remediation Sandbox</h1>
+<p>A bank error can affect a customer’s credit reporting after the underlying issue ends. This PostgreSQL project follows each synthetic account from the first affected month through a proposed correction, a documented cure, or the next monthly review. The account explorer pairs each proposed decision with the original account fields and dated payment history.</p>
+<p><a href="index.html">Open the teaching exhibit</a> · <a href="run.html">Run your own simulation</a> · <a href="scale/index.html">Explore 25,000 accounts</a> · <a href="manual-review/index.html">Open the monthly review queue</a></p>
+<h2 id="start-with-account-24064">Start with account 24064</h2>
+<p>The customer was already 30–59 days late in November 2023. The bank issue began in December, ended in January, and the account continued to fall further behind. The history cannot tell us whether the customer would have caught up without the bank’s error. The bank bears that uncertainty in this exercise. It preserves the pre-issue delinquency and corrects the affected months while waiting for evidence of recovery.</p>
+<table>
+<thead>
+<tr class="header">
+<th>History month</th>
+<th>Original reporting</th>
+<th>Sandbox decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>November 2023, before the issue</td>
+<td><code>1</code></td>
+<td>Keep November’s accurate delinquency.</td>
+</tr>
+<tr class="even">
+<td>December 2023 and January 2024, during the issue</td>
+<td><code>2</code>, <code>3</code></td>
+<td>Change each to <code>D</code>, meaning no payment history reported for that month.</td>
+</tr>
+<tr class="odd">
+<td>February through April 2024, after the issue</td>
+<td><code>4</code>, <code>5</code>, <code>6</code></td>
+<td>Extend the credit-impact window and change all three to <code>D</code>. The original months show continuing delinquency.</td>
+</tr>
+<tr class="even">
+<td>May 1, 2024 reporting snapshot</td>
+<td>April is the latest history month. None of the three post-issue months is current.</td>
+<td>Cure start and confirmation are unknown. Keep the account open for review. May’s original history will appear in the June 1 snapshot.</td>
+</tr>
+</tbody>
+</table>
+<p>On May 1 the bank elects current status <code>11</code> and proposes clearing the active date of first delinquency. Its internal modeled payment rating changes from <code>6</code> to <code>0</code>. Standard Field 17B is blank at both status <code>84</code> and <code>11</code> under the historical guide. The reviewer can inspect all five proposed changes alongside the original observations. <a href="scale/index.html#account=24064">Inspect account 24064 in the 25,000-account study</a></p>
+<h2 id="follow-the-evidence-to-the-next-decision">Follow the evidence to the next decision</h2>
+<ul>
+<li><strong>Account 175 shows an observed cure.</strong> Its bank issue ran from April 2024 through March 2025. February, March and April 2025 showed <code>1</code>, <code>2</code>, <code>1</code>. The bank corrects all three. Original May, June and July each showed <code>0</code>. May starts the cure and July confirms it. The correction window ends in April and monthly review closes. <a href="index.html#account=175">Account 175 in the 1,000-account replay</a></li>
+<li><strong>Account 327 separates reversal from cure.</strong> The issue ran from December 2024 through January 2025. A March charge-off occurred during continuing credit impact. April’s original <code>5</code> is the model’s proxy for reversal and still denotes delinquency. On the October 1 snapshot, the bank retains the tradeline, corrects nine months and has just one current observation toward cure. October is the next history month to request. <a href="index.html#account=327">Account 327 in the 1,000-account replay</a></li>
+<li><strong>Account 17899 explains the date of first delinquency (Field 25).</strong> December 2024’s original <code>1</code> stays. The January 1 reconstruction shows status <code>71</code> and a December 1 delinquency date. The bank issue covers January alone. On February 1 the retained source still shows <code>71</code>. The bank changes January’s <code>1</code> to <code>D</code>, elects current status <code>11</code> and clears the active date. The internal rating moves from <code>1</code> to <code>0</code>. The historical standard leaves Field 17B blank at both statuses. February’s history first appears March 1. Cure has yet to be established. <a href="scale/index.html#account=17899">Account 17899 in the 25,000-account study</a> · <a href="index.html#field-25">Standard Field 25 format</a></li>
+</ul>
+<p>Account status (17A) describes the condition on the Date of Account Information. The first Payment History Profile (PHP) byte describes the previous reporting month. Only original current months count toward cure. An original <code>D</code> means that month’s payment history is unavailable. It supplies no evidence that an earlier delinquency ended. An unrelated later status or delinquency onset can remain accurate when an older month needs correction.</p>
+<p>Read the <a href="requirements.html">business requirements</a> for the rules behind these cases and the <a href="validation.html">validation report</a> for the observed results.</p>
+<h2 id="run-your-own-simulation">Run your own simulation</h2>
+<p>Use the same tool to test a pre-production credit-reporting strategy. In two runs of the same 1,000 accounts, moving the cure threshold from three to four original current months changed confirmed cures from 555 to 494 and open monthly reviews from 133 to 147. Account 57 shows which month the reviewer needs next. Account 975 explains why one more tradeline receives a deletion proposal. Three current months establish a cure before the later charge-off. A four-month requirement keeps the charge-off inside the credit-impact window. <a href="run.html#case-975">Compare the two decisions</a></p>
+<ol type="1">
+<li>Download and extract the PowerShell study kit. Open PowerShell in the folder containing <code>src</code>, <code>tools</code> and <code>explorer-template</code>. Use a local PostgreSQL server and a login that can create a study database.</li>
+<li>Run <code>./tools/Run-Metro2Study.ps1 -AccountCount 1000 -CureMonths 3</code>. Change the threshold to <code>4</code> for a second run. Each run creates a fresh database and writes a new result folder.</li>
+<li>Use the guide’s commands to open your own account explorer and compare the dated evidence in the two runs. Keep the run receipts, configured SQL, reviewer handoff and comparison together.</li>
+</ol>
+<p><a href="run.html">Configure your PowerShell commands</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Download the self-contained kit</a> · <a href="downloads/Metro2_Threshold_Comparison_1000.json">Inspect the measured comparison</a></p>
+<h2 id="two-sql-modules">Two SQL modules</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th>What you can inspect or reuse</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="code/generator.html">Synthetic portfolio generator</a></td>
+<td>Account blueprints, one original observation per account-month, 24-position history snapshots and account-level outputs. The generator can be run independently to test reporting logic with synthetic data.</td>
+</tr>
+<tr class="even">
+<td><a href="code/engine.html">Remediation engine</a></td>
+<td>Incident dates, credit-impact windows, cure evidence, treatment decisions and original versus proposed fields. The engine preserves accurate pre-issue months and can reevaluate the same incident as new history arrives.</td>
+</tr>
+</tbody>
+</table>
+<p>The 25,000-account study contains <strong>873,193 original account-months</strong>. It proposes <strong>11,071 monthly corrections</strong> across 4,028 accounts and <strong>466 whole-tradeline deletions</strong>. It flags <strong>3,048 accounts</strong> for the next cure review. Account 987 shows the deletion route when the latest in-window charge-off has no modeled reversal. <a href="index.html#account=987">Account 987 in the 1,000-account replay</a></p>
+<p>Of the 2,340 proposed date clears, 329 preserve an earlier delinquent month that predates the bank issue. A separate source check identifies 130 retained accounts already missing a date called for by the historical field rules, including 129 at paid derogatory statuses 61–65. A separate servicing handoff identifies 26 missing required ratings. Three status-65 accounts are on both field worklists. The cure queue and the date investigation answer different questions. <a href="review.html#manual-review-and-delinquency-date-audit">Field 25 findings</a></p>
+<h2 id="explore-or-reproduce-the-study">Explore or reproduce the study</h2>
+<ul>
+<li>Open <code>docs/index.html</code> from an extracted copy for the offline exhibit. The <a href="executive_dashboard_preview.png">original dashboard</a> illustrates a separate 500-account study scaled by 10,000.</li>
+<li><a href="downloads/Metro2_PowerShell_Study.zip">Run the study on Windows</a> or <a href="downloads/Metro2_DBeaver_Export.zip">export retained DBeaver results</a> from <code>metro2_lab</code>, schemas <code>module1</code> and <code>module2</code>.</li>
+<li>Inspect the <a href="downloads/Metro2_Manual_Review_25000.xlsx">review workbook</a>, <a href="downloads/Metro2_Field25_Source_Exceptions_25000.csv">Field 25 source exceptions</a>, <a href="review.html#audit">code audit</a>, <a href="review.html#changelog">changelog</a> and <a href="downloads/Metro2_PowerShell_Study.zip">regression tests</a>.</li>
+</ul>
+<p>The independent audit reproduced the four featured cases, both study sizes and the three- versus four-month experiment. It closed the earlier hold and identified two operator errors that could still change a result. The current kit checks the identity and contents of a saved comparison input. It also checks the saved cure threshold before rerunning a bank incident. The 25,000-account reference keeps the original run receipt and the SQL that produced it. <a href="retest.html">Release corrections and evidence</a></p>
+<h2 id="reporting-guidance">Reporting guidance</h2>
+<p>CDIA maintains the Metro 2® format and lists the 2026 Credit Reporting Resource Guide®. Approved users can access the current field rules. The detailed field examples use the publicly reviewable 2020 definitions. CDIA retired status 05 in April 2022. The three-current-month cure threshold, severe-event reversal proxy and choice of favorable as-of status for an affected account are sandbox policy choices. <a href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">Current CDIA guide and access</a> · <a href="https://www.cdiaonline.org/publications/">CDIA publications</a> · <a href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">Field 17B, 2020 guide</a> · <a href="https://www.cdiaonline.org/ondemand-retirement-of-account-status-05-transferred/">CDIA retirement of status 05</a> · <a href="index.html#field-25">Field 25 teaching notes</a></p>
+</main><footer class="end"><div class="wrap">Andrew R. Goad · Consumer credit analytics <a href="index.html">Teaching page</a></div></footer></body></html>

@@ -1,0 +1,1424 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Module 1 · Synthetic portfolio generator</title><link rel="stylesheet" href="../style.css"><style>pre.sql {max-height:75vh; overflow:auto; padding:14px 12px; white-space:pre;} pre.sql span:target {background:#33596a} pre.sql a {color:#a2cebe; margin-right:.7rem} main {padding-block:2rem}</style></head><body><main class="wrap"><p><a href="../index.html">Return to the study</a> · <a href="../review.html">Changelog and audit</a></p><h1 style="font-size:clamp(2rem,4vw,3.3rem);max-width:33ch">Module 1 · Synthetic portfolio generator</h1><p>Runnable SQL is included in the <a href="../downloads/Metro2_PowerShell_Study.zip">PowerShell study kit</a>.</p><pre class="sql" tabindex="0" aria-label="SQL source"><code><span id="L1"><a aria-label="Line 1" href="#L1">   1</a> /* ====================================================================================================</span>
+<span id="L2"><a aria-label="Line 2" href="#L2">   2</a> PROGRAM:  Metro 2 Synthetic Portfolio Generator — (Version 2)</span>
+<span id="L3"><a aria-label="Line 3" href="#L3">   3</a> SUBTITLE: Module 1: Longitudinal Tradeline Sample Builder</span>
+<span id="L4"><a aria-label="Line 4" href="#L4">   4</a> FILE:     module_01_metro2_synthetic_portfolio_generator.sql</span>
+<span id="L5"><a aria-label="Line 5" href="#L5">   5</a> AUTHOR:   Andrew R Goad</span>
+<span id="L6"><a aria-label="Line 6" href="#L6">   6</a> DB:       PostgreSQL 15+</span>
+<span id="L7"><a aria-label="Line 7" href="#L7">   7</a> PURPOSE:  Build a synthetic Metro 2-style portfolio for analytics, SQL learning, QA practice,</span>
+<span id="L8"><a aria-label="Line 8" href="#L8">   8</a>           GitHub portfolio use, and later remediation simulation modules.</span>
+<span id="L9"><a aria-label="Line 9" href="#L9">   9</a> </span>
+<span id="L10"><a aria-label="Line 10" href="#L10">  10</a> AUTHORING INTENT</span>
+<span id="L11"><a aria-label="Line 11" href="#L11">  11</a> ----------------</span>
+<span id="L12"><a aria-label="Line 12" href="#L12">  12</a> This script is written as BOTH:</span>
+<span id="L13"><a aria-label="Line 13" href="#L13">  13</a> 1) a working synthetic data generator, and</span>
+<span id="L14"><a aria-label="Line 14" href="#L14">  14</a> 2) a teaching tool for users who want to learn the SQL and methodology step by step.</span>
+<span id="L15"><a aria-label="Line 15" href="#L15">  15</a> </span>
+<span id="L16"><a aria-label="Line 16" href="#L16">  16</a> VERSION HISTORY</span>
+<span id="L17"><a aria-label="Line 17" href="#L17">  17</a> ---------------</span>
+<span id="L18"><a aria-label="Line 18" href="#L18">  18</a> Version 1:</span>
+<span id="L19"><a aria-label="Line 19" href="#L19">  19</a> - Built metro2_sample first</span>
+<span id="L20"><a aria-label="Line 20" href="#L20">  20</a> - Then repeatedly exploded PHP to derive stitched outputs</span>
+<span id="L21"><a aria-label="Line 21" href="#L21">  21</a> - Included QA ideas, but the computational design was heavier than necessary</span>
+<span id="L22"><a aria-label="Line 22" href="#L22">  22</a> </span>
+<span id="L23"><a aria-label="Line 23" href="#L23">  23</a> Version 2:</span>
+<span id="L24"><a aria-label="Line 24" href="#L24">  24</a> - Materializes month-level account performance once in metro2_status_history</span>
+<span id="L25"><a aria-label="Line 25" href="#L25">  25</a> - Uses that table as the central truth source</span>
+<span id="L26"><a aria-label="Line 26" href="#L26">  26</a> - Derives metro2_sample and metro2_final from the same reusable month-level history</span>
+<span id="L27"><a aria-label="Line 27" href="#L27">  27</a> - Improves performance, readability, and auditability</span>
+<span id="L28"><a aria-label="Line 28" href="#L28">  28</a> - Keeps QA in the same script now that the target environment is local PostgreSQL + DBeaver</span>
+<span id="L29"><a aria-label="Line 29" href="#L29">  29</a> </span>
+<span id="L30"><a aria-label="Line 30" href="#L30">  30</a> CORE DESIGN PRINCIPLE</span>
+<span id="L31"><a aria-label="Line 31" href="#L31">  31</a> ---------------------</span>
+<span id="L32"><a aria-label="Line 32" href="#L32">  32</a> PHP is an output artifact, not the computational backbone.</span>
+<span id="L33"><a aria-label="Line 33" href="#L33">  33</a> </span>
+<span id="L34"><a aria-label="Line 34" href="#L34">  34</a> This means:</span>
+<span id="L35"><a aria-label="Line 35" href="#L35">  35</a> - We do NOT repeatedly explode and reassemble PHP to compute business logic</span>
+<span id="L36"><a aria-label="Line 36" href="#L36">  36</a> - Instead, we compute a clean month-level status history first</span>
+<span id="L37"><a aria-label="Line 37" href="#L37">  37</a> - Then PHP becomes a rendered view over that history</span>
+<span id="L38"><a aria-label="Line 38" href="#L38">  38</a> </span>
+<span id="L39"><a aria-label="Line 39" href="#L39">  39</a> This is both:</span>
+<span id="L40"><a aria-label="Line 40" href="#L40">  40</a> - more efficient</span>
+<span id="L41"><a aria-label="Line 41" href="#L41">  41</a> - easier to debug</span>
+<span id="L42"><a aria-label="Line 42" href="#L42">  42</a> - easier to explain to future readers</span>
+<span id="L43"><a aria-label="Line 43" href="#L43">  43</a> </span>
+<span id="L44"><a aria-label="Line 44" href="#L44">  44</a> ======================================================================================================</span>
+<span id="L45"><a aria-label="Line 45" href="#L45">  45</a> JOB AID — HOW TO USE THIS SCRIPT</span>
+<span id="L46"><a aria-label="Line 46" href="#L46">  46</a> ======================================================================================================</span>
+<span id="L47"><a aria-label="Line 47" href="#L47">  47</a> </span>
+<span id="L48"><a aria-label="Line 48" href="#L48">  48</a> 1) INSTALL / ENVIRONMENT ASSUMPTION</span>
+<span id="L49"><a aria-label="Line 49" href="#L49">  49</a>    This script is intended for local PostgreSQL inside DBeaver.</span>
+<span id="L50"><a aria-label="Line 50" href="#L50">  50</a>    It is not optimized for browser sandboxes like DB Fiddle.</span>
+<span id="L51"><a aria-label="Line 51" href="#L51">  51</a> </span>
+<span id="L52"><a aria-label="Line 52" href="#L52">  52</a> 2) RECOMMENDED DATABASE / SCHEMA SETUP</span>
+<span id="L53"><a aria-label="Line 53" href="#L53">  53</a>    Example:</span>
+<span id="L54"><a aria-label="Line 54" href="#L54">  54</a>       CREATE DATABASE metro2_lab;</span>
+<span id="L55"><a aria-label="Line 55" href="#L55">  55</a>       CREATE SCHEMA IF NOT EXISTS module1;</span>
+<span id="L56"><a aria-label="Line 56" href="#L56">  56</a>       SET search_path TO module1, public;</span>
+<span id="L57"><a aria-label="Line 57" href="#L57">  57</a> </span>
+<span id="L58"><a aria-label="Line 58" href="#L58">  58</a>    This script creates the schema if needed and sets the search_path for the current session.</span>
+<span id="L59"><a aria-label="Line 59" href="#L59">  59</a>    Run the complete script as one unit. A validation or build error rolls back the refresh.</span>
+<span id="L60"><a aria-label="Line 60" href="#L60">  60</a> </span>
+<span id="L61"><a aria-label="Line 61" href="#L61">  61</a> 3) INPUTS TO EDIT</span>
+<span id="L62"><a aria-label="Line 62" href="#L62">  62</a>    Most users should only edit the INSERT INTO module1_params statement near the top.</span>
+<span id="L63"><a aria-label="Line 63" href="#L63">  63</a>    Inputs:</span>
+<span id="L64"><a aria-label="Line 64" href="#L64">  64</a>       - sample_size</span>
+<span id="L65"><a aria-label="Line 65" href="#L65">  65</a>       - pct_current</span>
+<span id="L66"><a aria-label="Line 66" href="#L66">  66</a>       - pct_mild</span>
+<span id="L67"><a aria-label="Line 67" href="#L67">  67</a>       - pct_mod</span>
+<span id="L68"><a aria-label="Line 68" href="#L68">  68</a>       - pct_severe</span>
+<span id="L69"><a aria-label="Line 69" href="#L69">  69</a>       - pct_derog</span>
+<span id="L70"><a aria-label="Line 70" href="#L70">  70</a> </span>
+<span id="L71"><a aria-label="Line 71" href="#L71">  71</a>    Defaults:</span>
+<span id="L72"><a aria-label="Line 72" href="#L72">  72</a>       sample_size = 5000000</span>
+<span id="L73"><a aria-label="Line 73" href="#L73">  73</a>       current     = 70%</span>
+<span id="L74"><a aria-label="Line 74" href="#L74">  74</a>       mild        = 15%</span>
+<span id="L75"><a aria-label="Line 75" href="#L75">  75</a>       mod         =  8%</span>
+<span id="L76"><a aria-label="Line 76" href="#L76">  76</a>       severe      =  4%</span>
+<span id="L77"><a aria-label="Line 77" href="#L77">  77</a>       derog       =  3%</span>
+<span id="L78"><a aria-label="Line 78" href="#L78">  78</a> </span>
+<span id="L79"><a aria-label="Line 79" href="#L79">  79</a> 4) VALIDATION</span>
+<span id="L80"><a aria-label="Line 80" href="#L80">  80</a>    The script validates the user inputs and raises an error immediately if:</span>
+<span id="L81"><a aria-label="Line 81" href="#L81">  81</a>       - sample_size &lt;= 0</span>
+<span id="L82"><a aria-label="Line 82" href="#L82">  82</a>       - any percentage is outside [0, 1]</span>
+<span id="L83"><a aria-label="Line 83" href="#L83">  83</a>       - percentages differ from 1.000000 by more than the accepted tolerance, 0.000001</span>
+<span id="L84"><a aria-label="Line 84" href="#L84">  84</a> </span>
+<span id="L85"><a aria-label="Line 85" href="#L85">  85</a> 5) MAIN OUTPUT TABLES</span>
+<span id="L86"><a aria-label="Line 86" href="#L86">  86</a>    A) metro2_account_blueprint</span>
+<span id="L87"><a aria-label="Line 87" href="#L87">  87</a>       Account-level generation metadata</span>
+<span id="L88"><a aria-label="Line 88" href="#L88">  88</a> </span>
+<span id="L89"><a aria-label="Line 89" href="#L89">  89</a>    B) metro2_status_history</span>
+<span id="L90"><a aria-label="Line 90" href="#L90">  90</a>       One row per account per represented month</span>
+<span id="L91"><a aria-label="Line 91" href="#L91">  91</a>       This is the core month-level truth table</span>
+<span id="L92"><a aria-label="Line 92" href="#L92">  92</a> </span>
+<span id="L93"><a aria-label="Line 93" href="#L93">  93</a>    C) metro2_sample</span>
+<span id="L94"><a aria-label="Line 94" href="#L94">  94</a>       Longitudinal snapshot table with:</span>
+<span id="L95"><a aria-label="Line 95" href="#L95">  95</a>          - account</span>
+<span id="L96"><a aria-label="Line 96" href="#L96">  96</a>          - date_of_account_information</span>
+<span id="L97"><a aria-label="Line 97" href="#L97">  97</a>          - php</span>
+<span id="L98"><a aria-label="Line 98" href="#L98">  98</a> </span>
+<span id="L99"><a aria-label="Line 99" href="#L99">  99</a>    D) metro2_final</span>
+<span id="L100"><a aria-label="Line 100" href="#L100"> 100</a>       Final account-level output table with:</span>
+<span id="L101"><a aria-label="Line 101" href="#L101"> 101</a>          - latest_doai</span>
+<span id="L102"><a aria-label="Line 102" href="#L102"> 102</a>          - date_closed</span>
+<span id="L103"><a aria-label="Line 103" href="#L103"> 103</a>          - full_php</span>
+<span id="L104"><a aria-label="Line 104" href="#L104"> 104</a>          - account_status_17A</span>
+<span id="L105"><a aria-label="Line 105" href="#L105"> 105</a>          - payment_rating_17B</span>
+<span id="L106"><a aria-label="Line 106" href="#L106"> 106</a>          - date_of_first_delinquency</span>
+<span id="L107"><a aria-label="Line 107" href="#L107"> 107</a> </span>
+<span id="L108"><a aria-label="Line 108" href="#L108"> 108</a> 6) QA / REVIEW</span>
+<span id="L109"><a aria-label="Line 109" href="#L109"> 109</a>    The final section contains review queries to help inspect the output.</span>
+<span id="L110"><a aria-label="Line 110" href="#L110"> 110</a>    These queries are intended for:</span>
+<span id="L111"><a aria-label="Line 111" href="#L111"> 111</a>       - learning</span>
+<span id="L112"><a aria-label="Line 112" href="#L112"> 112</a>       - screenshots</span>
+<span id="L113"><a aria-label="Line 113" href="#L113"> 113</a>       - portfolio walkthroughs</span>
+<span id="L114"><a aria-label="Line 114" href="#L114"> 114</a>       - sanity checks</span>
+<span id="L115"><a aria-label="Line 115" href="#L115"> 115</a> </span>
+<span id="L116"><a aria-label="Line 116" href="#L116"> 116</a> ======================================================================================================</span>
+<span id="L117"><a aria-label="Line 117" href="#L117"> 117</a> METRO 2 COMMENT AID USED IN THIS MODULE</span>
+<span id="L118"><a aria-label="Line 118" href="#L118"> 118</a> ======================================================================================================</span>
+<span id="L119"><a aria-label="Line 119" href="#L119"> 119</a> </span>
+<span id="L120"><a aria-label="Line 120" href="#L120"> 120</a> A) PAYMENT HISTORY PROFILE (PHP)</span>
+<span id="L121"><a aria-label="Line 121" href="#L121"> 121</a>    - 24-byte string</span>
+<span id="L122"><a aria-label="Line 122" href="#L122"> 122</a>    - leftmost byte = most recent month represented</span>
+<span id="L123"><a aria-label="Line 123" href="#L123"> 123</a>    - rightmost byte = oldest month represented</span>
+<span id="L124"><a aria-label="Line 124" href="#L124"> 124</a>    - PHP byte 1 is the month before DOAI. Account Status (17A) describes the account as of DOAI.</span>
+<span id="L125"><a aria-label="Line 125" href="#L125"> 125</a> </span>
+<span id="L126"><a aria-label="Line 126" href="#L126"> 126</a>    Example:</span>
+<span id="L127"><a aria-label="Line 127" href="#L127"> 127</a>       DOAI = 2025-10-01</span>
+<span id="L128"><a aria-label="Line 128" href="#L128"> 128</a>       PHP byte 1 = 2025-09-01</span>
+<span id="L129"><a aria-label="Line 129" href="#L129"> 129</a>       PHP byte 24 = 2023-10-01</span>
+<span id="L130"><a aria-label="Line 130" href="#L130"> 130</a> </span>
+<span id="L131"><a aria-label="Line 131" href="#L131"> 131</a> B) PHP BYTES MODELED HERE</span>
+<span id="L132"><a aria-label="Line 132" href="#L132"> 132</a>    B = no reported history</span>
+<span id="L133"><a aria-label="Line 133" href="#L133"> 133</a>    D = no payment history information available (used to suppress a month in this sandbox)</span>
+<span id="L134"><a aria-label="Line 134" href="#L134"> 134</a>    0 = current</span>
+<span id="L135"><a aria-label="Line 135" href="#L135"> 135</a>    1 = 30 DPD</span>
+<span id="L136"><a aria-label="Line 136" href="#L136"> 136</a>    2 = 60 DPD</span>
+<span id="L137"><a aria-label="Line 137" href="#L137"> 137</a>    3 = 90 DPD</span>
+<span id="L138"><a aria-label="Line 138" href="#L138"> 138</a>    4 = 120 DPD</span>
+<span id="L139"><a aria-label="Line 139" href="#L139"> 139</a>    5 = 150 DPD</span>
+<span id="L140"><a aria-label="Line 140" href="#L140"> 140</a>    6 = 180+ DPD</span>
+<span id="L141"><a aria-label="Line 141" href="#L141"> 141</a>    G = collection</span>
+<span id="L142"><a aria-label="Line 142" href="#L142"> 142</a>    H = foreclosure</span>
+<span id="L143"><a aria-label="Line 143" href="#L143"> 143</a>    J = voluntary surrender</span>
+<span id="L144"><a aria-label="Line 144" href="#L144"> 144</a>    K = repossession</span>
+<span id="L145"><a aria-label="Line 145" href="#L145"> 145</a>    L = charge-off</span>
+<span id="L146"><a aria-label="Line 146" href="#L146"> 146</a> </span>
+<span id="L147"><a aria-label="Line 147" href="#L147"> 147</a> C) ACCOUNT STATUS 17A VALUES MODELED HERE</span>
+<span id="L148"><a aria-label="Line 148" href="#L148"> 148</a>    11 = current</span>
+<span id="L149"><a aria-label="Line 149" href="#L149"> 149</a>    13 = paid/closed account / zero balance</span>
+<span id="L150"><a aria-label="Line 150" href="#L150"> 150</a>    61 = paid in full, surrender</span>
+<span id="L151"><a aria-label="Line 151" href="#L151"> 151</a>    62 = paid in full, collection</span>
+<span id="L152"><a aria-label="Line 152" href="#L152"> 152</a>    63 = paid in full, repossession</span>
+<span id="L153"><a aria-label="Line 153" href="#L153"> 153</a>    64 = paid in full, charge-off</span>
+<span id="L154"><a aria-label="Line 154" href="#L154"> 154</a>    65 = paid in full, foreclosure</span>
+<span id="L155"><a aria-label="Line 155" href="#L155"> 155</a>    71 = 30–59 DPD</span>
+<span id="L156"><a aria-label="Line 156" href="#L156"> 156</a>    78 = 60–89 DPD</span>
+<span id="L157"><a aria-label="Line 157" href="#L157"> 157</a>    80 = 90–119 DPD</span>
+<span id="L158"><a aria-label="Line 158" href="#L158"> 158</a>    82 = 120–149 DPD</span>
+<span id="L159"><a aria-label="Line 159" href="#L159"> 159</a>    83 = 150–179 DPD</span>
+<span id="L160"><a aria-label="Line 160" href="#L160"> 160</a>    84 = 180+ DPD</span>
+<span id="L161"><a aria-label="Line 161" href="#L161"> 161</a>    93 = collection</span>
+<span id="L162"><a aria-label="Line 162" href="#L162"> 162</a>    94 = foreclosure</span>
+<span id="L163"><a aria-label="Line 163" href="#L163"> 163</a>    95 = voluntary surrender</span>
+<span id="L164"><a aria-label="Line 164" href="#L164"> 164</a>    96 = repossession</span>
+<span id="L165"><a aria-label="Line 165" href="#L165"> 165</a>    97 = charge-off</span>
+<span id="L166"><a aria-label="Line 166" href="#L166"> 166</a> </span>
+<span id="L167"><a aria-label="Line 167" href="#L167"> 167</a> D) PAYMENT RATING 17B VALUES MODELED HERE</span>
+<span id="L168"><a aria-label="Line 168" href="#L168"> 168</a>    0,1,2,3,4,5,6</span>
+<span id="L169"><a aria-label="Line 169" href="#L169"> 169</a>    G, L</span>
+<span id="L170"><a aria-label="Line 170" href="#L170"> 170</a>    NULL for 61–65 in this synthetic module</span>
+<span id="L171"><a aria-label="Line 171" href="#L171"> 171</a>    0 for 13 in this synthetic module</span>
+<span id="L172"><a aria-label="Line 172" href="#L172"> 172</a> </span>
+<span id="L173"><a aria-label="Line 173" href="#L173"> 173</a> IMPORTANT LIMITATION</span>
+<span id="L174"><a aria-label="Line 174" href="#L174"> 174</a> --------------------</span>
+<span id="L175"><a aria-label="Line 175" href="#L175"> 175</a> This is a synthetic portfolio-learning module, not a production furnishing engine.</span>
+<span id="L176"><a aria-label="Line 176" href="#L176"> 176</a> The goal is:</span>
+<span id="L177"><a aria-label="Line 177" href="#L177"> 177</a> - realistic behavior</span>
+<span id="L178"><a aria-label="Line 178" href="#L178"> 178</a> - explainable SQL</span>
+<span id="L179"><a aria-label="Line 179" href="#L179"> 179</a> - internally consistent outputs</span>
+<span id="L180"><a aria-label="Line 180" href="#L180"> 180</a> - good portfolio presentation</span>
+<span id="L181"><a aria-label="Line 181" href="#L181"> 181</a> </span>
+<span id="L182"><a aria-label="Line 182" href="#L182"> 182</a> It is not intended to reproduce every edge case of a production Metro 2 furnishing engine.</span>
+<span id="L183"><a aria-label="Line 183" href="#L183"> 183</a> ==================================================================================================== */</span>
+<span id="L184"><a aria-label="Line 184" href="#L184"> 184</a> </span>
+<span id="L185"><a aria-label="Line 185" href="#L185"> 185</a> </span>
+<span id="L186"><a aria-label="Line 186" href="#L186"> 186</a> -- ====================================================================================================</span>
+<span id="L187"><a aria-label="Line 187" href="#L187"> 187</a> -- SECTION 0: SCHEMA SETUP</span>
+<span id="L188"><a aria-label="Line 188" href="#L188"> 188</a> -- ====================================================================================================</span>
+<span id="L189"><a aria-label="Line 189" href="#L189"> 189</a> -- Purpose:</span>
+<span id="L190"><a aria-label="Line 190" href="#L190"> 190</a> --   Keep project tables out of the default public schema and place them in a dedicated module schema.</span>
+<span id="L191"><a aria-label="Line 191" href="#L191"> 191</a> --</span>
+<span id="L192"><a aria-label="Line 192" href="#L192"> 192</a> -- Why this exists:</span>
+<span id="L193"><a aria-label="Line 193" href="#L193"> 193</a> --   A dedicated schema is cleaner, more professional, and easier to manage in DBeaver.</span>
+<span id="L194"><a aria-label="Line 194" href="#L194"> 194</a> --</span>
+<span id="L195"><a aria-label="Line 195" href="#L195"> 195</a> -- SQL mechanics:</span>
+<span id="L196"><a aria-label="Line 196" href="#L196"> 196</a> --   - CREATE SCHEMA IF NOT EXISTS creates the schema only if it does not already exist</span>
+<span id="L197"><a aria-label="Line 197" href="#L197"> 197</a> --   - SET search_path tells PostgreSQL where to create/find unqualified objects for this session</span>
+<span id="L198"><a aria-label="Line 198" href="#L198"> 198</a> -- ====================================================================================================</span>
+<span id="L199"><a aria-label="Line 199" href="#L199"> 199</a> BEGIN;</span>
+<span id="L200"><a aria-label="Line 200" href="#L200"> 200</a> CREATE SCHEMA IF NOT EXISTS module1;</span>
+<span id="L201"><a aria-label="Line 201" href="#L201"> 201</a> SET search_path TO module1, public;</span>
+<span id="L202"><a aria-label="Line 202" href="#L202"> 202</a> </span>
+<span id="L203"><a aria-label="Line 203" href="#L203"> 203</a> </span>
+<span id="L204"><a aria-label="Line 204" href="#L204"> 204</a> -- ====================================================================================================</span>
+<span id="L205"><a aria-label="Line 205" href="#L205"> 205</a> -- SECTION 1: RESET THE SESSION&#x27;S PARAMETER TABLE</span>
+<span id="L206"><a aria-label="Line 206" href="#L206"> 206</a> -- ====================================================================================================</span>
+<span id="L207"><a aria-label="Line 207" href="#L207"> 207</a> -- A permanent table with the same name in public or module1 belongs to its owner.</span>
+<span id="L208"><a aria-label="Line 208" href="#L208"> 208</a> DROP TABLE IF EXISTS pg_temp.module1_params;</span>
+<span id="L209"><a aria-label="Line 209" href="#L209"> 209</a> </span>
+<span id="L210"><a aria-label="Line 210" href="#L210"> 210</a> </span>
+<span id="L211"><a aria-label="Line 211" href="#L211"> 211</a> -- ====================================================================================================</span>
+<span id="L212"><a aria-label="Line 212" href="#L212"> 212</a> -- SECTION 2: USER PARAMETERS</span>
+<span id="L213"><a aria-label="Line 213" href="#L213"> 213</a> -- ====================================================================================================</span>
+<span id="L214"><a aria-label="Line 214" href="#L214"> 214</a> -- Purpose:</span>
+<span id="L215"><a aria-label="Line 215" href="#L215"> 215</a> --   Store user-editable controls for sample size and portfolio mix.</span>
+<span id="L216"><a aria-label="Line 216" href="#L216"> 216</a> --</span>
+<span id="L217"><a aria-label="Line 217" href="#L217"> 217</a> -- Why this exists:</span>
+<span id="L218"><a aria-label="Line 218" href="#L218"> 218</a> --   Putting parameters into a table makes them easy to:</span>
+<span id="L219"><a aria-label="Line 219" href="#L219"> 219</a> --   - inspect</span>
+<span id="L220"><a aria-label="Line 220" href="#L220"> 220</a> --   - validate</span>
+<span id="L221"><a aria-label="Line 221" href="#L221"> 221</a> --   - reference in later SQL blocks</span>
+<span id="L222"><a aria-label="Line 222" href="#L222"> 222</a> --</span>
+<span id="L223"><a aria-label="Line 223" href="#L223"> 223</a> -- SQL mechanics:</span>
+<span id="L224"><a aria-label="Line 224" href="#L224"> 224</a> --   - CREATE TEMP TABLE creates a temporary table that exists only in the current session</span>
+<span id="L225"><a aria-label="Line 225" href="#L225"> 225</a> --   - The INSERT statement below is the main user-editable configuration row</span>
+<span id="L226"><a aria-label="Line 226" href="#L226"> 226</a> -- ====================================================================================================</span>
+<span id="L227"><a aria-label="Line 227" href="#L227"> 227</a> CREATE TEMP TABLE pg_temp.module1_params (</span>
+<span id="L228"><a aria-label="Line 228" href="#L228"> 228</a>     sample_size   INTEGER NOT NULL,</span>
+<span id="L229"><a aria-label="Line 229" href="#L229"> 229</a>     pct_current   NUMERIC(12,6) NOT NULL,</span>
+<span id="L230"><a aria-label="Line 230" href="#L230"> 230</a>     pct_mild      NUMERIC(12,6) NOT NULL,</span>
+<span id="L231"><a aria-label="Line 231" href="#L231"> 231</a>     pct_mod       NUMERIC(12,6) NOT NULL,</span>
+<span id="L232"><a aria-label="Line 232" href="#L232"> 232</a>     pct_severe    NUMERIC(12,6) NOT NULL,</span>
+<span id="L233"><a aria-label="Line 233" href="#L233"> 233</a>     pct_derog     NUMERIC(12,6) NOT NULL</span>
+<span id="L234"><a aria-label="Line 234" href="#L234"> 234</a> );</span>
+<span id="L235"><a aria-label="Line 235" href="#L235"> 235</a> </span>
+<span id="L236"><a aria-label="Line 236" href="#L236"> 236</a> INSERT INTO pg_temp.module1_params (</span>
+<span id="L237"><a aria-label="Line 237" href="#L237"> 237</a>     sample_size,</span>
+<span id="L238"><a aria-label="Line 238" href="#L238"> 238</a>     pct_current,</span>
+<span id="L239"><a aria-label="Line 239" href="#L239"> 239</a>     pct_mild,</span>
+<span id="L240"><a aria-label="Line 240" href="#L240"> 240</a>     pct_mod,</span>
+<span id="L241"><a aria-label="Line 241" href="#L241"> 241</a>     pct_severe,</span>
+<span id="L242"><a aria-label="Line 242" href="#L242"> 242</a>     pct_derog</span>
+<span id="L243"><a aria-label="Line 243" href="#L243"> 243</a> )</span>
+<span id="L244"><a aria-label="Line 244" href="#L244"> 244</a> VALUES (</span>
+<span id="L245"><a aria-label="Line 245" href="#L245"> 245</a>     5000000,   -- total number of synthetic accounts to generate</span>
+<span id="L246"><a aria-label="Line 246" href="#L246"> 246</a>     0.700000,  -- share of CURRENT accounts</span>
+<span id="L247"><a aria-label="Line 247" href="#L247"> 247</a>     0.150000,  -- share of MILD delinquency accounts</span>
+<span id="L248"><a aria-label="Line 248" href="#L248"> 248</a>     0.080000,  -- share of MOD delinquency accounts</span>
+<span id="L249"><a aria-label="Line 249" href="#L249"> 249</a>     0.040000,  -- share of SEVERE delinquency accounts</span>
+<span id="L250"><a aria-label="Line 250" href="#L250"> 250</a>     0.030000   -- share of DEROG accounts</span>
+<span id="L251"><a aria-label="Line 251" href="#L251"> 251</a> );</span>
+<span id="L252"><a aria-label="Line 252" href="#L252"> 252</a> </span>
+<span id="L253"><a aria-label="Line 253" href="#L253"> 253</a> </span>
+<span id="L254"><a aria-label="Line 254" href="#L254"> 254</a> -- ====================================================================================================</span>
+<span id="L255"><a aria-label="Line 255" href="#L255"> 255</a> -- SECTION 3: GATEKEEPER VALIDATION</span>
+<span id="L256"><a aria-label="Line 256" href="#L256"> 256</a> -- ====================================================================================================</span>
+<span id="L257"><a aria-label="Line 257" href="#L257"> 257</a> -- Purpose:</span>
+<span id="L258"><a aria-label="Line 258" href="#L258"> 258</a> --   Fail fast if the parameter configuration is invalid.</span>
+<span id="L259"><a aria-label="Line 259" href="#L259"> 259</a> --</span>
+<span id="L260"><a aria-label="Line 260" href="#L260"> 260</a> -- Why this exists:</span>
+<span id="L261"><a aria-label="Line 261" href="#L261"> 261</a> --   Validation at the top prevents confusing downstream failures.</span>
+<span id="L262"><a aria-label="Line 262" href="#L262"> 262</a> --</span>
+<span id="L263"><a aria-label="Line 263" href="#L263"> 263</a> -- SQL mechanics:</span>
+<span id="L264"><a aria-label="Line 264" href="#L264"> 264</a> --   - DO $$ ... $$ runs a procedural PL/pgSQL block</span>
+<span id="L265"><a aria-label="Line 265" href="#L265"> 265</a> --   - We read the parameter row into variables</span>
+<span id="L266"><a aria-label="Line 266" href="#L266"> 266</a> --   - We test the values using IF statements</span>
+<span id="L267"><a aria-label="Line 267" href="#L267"> 267</a> --   - RAISE EXCEPTION stops the script immediately with a descriptive message</span>
+<span id="L268"><a aria-label="Line 268" href="#L268"> 268</a> -- ====================================================================================================</span>
+<span id="L269"><a aria-label="Line 269" href="#L269"> 269</a> DO $$</span>
+<span id="L270"><a aria-label="Line 270" href="#L270"> 270</a> DECLARE</span>
+<span id="L271"><a aria-label="Line 271" href="#L271"> 271</a>     v_sample_size INTEGER;</span>
+<span id="L272"><a aria-label="Line 272" href="#L272"> 272</a>     v_pct_current NUMERIC(12,6);</span>
+<span id="L273"><a aria-label="Line 273" href="#L273"> 273</a>     v_pct_mild    NUMERIC(12,6);</span>
+<span id="L274"><a aria-label="Line 274" href="#L274"> 274</a>     v_pct_mod     NUMERIC(12,6);</span>
+<span id="L275"><a aria-label="Line 275" href="#L275"> 275</a>     v_pct_severe  NUMERIC(12,6);</span>
+<span id="L276"><a aria-label="Line 276" href="#L276"> 276</a>     v_pct_derog   NUMERIC(12,6);</span>
+<span id="L277"><a aria-label="Line 277" href="#L277"> 277</a>     v_sum         NUMERIC(18,10);</span>
+<span id="L278"><a aria-label="Line 278" href="#L278"> 278</a> BEGIN</span>
+<span id="L279"><a aria-label="Line 279" href="#L279"> 279</a>     SELECT</span>
+<span id="L280"><a aria-label="Line 280" href="#L280"> 280</a>         sample_size,</span>
+<span id="L281"><a aria-label="Line 281" href="#L281"> 281</a>         pct_current,</span>
+<span id="L282"><a aria-label="Line 282" href="#L282"> 282</a>         pct_mild,</span>
+<span id="L283"><a aria-label="Line 283" href="#L283"> 283</a>         pct_mod,</span>
+<span id="L284"><a aria-label="Line 284" href="#L284"> 284</a>         pct_severe,</span>
+<span id="L285"><a aria-label="Line 285" href="#L285"> 285</a>         pct_derog</span>
+<span id="L286"><a aria-label="Line 286" href="#L286"> 286</a>     INTO STRICT</span>
+<span id="L287"><a aria-label="Line 287" href="#L287"> 287</a>         v_sample_size,</span>
+<span id="L288"><a aria-label="Line 288" href="#L288"> 288</a>         v_pct_current,</span>
+<span id="L289"><a aria-label="Line 289" href="#L289"> 289</a>         v_pct_mild,</span>
+<span id="L290"><a aria-label="Line 290" href="#L290"> 290</a>         v_pct_mod,</span>
+<span id="L291"><a aria-label="Line 291" href="#L291"> 291</a>         v_pct_severe,</span>
+<span id="L292"><a aria-label="Line 292" href="#L292"> 292</a>         v_pct_derog</span>
+<span id="L293"><a aria-label="Line 293" href="#L293"> 293</a>     FROM pg_temp.module1_params;</span>
+<span id="L294"><a aria-label="Line 294" href="#L294"> 294</a> </span>
+<span id="L295"><a aria-label="Line 295" href="#L295"> 295</a>     v_sum := v_pct_current + v_pct_mild + v_pct_mod + v_pct_severe + v_pct_derog;</span>
+<span id="L296"><a aria-label="Line 296" href="#L296"> 296</a> </span>
+<span id="L297"><a aria-label="Line 297" href="#L297"> 297</a>     IF v_sample_size IS NULL OR v_sample_size &lt;= 0 THEN</span>
+<span id="L298"><a aria-label="Line 298" href="#L298"> 298</a>         RAISE EXCEPTION</span>
+<span id="L299"><a aria-label="Line 299" href="#L299"> 299</a>             &#x27;MODULE 1 PARAMETER VALIDATION FAILED: sample_size must be a positive integer. Current value = %&#x27;,</span>
+<span id="L300"><a aria-label="Line 300" href="#L300"> 300</a>             v_sample_size;</span>
+<span id="L301"><a aria-label="Line 301" href="#L301"> 301</a>     END IF;</span>
+<span id="L302"><a aria-label="Line 302" href="#L302"> 302</a> </span>
+<span id="L303"><a aria-label="Line 303" href="#L303"> 303</a>     IF v_pct_current &lt; 0 OR v_pct_current &gt; 1</span>
+<span id="L304"><a aria-label="Line 304" href="#L304"> 304</a>        OR v_pct_mild  &lt; 0 OR v_pct_mild  &gt; 1</span>
+<span id="L305"><a aria-label="Line 305" href="#L305"> 305</a>        OR v_pct_mod   &lt; 0 OR v_pct_mod   &gt; 1</span>
+<span id="L306"><a aria-label="Line 306" href="#L306"> 306</a>        OR v_pct_severe &lt; 0 OR v_pct_severe &gt; 1</span>
+<span id="L307"><a aria-label="Line 307" href="#L307"> 307</a>        OR v_pct_derog &lt; 0 OR v_pct_derog &gt; 1</span>
+<span id="L308"><a aria-label="Line 308" href="#L308"> 308</a>     THEN</span>
+<span id="L309"><a aria-label="Line 309" href="#L309"> 309</a>         RAISE EXCEPTION</span>
+<span id="L310"><a aria-label="Line 310" href="#L310"> 310</a>             &#x27;MODULE 1 PARAMETER VALIDATION FAILED: all percentage inputs must be between 0 and 1 inclusive. Current values = current:% mild:% mod:% severe:% derog:%&#x27;,</span>
+<span id="L311"><a aria-label="Line 311" href="#L311"> 311</a>             v_pct_current, v_pct_mild, v_pct_mod, v_pct_severe, v_pct_derog;</span>
+<span id="L312"><a aria-label="Line 312" href="#L312"> 312</a>     END IF;</span>
+<span id="L313"><a aria-label="Line 313" href="#L313"> 313</a> </span>
+<span id="L314"><a aria-label="Line 314" href="#L314"> 314</a>     IF ABS(v_sum - 1.000000) &gt; 0.000001 THEN</span>
+<span id="L315"><a aria-label="Line 315" href="#L315"> 315</a>         RAISE EXCEPTION</span>
+<span id="L316"><a aria-label="Line 316" href="#L316"> 316</a>             &#x27;MODULE 1 PARAMETER VALIDATION FAILED: profile percentages must sum to 1.000000 within 0.000001. Current sum = % (current:% mild:% mod:% severe:% derog:%)&#x27;,</span>
+<span id="L317"><a aria-label="Line 317" href="#L317"> 317</a>             v_sum, v_pct_current, v_pct_mild, v_pct_mod, v_pct_severe, v_pct_derog;</span>
+<span id="L318"><a aria-label="Line 318" href="#L318"> 318</a>     END IF;</span>
+<span id="L319"><a aria-label="Line 319" href="#L319"> 319</a> END $$;</span>
+<span id="L320"><a aria-label="Line 320" href="#L320"> 320</a> </span>
+<span id="L321"><a aria-label="Line 321" href="#L321"> 321</a> -- Only after validation succeeds, replace this module&#x27;s four persistent outputs.</span>
+<span id="L322"><a aria-label="Line 322" href="#L322"> 322</a> -- PostgreSQL restores the prior tables if a later step fails in this transaction.</span>
+<span id="L323"><a aria-label="Line 323" href="#L323"> 323</a> DROP TABLE IF EXISTS module1.metro2_final;</span>
+<span id="L324"><a aria-label="Line 324" href="#L324"> 324</a> DROP TABLE IF EXISTS module1.metro2_sample;</span>
+<span id="L325"><a aria-label="Line 325" href="#L325"> 325</a> DROP TABLE IF EXISTS module1.metro2_status_history;</span>
+<span id="L326"><a aria-label="Line 326" href="#L326"> 326</a> DROP TABLE IF EXISTS module1.metro2_account_blueprint;</span>
+<span id="L327"><a aria-label="Line 327" href="#L327"> 327</a> </span>
+<span id="L328"><a aria-label="Line 328" href="#L328"> 328</a> -- ====================================================================================================</span>
+<span id="L329"><a aria-label="Line 329" href="#L329"> 329</a> -- SECTION 4: BUILD ACCOUNT BLUEPRINT</span>
+<span id="L330"><a aria-label="Line 330" href="#L330"> 330</a> -- ====================================================================================================</span>
+<span id="L331"><a aria-label="Line 331" href="#L331"> 331</a> -- Purpose:</span>
+<span id="L332"><a aria-label="Line 332" href="#L332"> 332</a> --   Create one account-level row per synthetic account, including:</span>
+<span id="L333"><a aria-label="Line 333" href="#L333"> 333</a> --   - profile assignment</span>
+<span id="L334"><a aria-label="Line 334" href="#L334"> 334</a> --   - activity flag</span>
+<span id="L335"><a aria-label="Line 335" href="#L335"> 335</a> --   - closure behavior</span>
+<span id="L336"><a aria-label="Line 336" href="#L336"> 336</a> --   - derog code</span>
+<span id="L337"><a aria-label="Line 337" href="#L337"> 337</a> --   - date range</span>
+<span id="L338"><a aria-label="Line 338" href="#L338"> 338</a> --   - synthetic behavior pattern string</span>
+<span id="L339"><a aria-label="Line 339" href="#L339"> 339</a> --</span>
+<span id="L340"><a aria-label="Line 340" href="#L340"> 340</a> -- Why this exists:</span>
+<span id="L341"><a aria-label="Line 341" href="#L341"> 341</a> --   This table is the &quot;account design layer&quot; for the module.</span>
+<span id="L342"><a aria-label="Line 342" href="#L342"> 342</a> --   It lets us separate:</span>
+<span id="L343"><a aria-label="Line 343" href="#L343"> 343</a> --      (a) account-level assumptions</span>
+<span id="L344"><a aria-label="Line 344" href="#L344"> 344</a> --   from (b) month-level status generation</span>
+<span id="L345"><a aria-label="Line 345" href="#L345"> 345</a> --</span>
+<span id="L346"><a aria-label="Line 346" href="#L346"> 346</a> -- SQL mechanics:</span>
+<span id="L347"><a aria-label="Line 347" href="#L347"> 347</a> --   This section uses a chain of CTEs (WITH clauses).</span>
+<span id="L348"><a aria-label="Line 348" href="#L348"> 348</a> --   A CTE is like a temporary named result set used only within one query.</span>
+<span id="L349"><a aria-label="Line 349" href="#L349"> 349</a> --   We use CTEs here because each step builds logically on the prior step.</span>
+<span id="L350"><a aria-label="Line 350" href="#L350"> 350</a> -- ====================================================================================================</span>
+<span id="L351"><a aria-label="Line 351" href="#L351"> 351</a> CREATE TABLE module1.metro2_account_blueprint AS</span>
+<span id="L352"><a aria-label="Line 352" href="#L352"> 352</a> WITH</span>
+<span id="L353"><a aria-label="Line 353" href="#L353"> 353</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L354"><a aria-label="Line 354" href="#L354"> 354</a> -- CTE: params</span>
+<span id="L355"><a aria-label="Line 355" href="#L355"> 355</a> -- Purpose:</span>
+<span id="L356"><a aria-label="Line 356" href="#L356"> 356</a> --   Read the one-row parameter table into the query.</span>
+<span id="L357"><a aria-label="Line 357" href="#L357"> 357</a> --</span>
+<span id="L358"><a aria-label="Line 358" href="#L358"> 358</a> -- SQL mechanics:</span>
+<span id="L359"><a aria-label="Line 359" href="#L359"> 359</a> --   SELECT * FROM module1_params simply exposes the parameters for later CTEs.</span>
+<span id="L360"><a aria-label="Line 360" href="#L360"> 360</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L361"><a aria-label="Line 361" href="#L361"> 361</a> params AS (</span>
+<span id="L362"><a aria-label="Line 362" href="#L362"> 362</a>     SELECT * FROM pg_temp.module1_params</span>
+<span id="L363"><a aria-label="Line 363" href="#L363"> 363</a> ),</span>
+<span id="L364"><a aria-label="Line 364" href="#L364"> 364</a> </span>
+<span id="L365"><a aria-label="Line 365" href="#L365"> 365</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L366"><a aria-label="Line 366" href="#L366"> 366</a> -- CTE: profile_cutoffs</span>
+<span id="L367"><a aria-label="Line 367" href="#L367"> 367</a> -- Purpose:</span>
+<span id="L368"><a aria-label="Line 368" href="#L368"> 368</a> --   Convert percentage targets into cumulative integer cutoffs.</span>
+<span id="L369"><a aria-label="Line 369" href="#L369"> 369</a> --</span>
+<span id="L370"><a aria-label="Line 370" href="#L370"> 370</a> -- Why this exists:</span>
+<span id="L371"><a aria-label="Line 371" href="#L371"> 371</a> --   We want to assign account ids 1..N into profile buckets according to the user-configured mix.</span>
+<span id="L372"><a aria-label="Line 372" href="#L372"> 372</a> --</span>
+<span id="L373"><a aria-label="Line 373" href="#L373"> 373</a> -- SQL mechanics:</span>
+<span id="L374"><a aria-label="Line 374" href="#L374"> 374</a> --   - FLOOR(sample_size * pct_x) converts percentages into counts</span>
+<span id="L375"><a aria-label="Line 375" href="#L375"> 375</a> --   - thresholds use cumulative floors. The final bucket receives the remaining IDs.</span>
+<span id="L376"><a aria-label="Line 376" href="#L376"> 376</a> --   - a later rare-pattern override can change the final profile label. Resizing the study can move an ID into another bucket.</span>
+<span id="L377"><a aria-label="Line 377" href="#L377"> 377</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L378"><a aria-label="Line 378" href="#L378"> 378</a> profile_cutoffs AS (</span>
+<span id="L379"><a aria-label="Line 379" href="#L379"> 379</a>     SELECT</span>
+<span id="L380"><a aria-label="Line 380" href="#L380"> 380</a>         sample_size,</span>
+<span id="L381"><a aria-label="Line 381" href="#L381"> 381</a>         FLOOR(sample_size * pct_current)::INT AS curr_cut,</span>
+<span id="L382"><a aria-label="Line 382" href="#L382"> 382</a>         LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild)))::INT AS mild_cut,</span>
+<span id="L383"><a aria-label="Line 383" href="#L383"> 383</a>         LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild + pct_mod)))::INT AS mod_cut,</span>
+<span id="L384"><a aria-label="Line 384" href="#L384"> 384</a>         LEAST(sample_size, FLOOR(sample_size * (pct_current + pct_mild + pct_mod + pct_severe)))::INT AS severe_cut</span>
+<span id="L385"><a aria-label="Line 385" href="#L385"> 385</a>     FROM params</span>
+<span id="L386"><a aria-label="Line 386" href="#L386"> 386</a> ),</span>
+<span id="L387"><a aria-label="Line 387" href="#L387"> 387</a> </span>
+<span id="L388"><a aria-label="Line 388" href="#L388"> 388</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L389"><a aria-label="Line 389" href="#L389"> 389</a> -- CTE: base_accounts</span>
+<span id="L390"><a aria-label="Line 390" href="#L390"> 390</a> -- Purpose:</span>
+<span id="L391"><a aria-label="Line 391" href="#L391"> 391</a> --   Create one row per synthetic account and assign a base profile type.</span>
+<span id="L392"><a aria-label="Line 392" href="#L392"> 392</a> --</span>
+<span id="L393"><a aria-label="Line 393" href="#L393"> 393</a> -- Why this exists:</span>
+<span id="L394"><a aria-label="Line 394" href="#L394"> 394</a> --   This is the first true account-level population step.</span>
+<span id="L395"><a aria-label="Line 395" href="#L395"> 395</a> --</span>
+<span id="L396"><a aria-label="Line 396" href="#L396"> 396</a> -- SQL mechanics:</span>
+<span id="L397"><a aria-label="Line 397" href="#L397"> 397</a> --   - generate_series(1, sample_size) creates integers 1..sample_size</span>
+<span id="L398"><a aria-label="Line 398" href="#L398"> 398</a> --   - each integer becomes an account id</span>
+<span id="L399"><a aria-label="Line 399" href="#L399"> 399</a> --   - CASE compares each account id to the cumulative cutoffs to assign its profile bucket</span>
+<span id="L400"><a aria-label="Line 400" href="#L400"> 400</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L401"><a aria-label="Line 401" href="#L401"> 401</a> base_accounts AS (</span>
+<span id="L402"><a aria-label="Line 402" href="#L402"> 402</a>     SELECT</span>
+<span id="L403"><a aria-label="Line 403" href="#L403"> 403</a>         gs AS account,</span>
+<span id="L404"><a aria-label="Line 404" href="#L404"> 404</a>         CASE</span>
+<span id="L405"><a aria-label="Line 405" href="#L405"> 405</a>             WHEN gs &lt;= pc.curr_cut   THEN &#x27;CURRENT&#x27;</span>
+<span id="L406"><a aria-label="Line 406" href="#L406"> 406</a>             WHEN gs &lt;= pc.mild_cut   THEN &#x27;MILD&#x27;</span>
+<span id="L407"><a aria-label="Line 407" href="#L407"> 407</a>             WHEN gs &lt;= pc.mod_cut    THEN &#x27;MOD&#x27;</span>
+<span id="L408"><a aria-label="Line 408" href="#L408"> 408</a>             WHEN gs &lt;= pc.severe_cut THEN &#x27;SEVERE&#x27;</span>
+<span id="L409"><a aria-label="Line 409" href="#L409"> 409</a>             ELSE &#x27;DEROG&#x27;</span>
+<span id="L410"><a aria-label="Line 410" href="#L410"> 410</a>         END AS base_profile_type</span>
+<span id="L411"><a aria-label="Line 411" href="#L411"> 411</a>     FROM profile_cutoffs pc</span>
+<span id="L412"><a aria-label="Line 412" href="#L412"> 412</a>     CROSS JOIN generate_series(1, (SELECT sample_size FROM params)) AS gs</span>
+<span id="L413"><a aria-label="Line 413" href="#L413"> 413</a> ),</span>
+<span id="L414"><a aria-label="Line 414" href="#L414"> 414</a> </span>
+<span id="L415"><a aria-label="Line 415" href="#L415"> 415</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L416"><a aria-label="Line 416" href="#L416"> 416</a> -- CTE: seeds</span>
+<span id="L417"><a aria-label="Line 417" href="#L417"> 417</a> -- Purpose:</span>
+<span id="L418"><a aria-label="Line 418" href="#L418"> 418</a> --   Create deterministic pseudo-random seed values per account.</span>
+<span id="L419"><a aria-label="Line 419" href="#L419"> 419</a> --</span>
+<span id="L420"><a aria-label="Line 420" href="#L420"> 420</a> -- Why this exists:</span>
+<span id="L421"><a aria-label="Line 421" href="#L421"> 421</a> --   We want reproducible synthetic variation. If you rerun the script with the same inputs,</span>
+<span id="L422"><a aria-label="Line 422" href="#L422"> 422</a> --   each account should get the same synthetic behavior.</span>
+<span id="L423"><a aria-label="Line 423" href="#L423"> 423</a> --</span>
+<span id="L424"><a aria-label="Line 424" href="#L424"> 424</a> -- SQL mechanics:</span>
+<span id="L425"><a aria-label="Line 425" href="#L425"> 425</a> --   - md5(text) produces a deterministic hash string</span>
+<span id="L426"><a aria-label="Line 426" href="#L426"> 426</a> --   - substr(..., 1, 7) takes part of the hash</span>
+<span id="L427"><a aria-label="Line 427" href="#L427"> 427</a> --   - the hex is converted into an integer using bit casting</span>
+<span id="L428"><a aria-label="Line 428" href="#L428"> 428</a> --   - the eight suffixes select separate deterministic streams; seven hex digits range from zero through 268435455</span>
+<span id="L429"><a aria-label="Line 429" href="#L429"> 429</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L430"><a aria-label="Line 430" href="#L430"> 430</a> seeds AS (</span>
+<span id="L431"><a aria-label="Line 431" href="#L431"> 431</a>     SELECT</span>
+<span id="L432"><a aria-label="Line 432" href="#L432"> 432</a>         b.*,</span>
+<span id="L433"><a aria-label="Line 433" href="#L433"> 433</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-a&#x27;), 1, 7))::bit(28)::int) AS s1,</span>
+<span id="L434"><a aria-label="Line 434" href="#L434"> 434</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-b&#x27;), 1, 7))::bit(28)::int) AS s2,</span>
+<span id="L435"><a aria-label="Line 435" href="#L435"> 435</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-c&#x27;), 1, 7))::bit(28)::int) AS s3,</span>
+<span id="L436"><a aria-label="Line 436" href="#L436"> 436</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-d&#x27;), 1, 7))::bit(28)::int) AS s4,</span>
+<span id="L437"><a aria-label="Line 437" href="#L437"> 437</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-e&#x27;), 1, 7))::bit(28)::int) AS s5,</span>
+<span id="L438"><a aria-label="Line 438" href="#L438"> 438</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-f&#x27;), 1, 7))::bit(28)::int) AS s6,</span>
+<span id="L439"><a aria-label="Line 439" href="#L439"> 439</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-g&#x27;), 1, 7))::bit(28)::int) AS s7,</span>
+<span id="L440"><a aria-label="Line 440" href="#L440"> 440</a>         ((&#x27;x&#x27; || substr(md5(account::text || &#x27;-h&#x27;), 1, 7))::bit(28)::int) AS s8</span>
+<span id="L441"><a aria-label="Line 441" href="#L441"> 441</a>     FROM base_accounts b</span>
+<span id="L442"><a aria-label="Line 442" href="#L442"> 442</a> ),</span>
+<span id="L443"><a aria-label="Line 443" href="#L443"> 443</a> </span>
+<span id="L444"><a aria-label="Line 444" href="#L444"> 444</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L445"><a aria-label="Line 445" href="#L445"> 445</a> -- CTE: seeded</span>
+<span id="L446"><a aria-label="Line 446" href="#L446"> 446</a> -- Purpose:</span>
+<span id="L447"><a aria-label="Line 447" href="#L447"> 447</a> --   Convert the raw seed values into account-level features:</span>
+<span id="L448"><a aria-label="Line 448" href="#L448"> 448</a> --   - active vs inactive</span>
+<span id="L449"><a aria-label="Line 449" href="#L449"> 449</a> --   - behavior variant</span>
+<span id="L450"><a aria-label="Line 450" href="#L450"> 450</a> --   - suppression flag</span>
+<span id="L451"><a aria-label="Line 451" href="#L451"> 451</a> --   - derog code family</span>
+<span id="L452"><a aria-label="Line 452" href="#L452"> 452</a> --</span>
+<span id="L453"><a aria-label="Line 453" href="#L453"> 453</a> -- Why this exists:</span>
+<span id="L454"><a aria-label="Line 454" href="#L454"> 454</a> --   This is where account-level diversity begins.</span>
+<span id="L455"><a aria-label="Line 455" href="#L455"> 455</a> --</span>
+<span id="L456"><a aria-label="Line 456" href="#L456"> 456</a> -- SQL mechanics:</span>
+<span id="L457"><a aria-label="Line 457" href="#L457"> 457</a> --   - CASE + modulo (%) creates controlled deterministic branching</span>
+<span id="L458"><a aria-label="Line 458" href="#L458"> 458</a> --   - s1%100 gives a stable pseudo-random number from 0 to 99 for each account</span>
+<span id="L459"><a aria-label="Line 459" href="#L459"> 459</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L460"><a aria-label="Line 460" href="#L460"> 460</a> seeded AS (</span>
+<span id="L461"><a aria-label="Line 461" href="#L461"> 461</a>     SELECT</span>
+<span id="L462"><a aria-label="Line 462" href="#L462"> 462</a>         account,</span>
+<span id="L463"><a aria-label="Line 463" href="#L463"> 463</a>         base_profile_type,</span>
+<span id="L464"><a aria-label="Line 464" href="#L464"> 464</a> </span>
+<span id="L465"><a aria-label="Line 465" href="#L465"> 465</a>         CASE</span>
+<span id="L466"><a aria-label="Line 466" href="#L466"> 466</a>             WHEN base_profile_type = &#x27;CURRENT&#x27; THEN CASE WHEN s1 % 100 &lt; 80 THEN 1 ELSE 0 END</span>
+<span id="L467"><a aria-label="Line 467" href="#L467"> 467</a>             WHEN base_profile_type = &#x27;MILD&#x27;    THEN CASE WHEN s1 % 100 &lt; 70 THEN 1 ELSE 0 END</span>
+<span id="L468"><a aria-label="Line 468" href="#L468"> 468</a>             WHEN base_profile_type = &#x27;MOD&#x27;     THEN CASE WHEN s1 % 100 &lt; 55 THEN 1 ELSE 0 END</span>
+<span id="L469"><a aria-label="Line 469" href="#L469"> 469</a>             WHEN base_profile_type = &#x27;SEVERE&#x27;  THEN CASE WHEN s1 % 100 &lt; 38 THEN 1 ELSE 0 END</span>
+<span id="L470"><a aria-label="Line 470" href="#L470"> 470</a>             ELSE                                    CASE WHEN s1 % 100 &lt; 22 THEN 1 ELSE 0 END</span>
+<span id="L471"><a aria-label="Line 471" href="#L471"> 471</a>         END AS active_flag,</span>
+<span id="L472"><a aria-label="Line 472" href="#L472"> 472</a> </span>
+<span id="L473"><a aria-label="Line 473" href="#L473"> 473</a>         s2,</span>
+<span id="L474"><a aria-label="Line 474" href="#L474"> 474</a>         s3,</span>
+<span id="L475"><a aria-label="Line 475" href="#L475"> 475</a>         s4 % 100 AS behavior_variant,</span>
+<span id="L476"><a aria-label="Line 476" href="#L476"> 476</a> </span>
+<span id="L477"><a aria-label="Line 477" href="#L477"> 477</a>         CASE WHEN s5 % 100 &lt; 2 THEN 1 ELSE 0 END AS has_suppression,</span>
+<span id="L478"><a aria-label="Line 478" href="#L478"> 478</a>         1 + (s6 % 8) AS suppression_start_age,</span>
+<span id="L479"><a aria-label="Line 479" href="#L479"> 479</a> </span>
+<span id="L480"><a aria-label="Line 480" href="#L480"> 480</a>         CASE</span>
+<span id="L481"><a aria-label="Line 481" href="#L481"> 481</a>             WHEN s7 % 100 &lt; 50 THEN &#x27;L&#x27;</span>
+<span id="L482"><a aria-label="Line 482" href="#L482"> 482</a>             WHEN s7 % 100 &lt; 75 THEN &#x27;G&#x27;</span>
+<span id="L483"><a aria-label="Line 483" href="#L483"> 483</a>             WHEN s7 % 100 &lt; 87 THEN &#x27;K&#x27;</span>
+<span id="L484"><a aria-label="Line 484" href="#L484"> 484</a>             WHEN s7 % 100 &lt; 95 THEN &#x27;J&#x27;</span>
+<span id="L485"><a aria-label="Line 485" href="#L485"> 485</a>             ELSE &#x27;H&#x27;</span>
+<span id="L486"><a aria-label="Line 486" href="#L486"> 486</a>         END AS derog_code,</span>
+<span id="L487"><a aria-label="Line 487" href="#L487"> 487</a> </span>
+<span id="L488"><a aria-label="Line 488" href="#L488"> 488</a>         s8 AS raw_seed</span>
+<span id="L489"><a aria-label="Line 489" href="#L489"> 489</a>     FROM seeds</span>
+<span id="L490"><a aria-label="Line 490" href="#L490"> 490</a> ),</span>
+<span id="L491"><a aria-label="Line 491" href="#L491"> 491</a> </span>
+<span id="L492"><a aria-label="Line 492" href="#L492"> 492</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L493"><a aria-label="Line 493" href="#L493"> 493</a> -- CTE: patterned</span>
+<span id="L494"><a aria-label="Line 494" href="#L494"> 494</a> -- Purpose:</span>
+<span id="L495"><a aria-label="Line 495" href="#L495"> 495</a> --   Propose an initial reporting window length per account.</span>
+<span id="L496"><a aria-label="Line 496" href="#L496"> 496</a> --</span>
+<span id="L497"><a aria-label="Line 497" href="#L497"> 497</a> -- Why this exists:</span>
+<span id="L498"><a aria-label="Line 498" href="#L498"> 498</a> --   Real portfolios have varied ages:</span>
+<span id="L499"><a aria-label="Line 499" href="#L499"> 499</a> --   - some accounts are new</span>
+<span id="L500"><a aria-label="Line 500" href="#L500"> 500</a> --   - some are seasoned</span>
+<span id="L501"><a aria-label="Line 501" href="#L501"> 501</a> --   - some are very old but still within bureau-detail retention assumptions</span>
+<span id="L502"><a aria-label="Line 502" href="#L502"> 502</a> --</span>
+<span id="L503"><a aria-label="Line 503" href="#L503"> 503</a> -- SQL mechanics:</span>
+<span id="L504"><a aria-label="Line 504" href="#L504"> 504</a> --   - nested CASE statements create different vintage distributions by profile type</span>
+<span id="L505"><a aria-label="Line 505" href="#L505"> 505</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L506"><a aria-label="Line 506" href="#L506"> 506</a> patterned AS (</span>
+<span id="L507"><a aria-label="Line 507" href="#L507"> 507</a>     SELECT</span>
+<span id="L508"><a aria-label="Line 508" href="#L508"> 508</a>         account,</span>
+<span id="L509"><a aria-label="Line 509" href="#L509"> 509</a>         base_profile_type,</span>
+<span id="L510"><a aria-label="Line 510" href="#L510"> 510</a>         active_flag,</span>
+<span id="L511"><a aria-label="Line 511" href="#L511"> 511</a>         behavior_variant,</span>
+<span id="L512"><a aria-label="Line 512" href="#L512"> 512</a>         has_suppression,</span>
+<span id="L513"><a aria-label="Line 513" href="#L513"> 513</a>         suppression_start_age,</span>
+<span id="L514"><a aria-label="Line 514" href="#L514"> 514</a>         derog_code,</span>
+<span id="L515"><a aria-label="Line 515" href="#L515"> 515</a>         raw_seed,</span>
+<span id="L516"><a aria-label="Line 516" href="#L516"> 516</a>         CASE</span>
+<span id="L517"><a aria-label="Line 517" href="#L517"> 517</a>             WHEN base_profile_type = &#x27;CURRENT&#x27; THEN</span>
+<span id="L518"><a aria-label="Line 518" href="#L518"> 518</a>                 CASE</span>
+<span id="L519"><a aria-label="Line 519" href="#L519"> 519</a>                     WHEN s2 % 100 &lt; 20 THEN  3 + (s3 % 10)</span>
+<span id="L520"><a aria-label="Line 520" href="#L520"> 520</a>                     WHEN s2 % 100 &lt; 60 THEN 13 + (s3 % 24)</span>
+<span id="L521"><a aria-label="Line 521" href="#L521"> 521</a>                     WHEN s2 % 100 &lt; 85 THEN 37 + (s3 % 24)</span>
+<span id="L522"><a aria-label="Line 522" href="#L522"> 522</a>                     ELSE                   61 + (s3 % 24)</span>
+<span id="L523"><a aria-label="Line 523" href="#L523"> 523</a>                 END</span>
+<span id="L524"><a aria-label="Line 524" href="#L524"> 524</a>             WHEN base_profile_type = &#x27;MILD&#x27; THEN</span>
+<span id="L525"><a aria-label="Line 525" href="#L525"> 525</a>                 CASE</span>
+<span id="L526"><a aria-label="Line 526" href="#L526"> 526</a>                     WHEN s2 % 100 &lt; 15 THEN  6 + (s3 % 7)</span>
+<span id="L527"><a aria-label="Line 527" href="#L527"> 527</a>                     WHEN s2 % 100 &lt; 60 THEN 13 + (s3 % 24)</span>
+<span id="L528"><a aria-label="Line 528" href="#L528"> 528</a>                     WHEN s2 % 100 &lt; 85 THEN 37 + (s3 % 24)</span>
+<span id="L529"><a aria-label="Line 529" href="#L529"> 529</a>                     ELSE                   61 + (s3 % 24)</span>
+<span id="L530"><a aria-label="Line 530" href="#L530"> 530</a>                 END</span>
+<span id="L531"><a aria-label="Line 531" href="#L531"> 531</a>             WHEN base_profile_type = &#x27;MOD&#x27; THEN</span>
+<span id="L532"><a aria-label="Line 532" href="#L532"> 532</a>                 CASE</span>
+<span id="L533"><a aria-label="Line 533" href="#L533"> 533</a>                     WHEN s2 % 100 &lt; 20 THEN  8 + (s3 % 9)</span>
+<span id="L534"><a aria-label="Line 534" href="#L534"> 534</a>                     WHEN s2 % 100 &lt; 65 THEN 17 + (s3 % 20)</span>
+<span id="L535"><a aria-label="Line 535" href="#L535"> 535</a>                     WHEN s2 % 100 &lt; 88 THEN 37 + (s3 % 24)</span>
+<span id="L536"><a aria-label="Line 536" href="#L536"> 536</a>                     ELSE                   61 + (s3 % 24)</span>
+<span id="L537"><a aria-label="Line 537" href="#L537"> 537</a>                 END</span>
+<span id="L538"><a aria-label="Line 538" href="#L538"> 538</a>             WHEN base_profile_type = &#x27;SEVERE&#x27; THEN</span>
+<span id="L539"><a aria-label="Line 539" href="#L539"> 539</a>                 CASE</span>
+<span id="L540"><a aria-label="Line 540" href="#L540"> 540</a>                     WHEN s2 % 100 &lt; 30 THEN 12 + (s3 % 13)</span>
+<span id="L541"><a aria-label="Line 541" href="#L541"> 541</a>                     WHEN s2 % 100 &lt; 75 THEN 25 + (s3 % 24)</span>
+<span id="L542"><a aria-label="Line 542" href="#L542"> 542</a>                     ELSE                   49 + (s3 % 36)</span>
+<span id="L543"><a aria-label="Line 543" href="#L543"> 543</a>                 END</span>
+<span id="L544"><a aria-label="Line 544" href="#L544"> 544</a>             WHEN base_profile_type = &#x27;DEROG&#x27; THEN</span>
+<span id="L545"><a aria-label="Line 545" href="#L545"> 545</a>                 CASE</span>
+<span id="L546"><a aria-label="Line 546" href="#L546"> 546</a>                     WHEN s2 % 100 &lt; 25 THEN 18 + (s3 % 13)</span>
+<span id="L547"><a aria-label="Line 547" href="#L547"> 547</a>                     WHEN s2 % 100 &lt; 75 THEN 31 + (s3 % 24)</span>
+<span id="L548"><a aria-label="Line 548" href="#L548"> 548</a>                     ELSE                   55 + (s3 % 30)</span>
+<span id="L549"><a aria-label="Line 549" href="#L549"> 549</a>                 END</span>
+<span id="L550"><a aria-label="Line 550" href="#L550"> 550</a>         END AS months_reporting_raw</span>
+<span id="L551"><a aria-label="Line 551" href="#L551"> 551</a>     FROM seeded</span>
+<span id="L552"><a aria-label="Line 552" href="#L552"> 552</a> ),</span>
+<span id="L553"><a aria-label="Line 553" href="#L553"> 553</a> </span>
+<span id="L554"><a aria-label="Line 554" href="#L554"> 554</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L555"><a aria-label="Line 555" href="#L555"> 555</a> -- CTE: profile_logic</span>
+<span id="L556"><a aria-label="Line 556" href="#L556"> 556</a> -- Purpose:</span>
+<span id="L557"><a aria-label="Line 557" href="#L557"> 557</a> --   Convert a very small number of accounts into reversed-major-derog cases.</span>
+<span id="L558"><a aria-label="Line 558" href="#L558"> 558</a> --</span>
+<span id="L559"><a aria-label="Line 559" href="#L559"> 559</a> -- Why this exists:</span>
+<span id="L560"><a aria-label="Line 560" href="#L560"> 560</a> --   In real-world remediation and servicing scenarios, banks sometimes reverse major derogatory</span>
+<span id="L561"><a aria-label="Line 561" href="#L561"> 561</a> --   outcomes. We include a tiny number of those cases for realism and future remediation work.</span>
+<span id="L562"><a aria-label="Line 562" href="#L562"> 562</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L563"><a aria-label="Line 563" href="#L563"> 563</a> profile_logic AS (</span>
+<span id="L564"><a aria-label="Line 564" href="#L564"> 564</a>     SELECT</span>
+<span id="L565"><a aria-label="Line 565" href="#L565"> 565</a>         p.*,</span>
+<span id="L566"><a aria-label="Line 566" href="#L566"> 566</a>         CASE</span>
+<span id="L567"><a aria-label="Line 567" href="#L567"> 567</a>             WHEN base_profile_type IN (&#x27;CURRENT&#x27;,&#x27;MILD&#x27;,&#x27;MOD&#x27;)</span>
+<span id="L568"><a aria-label="Line 568" href="#L568"> 568</a>              AND active_flag = 1</span>
+<span id="L569"><a aria-label="Line 569" href="#L569"> 569</a>              AND has_suppression = 0</span>
+<span id="L570"><a aria-label="Line 570" href="#L570"> 570</a>              AND months_reporting_raw &gt;= 20</span>
+<span id="L571"><a aria-label="Line 571" href="#L571"> 571</a>              AND raw_seed % 100 &lt; 2</span>
+<span id="L572"><a aria-label="Line 572" href="#L572"> 572</a>             THEN &#x27;REVERSED_MAJOR_DEROG&#x27;</span>
+<span id="L573"><a aria-label="Line 573" href="#L573"> 573</a>             ELSE base_profile_type</span>
+<span id="L574"><a aria-label="Line 574" href="#L574"> 574</a>         END AS profile_type</span>
+<span id="L575"><a aria-label="Line 575" href="#L575"> 575</a>     FROM patterned p</span>
+<span id="L576"><a aria-label="Line 576" href="#L576"> 576</a> ),</span>
+<span id="L577"><a aria-label="Line 577" href="#L577"> 577</a> </span>
+<span id="L578"><a aria-label="Line 578" href="#L578"> 578</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L579"><a aria-label="Line 579" href="#L579"> 579</a> -- CTE: closure_logic</span>
+<span id="L580"><a aria-label="Line 580" href="#L580"> 580</a> -- Purpose:</span>
+<span id="L581"><a aria-label="Line 581" href="#L581"> 581</a> --   Assign some inactive accounts to paid/closed statuses.</span>
+<span id="L582"><a aria-label="Line 582" href="#L582"> 582</a> --</span>
+<span id="L583"><a aria-label="Line 583" href="#L583"> 583</a> -- Why this exists:</span>
+<span id="L584"><a aria-label="Line 584" href="#L584"> 584</a> --   A realistic portfolio should not contain only active and open derog accounts.</span>
+<span id="L585"><a aria-label="Line 585" href="#L585"> 585</a> --   It should also contain:</span>
+<span id="L586"><a aria-label="Line 586" href="#L586"> 586</a> --   - paid/closed current or near-current accounts</span>
+<span id="L587"><a aria-label="Line 587" href="#L587"> 587</a> --   - paid post-derog accounts (61–65)</span>
+<span id="L588"><a aria-label="Line 588" href="#L588"> 588</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L589"><a aria-label="Line 589" href="#L589"> 589</a> closure_logic AS (</span>
+<span id="L590"><a aria-label="Line 590" href="#L590"> 590</a>     SELECT</span>
+<span id="L591"><a aria-label="Line 591" href="#L591"> 591</a>         pl.*,</span>
+<span id="L592"><a aria-label="Line 592" href="#L592"> 592</a>         CASE</span>
+<span id="L593"><a aria-label="Line 593" href="#L593"> 593</a>             WHEN active_flag = 0</span>
+<span id="L594"><a aria-label="Line 594" href="#L594"> 594</a>              AND profile_type IN (&#x27;CURRENT&#x27;,&#x27;MILD&#x27;,&#x27;MOD&#x27;)</span>
+<span id="L595"><a aria-label="Line 595" href="#L595"> 595</a>              AND raw_seed % 100 &lt; 45</span>
+<span id="L596"><a aria-label="Line 596" href="#L596"> 596</a>             THEN &#x27;13&#x27;</span>
+<span id="L597"><a aria-label="Line 597" href="#L597"> 597</a> </span>
+<span id="L598"><a aria-label="Line 598" href="#L598"> 598</a>             WHEN active_flag = 0</span>
+<span id="L599"><a aria-label="Line 599" href="#L599"> 599</a>              AND profile_type = &#x27;DEROG&#x27;</span>
+<span id="L600"><a aria-label="Line 600" href="#L600"> 600</a>              AND raw_seed % 100 &lt; 55</span>
+<span id="L601"><a aria-label="Line 601" href="#L601"> 601</a>             THEN CASE derog_code</span>
+<span id="L602"><a aria-label="Line 602" href="#L602"> 602</a>                      WHEN &#x27;J&#x27; THEN &#x27;61&#x27;</span>
+<span id="L603"><a aria-label="Line 603" href="#L603"> 603</a>                      WHEN &#x27;G&#x27; THEN &#x27;62&#x27;</span>
+<span id="L604"><a aria-label="Line 604" href="#L604"> 604</a>                      WHEN &#x27;K&#x27; THEN &#x27;63&#x27;</span>
+<span id="L605"><a aria-label="Line 605" href="#L605"> 605</a>                      WHEN &#x27;L&#x27; THEN &#x27;64&#x27;</span>
+<span id="L606"><a aria-label="Line 606" href="#L606"> 606</a>                      WHEN &#x27;H&#x27; THEN &#x27;65&#x27;</span>
+<span id="L607"><a aria-label="Line 607" href="#L607"> 607</a>                      ELSE NULL</span>
+<span id="L608"><a aria-label="Line 608" href="#L608"> 608</a>                  END</span>
+<span id="L609"><a aria-label="Line 609" href="#L609"> 609</a> </span>
+<span id="L610"><a aria-label="Line 610" href="#L610"> 610</a>             ELSE NULL</span>
+<span id="L611"><a aria-label="Line 611" href="#L611"> 611</a>         END AS close_status_code</span>
+<span id="L612"><a aria-label="Line 612" href="#L612"> 612</a>     FROM profile_logic pl</span>
+<span id="L613"><a aria-label="Line 613" href="#L613"> 613</a> ),</span>
+<span id="L614"><a aria-label="Line 614" href="#L614"> 614</a> </span>
+<span id="L615"><a aria-label="Line 615" href="#L615"> 615</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L616"><a aria-label="Line 616" href="#L616"> 616</a> -- CTE: pattern_strings</span>
+<span id="L617"><a aria-label="Line 617" href="#L617"> 617</a> -- Purpose:</span>
+<span id="L618"><a aria-label="Line 618" href="#L618"> 618</a> --   Assign a behavior pattern string per account.</span>
+<span id="L619"><a aria-label="Line 619" href="#L619"> 619</a> --</span>
+<span id="L620"><a aria-label="Line 620" href="#L620"> 620</a> -- Why this exists:</span>
+<span id="L621"><a aria-label="Line 621" href="#L621"> 621</a> --   This is the core behavioral logic of the generator.</span>
+<span id="L622"><a aria-label="Line 622" href="#L622"> 622</a> --   Instead of generating month-to-month states independently, we use valid pattern strings</span>
+<span id="L623"><a aria-label="Line 623" href="#L623"> 623</a> --   so transitions remain logical.</span>
+<span id="L624"><a aria-label="Line 624" href="#L624"> 624</a> --</span>
+<span id="L625"><a aria-label="Line 625" href="#L625"> 625</a> -- SQL mechanics:</span>
+<span id="L626"><a aria-label="Line 626" href="#L626"> 626</a> --   - Each pattern string is ordered from most recent month to older months</span>
+<span id="L627"><a aria-label="Line 627" href="#L627"> 627</a> --   - Later we &quot;place&quot; that pattern into the account timeline</span>
+<span id="L628"><a aria-label="Line 628" href="#L628"> 628</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L629"><a aria-label="Line 629" href="#L629"> 629</a> pattern_strings AS (</span>
+<span id="L630"><a aria-label="Line 630" href="#L630"> 630</a>     SELECT</span>
+<span id="L631"><a aria-label="Line 631" href="#L631"> 631</a>         account,</span>
+<span id="L632"><a aria-label="Line 632" href="#L632"> 632</a>         profile_type,</span>
+<span id="L633"><a aria-label="Line 633" href="#L633"> 633</a>         active_flag,</span>
+<span id="L634"><a aria-label="Line 634" href="#L634"> 634</a>         behavior_variant,</span>
+<span id="L635"><a aria-label="Line 635" href="#L635"> 635</a>         has_suppression,</span>
+<span id="L636"><a aria-label="Line 636" href="#L636"> 636</a>         suppression_start_age,</span>
+<span id="L637"><a aria-label="Line 637" href="#L637"> 637</a>         derog_code,</span>
+<span id="L638"><a aria-label="Line 638" href="#L638"> 638</a>         raw_seed,</span>
+<span id="L639"><a aria-label="Line 639" href="#L639"> 639</a>         months_reporting_raw,</span>
+<span id="L640"><a aria-label="Line 640" href="#L640"> 640</a>         close_status_code,</span>
+<span id="L641"><a aria-label="Line 641" href="#L641"> 641</a>         CASE</span>
+<span id="L642"><a aria-label="Line 642" href="#L642"> 642</a>             WHEN profile_type = &#x27;REVERSED_MAJOR_DEROG&#x27;</span>
+<span id="L643"><a aria-label="Line 643" href="#L643"> 643</a>                 THEN &#x27;012345&#x27; || derog_code || &#x27;543210&#x27;</span>
+<span id="L644"><a aria-label="Line 644" href="#L644"> 644</a> </span>
+<span id="L645"><a aria-label="Line 645" href="#L645"> 645</a>             WHEN close_status_code = &#x27;13&#x27; THEN</span>
+<span id="L646"><a aria-label="Line 646" href="#L646"> 646</a>                 CASE</span>
+<span id="L647"><a aria-label="Line 647" href="#L647"> 647</a>                     WHEN behavior_variant &lt; 70 THEN &#x27;0&#x27;</span>
+<span id="L648"><a aria-label="Line 648" href="#L648"> 648</a>                     WHEN behavior_variant &lt; 90 THEN &#x27;010&#x27;</span>
+<span id="L649"><a aria-label="Line 649" href="#L649"> 649</a>                     ELSE &#x27;01210&#x27;</span>
+<span id="L650"><a aria-label="Line 650" href="#L650"> 650</a>                 END</span>
+<span id="L651"><a aria-label="Line 651" href="#L651"> 651</a> </span>
+<span id="L652"><a aria-label="Line 652" href="#L652"> 652</a>             WHEN close_status_code IN (&#x27;61&#x27;,&#x27;62&#x27;,&#x27;63&#x27;,&#x27;64&#x27;,&#x27;65&#x27;) THEN</span>
+<span id="L653"><a aria-label="Line 653" href="#L653"> 653</a>                 REPEAT(</span>
+<span id="L654"><a aria-label="Line 654" href="#L654"> 654</a>                     CASE close_status_code</span>
+<span id="L655"><a aria-label="Line 655" href="#L655"> 655</a>                         WHEN &#x27;61&#x27; THEN &#x27;J&#x27;</span>
+<span id="L656"><a aria-label="Line 656" href="#L656"> 656</a>                         WHEN &#x27;62&#x27; THEN &#x27;G&#x27;</span>
+<span id="L657"><a aria-label="Line 657" href="#L657"> 657</a>                         WHEN &#x27;63&#x27; THEN &#x27;K&#x27;</span>
+<span id="L658"><a aria-label="Line 658" href="#L658"> 658</a>                         WHEN &#x27;64&#x27; THEN &#x27;L&#x27;</span>
+<span id="L659"><a aria-label="Line 659" href="#L659"> 659</a>                         WHEN &#x27;65&#x27; THEN &#x27;H&#x27;</span>
+<span id="L660"><a aria-label="Line 660" href="#L660"> 660</a>                     END,</span>
+<span id="L661"><a aria-label="Line 661" href="#L661"> 661</a>                     1 + LEAST(raw_seed % 4, 3)</span>
+<span id="L662"><a aria-label="Line 662" href="#L662"> 662</a>                 ) || &#x27;6543210&#x27;</span>
+<span id="L663"><a aria-label="Line 663" href="#L663"> 663</a> </span>
+<span id="L664"><a aria-label="Line 664" href="#L664"> 664</a>             WHEN profile_type = &#x27;CURRENT&#x27; THEN</span>
+<span id="L665"><a aria-label="Line 665" href="#L665"> 665</a>                 CASE</span>
+<span id="L666"><a aria-label="Line 666" href="#L666"> 666</a>                     WHEN behavior_variant &lt; 92 THEN &#x27;0&#x27;</span>
+<span id="L667"><a aria-label="Line 667" href="#L667"> 667</a>                     WHEN behavior_variant &lt; 98 THEN &#x27;010&#x27;</span>
+<span id="L668"><a aria-label="Line 668" href="#L668"> 668</a>                     ELSE &#x27;01210&#x27;</span>
+<span id="L669"><a aria-label="Line 669" href="#L669"> 669</a>                 END</span>
+<span id="L670"><a aria-label="Line 670" href="#L670"> 670</a> </span>
+<span id="L671"><a aria-label="Line 671" href="#L671"> 671</a>             WHEN profile_type = &#x27;MILD&#x27; THEN</span>
+<span id="L672"><a aria-label="Line 672" href="#L672"> 672</a>                 CASE</span>
+<span id="L673"><a aria-label="Line 673" href="#L673"> 673</a>                     WHEN behavior_variant &lt; 30 THEN &#x27;10&#x27;</span>
+<span id="L674"><a aria-label="Line 674" href="#L674"> 674</a>                     WHEN behavior_variant &lt; 55 THEN &#x27;110&#x27;</span>
+<span id="L675"><a aria-label="Line 675" href="#L675"> 675</a>                     WHEN behavior_variant &lt; 75 THEN &#x27;210&#x27;</span>
+<span id="L676"><a aria-label="Line 676" href="#L676"> 676</a>                     WHEN behavior_variant &lt; 90 THEN &#x27;010&#x27;</span>
+<span id="L677"><a aria-label="Line 677" href="#L677"> 677</a>                     ELSE &#x27;01210&#x27;</span>
+<span id="L678"><a aria-label="Line 678" href="#L678"> 678</a>                 END</span>
+<span id="L679"><a aria-label="Line 679" href="#L679"> 679</a> </span>
+<span id="L680"><a aria-label="Line 680" href="#L680"> 680</a>             WHEN profile_type = &#x27;MOD&#x27; THEN</span>
+<span id="L681"><a aria-label="Line 681" href="#L681"> 681</a>                 CASE</span>
+<span id="L682"><a aria-label="Line 682" href="#L682"> 682</a>                     WHEN behavior_variant &lt; 45 THEN &#x27;3210&#x27;</span>
+<span id="L683"><a aria-label="Line 683" href="#L683"> 683</a>                     WHEN behavior_variant &lt; 80 THEN &#x27;43210&#x27;</span>
+<span id="L684"><a aria-label="Line 684" href="#L684"> 684</a>                     ELSE &#x27;0123210&#x27;</span>
+<span id="L685"><a aria-label="Line 685" href="#L685"> 685</a>                 END</span>
+<span id="L686"><a aria-label="Line 686" href="#L686"> 686</a> </span>
+<span id="L687"><a aria-label="Line 687" href="#L687"> 687</a>             WHEN profile_type = &#x27;SEVERE&#x27; THEN</span>
+<span id="L688"><a aria-label="Line 688" href="#L688"> 688</a>                 CASE</span>
+<span id="L689"><a aria-label="Line 689" href="#L689"> 689</a>                     WHEN behavior_variant &lt; 55 THEN &#x27;543210&#x27;</span>
+<span id="L690"><a aria-label="Line 690" href="#L690"> 690</a>                     ELSE &#x27;6543210&#x27;</span>
+<span id="L691"><a aria-label="Line 691" href="#L691"> 691</a>                 END</span>
+<span id="L692"><a aria-label="Line 692" href="#L692"> 692</a> </span>
+<span id="L693"><a aria-label="Line 693" href="#L693"> 693</a>             WHEN profile_type = &#x27;DEROG&#x27; THEN</span>
+<span id="L694"><a aria-label="Line 694" href="#L694"> 694</a>                 REPEAT(</span>
+<span id="L695"><a aria-label="Line 695" href="#L695"> 695</a>                     derog_code,</span>
+<span id="L696"><a aria-label="Line 696" href="#L696"> 696</a>                     1 + LEAST(raw_seed % 5, 4)</span>
+<span id="L697"><a aria-label="Line 697" href="#L697"> 697</a>                 ) || &#x27;6543210&#x27;</span>
+<span id="L698"><a aria-label="Line 698" href="#L698"> 698</a>         END AS pattern_string</span>
+<span id="L699"><a aria-label="Line 699" href="#L699"> 699</a>     FROM closure_logic</span>
+<span id="L700"><a aria-label="Line 700" href="#L700"> 700</a> ),</span>
+<span id="L701"><a aria-label="Line 701" href="#L701"> 701</a> </span>
+<span id="L702"><a aria-label="Line 702" href="#L702"> 702</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L703"><a aria-label="Line 703" href="#L703"> 703</a> -- CTE: pattern_meta</span>
+<span id="L704"><a aria-label="Line 704" href="#L704"> 704</a> -- Purpose:</span>
+<span id="L705"><a aria-label="Line 705" href="#L705"> 705</a> --   Derive metadata about each pattern:</span>
+<span id="L706"><a aria-label="Line 706" href="#L706"> 706</a> --   - pattern length</span>
+<span id="L707"><a aria-label="Line 707" href="#L707"> 707</a> --   - mode (NONE / ACTIVE / CURED / CLOSED)</span>
+<span id="L708"><a aria-label="Line 708" href="#L708"> 708</a> --   - clean runway requirement</span>
+<span id="L709"><a aria-label="Line 709" href="#L709"> 709</a> --</span>
+<span id="L710"><a aria-label="Line 710" href="#L710"> 710</a> -- Why this exists:</span>
+<span id="L711"><a aria-label="Line 711" href="#L711"> 711</a> --   Some patterns must be pushed farther back in time so the latest month is current.</span>
+<span id="L712"><a aria-label="Line 712" href="#L712"> 712</a> --   We also require clean history behind adverse ramps to avoid unrealistic thin-file behavior.</span>
+<span id="L713"><a aria-label="Line 713" href="#L713"> 713</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L714"><a aria-label="Line 714" href="#L714"> 714</a> pattern_meta AS (</span>
+<span id="L715"><a aria-label="Line 715" href="#L715"> 715</a>     SELECT</span>
+<span id="L716"><a aria-label="Line 716" href="#L716"> 716</a>         account,</span>
+<span id="L717"><a aria-label="Line 717" href="#L717"> 717</a>         profile_type,</span>
+<span id="L718"><a aria-label="Line 718" href="#L718"> 718</a>         active_flag,</span>
+<span id="L719"><a aria-label="Line 719" href="#L719"> 719</a>         behavior_variant,</span>
+<span id="L720"><a aria-label="Line 720" href="#L720"> 720</a>         has_suppression,</span>
+<span id="L721"><a aria-label="Line 721" href="#L721"> 721</a>         suppression_start_age,</span>
+<span id="L722"><a aria-label="Line 722" href="#L722"> 722</a>         derog_code,</span>
+<span id="L723"><a aria-label="Line 723" href="#L723"> 723</a>         raw_seed,</span>
+<span id="L724"><a aria-label="Line 724" href="#L724"> 724</a>         months_reporting_raw,</span>
+<span id="L725"><a aria-label="Line 725" href="#L725"> 725</a>         close_status_code,</span>
+<span id="L726"><a aria-label="Line 726" href="#L726"> 726</a>         pattern_string,</span>
+<span id="L727"><a aria-label="Line 727" href="#L727"> 727</a>         LENGTH(pattern_string) AS pattern_length,</span>
+<span id="L728"><a aria-label="Line 728" href="#L728"> 728</a>         CASE</span>
+<span id="L729"><a aria-label="Line 729" href="#L729"> 729</a>             WHEN profile_type = &#x27;REVERSED_MAJOR_DEROG&#x27; THEN &#x27;CURED&#x27;</span>
+<span id="L730"><a aria-label="Line 730" href="#L730"> 730</a>             WHEN close_status_code IS NOT NULL THEN &#x27;CLOSED&#x27;</span>
+<span id="L731"><a aria-label="Line 731" href="#L731"> 731</a>             WHEN profile_type IN (&#x27;SEVERE&#x27;, &#x27;DEROG&#x27;) THEN &#x27;ACTIVE&#x27;</span>
+<span id="L732"><a aria-label="Line 732" href="#L732"> 732</a>             WHEN profile_type IN (&#x27;CURRENT&#x27;,&#x27;MILD&#x27;,&#x27;MOD&#x27;)</span>
+<span id="L733"><a aria-label="Line 733" href="#L733"> 733</a>                  AND pattern_string IN (&#x27;010&#x27;,&#x27;01210&#x27;,&#x27;0123210&#x27;)</span>
+<span id="L734"><a aria-label="Line 734" href="#L734"> 734</a>             THEN &#x27;CURED&#x27;</span>
+<span id="L735"><a aria-label="Line 735" href="#L735"> 735</a>             WHEN pattern_string = &#x27;0&#x27; THEN &#x27;NONE&#x27;</span>
+<span id="L736"><a aria-label="Line 736" href="#L736"> 736</a>             ELSE &#x27;ACTIVE&#x27;</span>
+<span id="L737"><a aria-label="Line 737" href="#L737"> 737</a>         END AS pattern_mode,</span>
+<span id="L738"><a aria-label="Line 738" href="#L738"> 738</a>         CASE</span>
+<span id="L739"><a aria-label="Line 739" href="#L739"> 739</a>             WHEN pattern_string = &#x27;0&#x27; THEN 0</span>
+<span id="L740"><a aria-label="Line 740" href="#L740"> 740</a>             WHEN pattern_string IN (&#x27;10&#x27;,&#x27;110&#x27;,&#x27;010&#x27;) THEN 2</span>
+<span id="L741"><a aria-label="Line 741" href="#L741"> 741</a>             WHEN pattern_string IN (&#x27;210&#x27;,&#x27;01210&#x27;) THEN 3</span>
+<span id="L742"><a aria-label="Line 742" href="#L742"> 742</a>             WHEN pattern_string IN (&#x27;3210&#x27;) THEN 3</span>
+<span id="L743"><a aria-label="Line 743" href="#L743"> 743</a>             WHEN pattern_string IN (&#x27;43210&#x27;,&#x27;0123210&#x27;) THEN 4</span>
+<span id="L744"><a aria-label="Line 744" href="#L744"> 744</a>             WHEN pattern_string IN (&#x27;543210&#x27;) THEN 5</span>
+<span id="L745"><a aria-label="Line 745" href="#L745"> 745</a>             WHEN pattern_string IN (&#x27;6543210&#x27;) THEN 6</span>
+<span id="L746"><a aria-label="Line 746" href="#L746"> 746</a>             WHEN profile_type = &#x27;REVERSED_MAJOR_DEROG&#x27; THEN 6</span>
+<span id="L747"><a aria-label="Line 747" href="#L747"> 747</a>             ELSE 6</span>
+<span id="L748"><a aria-label="Line 748" href="#L748"> 748</a>         END AS clean_runway</span>
+<span id="L749"><a aria-label="Line 749" href="#L749"> 749</a>     FROM pattern_strings</span>
+<span id="L750"><a aria-label="Line 750" href="#L750"> 750</a> ),</span>
+<span id="L751"><a aria-label="Line 751" href="#L751"> 751</a> </span>
+<span id="L752"><a aria-label="Line 752" href="#L752"> 752</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L753"><a aria-label="Line 753" href="#L753"> 753</a> -- CTE: fitted</span>
+<span id="L754"><a aria-label="Line 754" href="#L754"> 754</a> -- Purpose:</span>
+<span id="L755"><a aria-label="Line 755" href="#L755"> 755</a> --   Force enough reporting history to fit the pattern and required clean runway.</span>
+<span id="L756"><a aria-label="Line 756" href="#L756"> 756</a> --</span>
+<span id="L757"><a aria-label="Line 757" href="#L757"> 757</a> -- Why this exists:</span>
+<span id="L758"><a aria-label="Line 758" href="#L758"> 758</a> --   Without this, you get unrealistic cases where the oldest reported month is already deeply delinquent.</span>
+<span id="L759"><a aria-label="Line 759" href="#L759"> 759</a> --</span>
+<span id="L760"><a aria-label="Line 760" href="#L760"> 760</a> -- SQL mechanics:</span>
+<span id="L761"><a aria-label="Line 761" href="#L761"> 761</a> --   - GREATEST ensures the account is old enough to fit:</span>
+<span id="L762"><a aria-label="Line 762" href="#L762"> 762</a> --         pattern_length + clean_runway</span>
+<span id="L763"><a aria-label="Line 763" href="#L763"> 763</a> --   - LEAST caps history at 84 months</span>
+<span id="L764"><a aria-label="Line 764" href="#L764"> 764</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L765"><a aria-label="Line 765" href="#L765"> 765</a> fitted AS (</span>
+<span id="L766"><a aria-label="Line 766" href="#L766"> 766</a>     SELECT</span>
+<span id="L767"><a aria-label="Line 767" href="#L767"> 767</a>         account,</span>
+<span id="L768"><a aria-label="Line 768" href="#L768"> 768</a>         profile_type,</span>
+<span id="L769"><a aria-label="Line 769" href="#L769"> 769</a>         active_flag,</span>
+<span id="L770"><a aria-label="Line 770" href="#L770"> 770</a>         behavior_variant,</span>
+<span id="L771"><a aria-label="Line 771" href="#L771"> 771</a>         has_suppression,</span>
+<span id="L772"><a aria-label="Line 772" href="#L772"> 772</a>         suppression_start_age,</span>
+<span id="L773"><a aria-label="Line 773" href="#L773"> 773</a>         derog_code,</span>
+<span id="L774"><a aria-label="Line 774" href="#L774"> 774</a>         raw_seed,</span>
+<span id="L775"><a aria-label="Line 775" href="#L775"> 775</a>         months_reporting_raw,</span>
+<span id="L776"><a aria-label="Line 776" href="#L776"> 776</a>         close_status_code,</span>
+<span id="L777"><a aria-label="Line 777" href="#L777"> 777</a>         pattern_string,</span>
+<span id="L778"><a aria-label="Line 778" href="#L778"> 778</a>         pattern_length,</span>
+<span id="L779"><a aria-label="Line 779" href="#L779"> 779</a>         pattern_mode,</span>
+<span id="L780"><a aria-label="Line 780" href="#L780"> 780</a>         clean_runway,</span>
+<span id="L781"><a aria-label="Line 781" href="#L781"> 781</a>         LEAST(</span>
+<span id="L782"><a aria-label="Line 782" href="#L782"> 782</a>             GREATEST(months_reporting_raw, pattern_length + clean_runway),</span>
+<span id="L783"><a aria-label="Line 783" href="#L783"> 783</a>             84</span>
+<span id="L784"><a aria-label="Line 784" href="#L784"> 784</a>         ) AS months_reporting</span>
+<span id="L785"><a aria-label="Line 785" href="#L785"> 785</a>     FROM pattern_meta</span>
+<span id="L786"><a aria-label="Line 786" href="#L786"> 786</a> ),</span>
+<span id="L787"><a aria-label="Line 787" href="#L787"> 787</a> </span>
+<span id="L788"><a aria-label="Line 788" href="#L788"> 788</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L789"><a aria-label="Line 789" href="#L789"> 789</a> -- CTE: dated</span>
+<span id="L790"><a aria-label="Line 790" href="#L790"> 790</a> -- Purpose:</span>
+<span id="L791"><a aria-label="Line 791" href="#L791"> 791</a> --   Assign account-level start and end dates.</span>
+<span id="L792"><a aria-label="Line 792" href="#L792"> 792</a> --</span>
+<span id="L793"><a aria-label="Line 793" href="#L793"> 793</a> -- Why this exists:</span>
+<span id="L794"><a aria-label="Line 794" href="#L794"> 794</a> --   Real portfolios are panel data. Accounts do not all start and stop on the same timeline.</span>
+<span id="L795"><a aria-label="Line 795" href="#L795"> 795</a> --</span>
+<span id="L796"><a aria-label="Line 796" href="#L796"> 796</a> -- SQL mechanics:</span>
+<span id="L797"><a aria-label="Line 797" href="#L797"> 797</a> --   - active accounts end at the anchor date</span>
+<span id="L798"><a aria-label="Line 798" href="#L798"> 798</a> --   - inactive accounts stop at a deterministic earlier date</span>
+<span id="L799"><a aria-label="Line 799" href="#L799"> 799</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L800"><a aria-label="Line 800" href="#L800"> 800</a> dated AS (</span>
+<span id="L801"><a aria-label="Line 801" href="#L801"> 801</a>     SELECT</span>
+<span id="L802"><a aria-label="Line 802" href="#L802"> 802</a>         account,</span>
+<span id="L803"><a aria-label="Line 803" href="#L803"> 803</a>         profile_type,</span>
+<span id="L804"><a aria-label="Line 804" href="#L804"> 804</a>         active_flag,</span>
+<span id="L805"><a aria-label="Line 805" href="#L805"> 805</a>         behavior_variant,</span>
+<span id="L806"><a aria-label="Line 806" href="#L806"> 806</a>         has_suppression,</span>
+<span id="L807"><a aria-label="Line 807" href="#L807"> 807</a>         suppression_start_age,</span>
+<span id="L808"><a aria-label="Line 808" href="#L808"> 808</a>         derog_code,</span>
+<span id="L809"><a aria-label="Line 809" href="#L809"> 809</a>         raw_seed,</span>
+<span id="L810"><a aria-label="Line 810" href="#L810"> 810</a>         months_reporting_raw,</span>
+<span id="L811"><a aria-label="Line 811" href="#L811"> 811</a>         close_status_code,</span>
+<span id="L812"><a aria-label="Line 812" href="#L812"> 812</a>         pattern_string,</span>
+<span id="L813"><a aria-label="Line 813" href="#L813"> 813</a>         pattern_length,</span>
+<span id="L814"><a aria-label="Line 814" href="#L814"> 814</a>         pattern_mode,</span>
+<span id="L815"><a aria-label="Line 815" href="#L815"> 815</a>         clean_runway,</span>
+<span id="L816"><a aria-label="Line 816" href="#L816"> 816</a>         months_reporting,</span>
+<span id="L817"><a aria-label="Line 817" href="#L817"> 817</a>         CASE</span>
+<span id="L818"><a aria-label="Line 818" href="#L818"> 818</a>             WHEN active_flag = 1 THEN DATE &#x27;2025-10-01&#x27;</span>
+<span id="L819"><a aria-label="Line 819" href="#L819"> 819</a>             ELSE (DATE &#x27;2025-10-01&#x27; - ((1 + (account::bigint * 13 % 42)) * INTERVAL &#x27;1 month&#x27;))::date</span>
+<span id="L820"><a aria-label="Line 820" href="#L820"> 820</a>         END AS end_date</span>
+<span id="L821"><a aria-label="Line 821" href="#L821"> 821</a>     FROM fitted</span>
+<span id="L822"><a aria-label="Line 822" href="#L822"> 822</a> ),</span>
+<span id="L823"><a aria-label="Line 823" href="#L823"> 823</a> </span>
+<span id="L824"><a aria-label="Line 824" href="#L824"> 824</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L825"><a aria-label="Line 825" href="#L825"> 825</a> -- CTE: blueprint</span>
+<span id="L826"><a aria-label="Line 826" href="#L826"> 826</a> -- Purpose:</span>
+<span id="L827"><a aria-label="Line 827" href="#L827"> 827</a> --   Finalize the account-level blueprint table.</span>
+<span id="L828"><a aria-label="Line 828" href="#L828"> 828</a> --</span>
+<span id="L829"><a aria-label="Line 829" href="#L829"> 829</a> -- Why this exists:</span>
+<span id="L830"><a aria-label="Line 830" href="#L830"> 830</a> --   This is the one-row-per-account design table used by downstream steps.</span>
+<span id="L831"><a aria-label="Line 831" href="#L831"> 831</a> --</span>
+<span id="L832"><a aria-label="Line 832" href="#L832"> 832</a> -- SQL mechanics:</span>
+<span id="L833"><a aria-label="Line 833" href="#L833"> 833</a> --   - start_date is derived from end_date and months_reporting</span>
+<span id="L834"><a aria-label="Line 834" href="#L834"> 834</a> --   - date_closed is populated only for closed-status accounts</span>
+<span id="L835"><a aria-label="Line 835" href="#L835"> 835</a> --   - episode_start_age controls where the pattern is placed in the time series</span>
+<span id="L836"><a aria-label="Line 836" href="#L836"> 836</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L837"><a aria-label="Line 837" href="#L837"> 837</a> blueprint AS (</span>
+<span id="L838"><a aria-label="Line 838" href="#L838"> 838</a>     SELECT</span>
+<span id="L839"><a aria-label="Line 839" href="#L839"> 839</a>         account,</span>
+<span id="L840"><a aria-label="Line 840" href="#L840"> 840</a>         profile_type,</span>
+<span id="L841"><a aria-label="Line 841" href="#L841"> 841</a>         active_flag,</span>
+<span id="L842"><a aria-label="Line 842" href="#L842"> 842</a>         months_reporting,</span>
+<span id="L843"><a aria-label="Line 843" href="#L843"> 843</a>         (end_date - ((months_reporting - 1) * INTERVAL &#x27;1 month&#x27;))::date AS start_date,</span>
+<span id="L844"><a aria-label="Line 844" href="#L844"> 844</a>         end_date,</span>
+<span id="L845"><a aria-label="Line 845" href="#L845"> 845</a>         CASE WHEN close_status_code IS NOT NULL THEN end_date ELSE NULL END AS date_closed,</span>
+<span id="L846"><a aria-label="Line 846" href="#L846"> 846</a>         close_status_code,</span>
+<span id="L847"><a aria-label="Line 847" href="#L847"> 847</a>         has_suppression,</span>
+<span id="L848"><a aria-label="Line 848" href="#L848"> 848</a>         suppression_start_age,</span>
+<span id="L849"><a aria-label="Line 849" href="#L849"> 849</a>         derog_code,</span>
+<span id="L850"><a aria-label="Line 850" href="#L850"> 850</a>         pattern_string,</span>
+<span id="L851"><a aria-label="Line 851" href="#L851"> 851</a>         pattern_length,</span>
+<span id="L852"><a aria-label="Line 852" href="#L852"> 852</a>         pattern_mode,</span>
+<span id="L853"><a aria-label="Line 853" href="#L853"> 853</a>         clean_runway,</span>
+<span id="L854"><a aria-label="Line 854" href="#L854"> 854</a>         CASE</span>
+<span id="L855"><a aria-label="Line 855" href="#L855"> 855</a>             WHEN pattern_mode = &#x27;NONE&#x27; THEN 0</span>
+<span id="L856"><a aria-label="Line 856" href="#L856"> 856</a>             WHEN pattern_mode = &#x27;ACTIVE&#x27; THEN 0</span>
+<span id="L857"><a aria-label="Line 857" href="#L857"> 857</a>             WHEN profile_type = &#x27;REVERSED_MAJOR_DEROG&#x27; THEN 0</span>
+<span id="L858"><a aria-label="Line 858" href="#L858"> 858</a>             WHEN close_status_code IS NOT NULL THEN 0</span>
+<span id="L859"><a aria-label="Line 859" href="#L859"> 859</a>             ELSE raw_seed % GREATEST(months_reporting - pattern_length - clean_runway + 1, 1)</span>
+<span id="L860"><a aria-label="Line 860" href="#L860"> 860</a>         END AS episode_start_age</span>
+<span id="L861"><a aria-label="Line 861" href="#L861"> 861</a>     FROM dated</span>
+<span id="L862"><a aria-label="Line 862" href="#L862"> 862</a> )</span>
+<span id="L863"><a aria-label="Line 863" href="#L863"> 863</a> SELECT</span>
+<span id="L864"><a aria-label="Line 864" href="#L864"> 864</a>     account,</span>
+<span id="L865"><a aria-label="Line 865" href="#L865"> 865</a>     profile_type,</span>
+<span id="L866"><a aria-label="Line 866" href="#L866"> 866</a>     active_flag,</span>
+<span id="L867"><a aria-label="Line 867" href="#L867"> 867</a>     months_reporting,</span>
+<span id="L868"><a aria-label="Line 868" href="#L868"> 868</a>     start_date,</span>
+<span id="L869"><a aria-label="Line 869" href="#L869"> 869</a>     end_date,</span>
+<span id="L870"><a aria-label="Line 870" href="#L870"> 870</a>     date_closed,</span>
+<span id="L871"><a aria-label="Line 871" href="#L871"> 871</a>     close_status_code,</span>
+<span id="L872"><a aria-label="Line 872" href="#L872"> 872</a>     has_suppression,</span>
+<span id="L873"><a aria-label="Line 873" href="#L873"> 873</a>     suppression_start_age,</span>
+<span id="L874"><a aria-label="Line 874" href="#L874"> 874</a>     derog_code,</span>
+<span id="L875"><a aria-label="Line 875" href="#L875"> 875</a>     pattern_string,</span>
+<span id="L876"><a aria-label="Line 876" href="#L876"> 876</a>     pattern_length,</span>
+<span id="L877"><a aria-label="Line 877" href="#L877"> 877</a>     pattern_mode,</span>
+<span id="L878"><a aria-label="Line 878" href="#L878"> 878</a>     clean_runway,</span>
+<span id="L879"><a aria-label="Line 879" href="#L879"> 879</a>     episode_start_age</span>
+<span id="L880"><a aria-label="Line 880" href="#L880"> 880</a> FROM blueprint</span>
+<span id="L881"><a aria-label="Line 881" href="#L881"> 881</a> ORDER BY account;</span>
+<span id="L882"><a aria-label="Line 882" href="#L882"> 882</a> </span>
+<span id="L883"><a aria-label="Line 883" href="#L883"> 883</a> CREATE UNIQUE INDEX ix_blueprint_account ON module1.metro2_account_blueprint (account);</span>
+<span id="L884"><a aria-label="Line 884" href="#L884"> 884</a> </span>
+<span id="L885"><a aria-label="Line 885" href="#L885"> 885</a> </span>
+<span id="L886"><a aria-label="Line 886" href="#L886"> 886</a> -- ====================================================================================================</span>
+<span id="L887"><a aria-label="Line 887" href="#L887"> 887</a> -- SECTION 5: BUILD MONTH-LEVEL STATUS HISTORY</span>
+<span id="L888"><a aria-label="Line 888" href="#L888"> 888</a> -- ====================================================================================================</span>
+<span id="L889"><a aria-label="Line 889" href="#L889"> 889</a> -- Purpose:</span>
+<span id="L890"><a aria-label="Line 890" href="#L890"> 890</a> --   Create the central month-level truth table:</span>
+<span id="L891"><a aria-label="Line 891" href="#L891"> 891</a> --      metro2_status_history(account, byte_date, perf_age, status)</span>
+<span id="L892"><a aria-label="Line 892" href="#L892"> 892</a> --</span>
+<span id="L893"><a aria-label="Line 893" href="#L893"> 893</a> -- Why this exists:</span>
+<span id="L894"><a aria-label="Line 894" href="#L894"> 894</a> --   This is the biggest Version 2 optimization.</span>
+<span id="L895"><a aria-label="Line 895" href="#L895"> 895</a> --   Instead of deriving everything from PHP repeatedly, we calculate month-level history once.</span>
+<span id="L896"><a aria-label="Line 896" href="#L896"> 896</a> --</span>
+<span id="L897"><a aria-label="Line 897" href="#L897"> 897</a> -- SQL mechanics:</span>
+<span id="L898"><a aria-label="Line 898" href="#L898"> 898</a> --   - generate_series(start_date - 1 month, end_date - 1 month, 1 month)</span>
+<span id="L899"><a aria-label="Line 899" href="#L899"> 899</a> --     creates each represented performance month</span>
+<span id="L900"><a aria-label="Line 900" href="#L900"> 900</a> --   - ROW_NUMBER ordered descending by byte_date creates perf_age:</span>
+<span id="L901"><a aria-label="Line 901" href="#L901"> 901</a> --       0 = most recent represented month</span>
+<span id="L902"><a aria-label="Line 902" href="#L902"> 902</a> --       1 = one month older</span>
+<span id="L903"><a aria-label="Line 903" href="#L903"> 903</a> --   - pattern placement uses perf_age and episode_start_age</span>
+<span id="L904"><a aria-label="Line 904" href="#L904"> 904</a> -- ====================================================================================================</span>
+<span id="L905"><a aria-label="Line 905" href="#L905"> 905</a> CREATE TABLE module1.metro2_status_history AS</span>
+<span id="L906"><a aria-label="Line 906" href="#L906"> 906</a> WITH</span>
+<span id="L907"><a aria-label="Line 907" href="#L907"> 907</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L908"><a aria-label="Line 908" href="#L908"> 908</a> -- CTE: performance_months</span>
+<span id="L909"><a aria-label="Line 909" href="#L909"> 909</a> -- Purpose:</span>
+<span id="L910"><a aria-label="Line 910" href="#L910"> 910</a> --   Create one row per account per represented month.</span>
+<span id="L911"><a aria-label="Line 911" href="#L911"> 911</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L912"><a aria-label="Line 912" href="#L912"> 912</a> performance_months AS (</span>
+<span id="L913"><a aria-label="Line 913" href="#L913"> 913</a>     SELECT</span>
+<span id="L914"><a aria-label="Line 914" href="#L914"> 914</a>         a.account,</span>
+<span id="L915"><a aria-label="Line 915" href="#L915"> 915</a>         a.profile_type,</span>
+<span id="L916"><a aria-label="Line 916" href="#L916"> 916</a>         a.start_date,</span>
+<span id="L917"><a aria-label="Line 917" href="#L917"> 917</a>         a.end_date,</span>
+<span id="L918"><a aria-label="Line 918" href="#L918"> 918</a>         a.pattern_string,</span>
+<span id="L919"><a aria-label="Line 919" href="#L919"> 919</a>         a.pattern_length,</span>
+<span id="L920"><a aria-label="Line 920" href="#L920"> 920</a>         a.pattern_mode,</span>
+<span id="L921"><a aria-label="Line 921" href="#L921"> 921</a>         a.episode_start_age,</span>
+<span id="L922"><a aria-label="Line 922" href="#L922"> 922</a>         a.has_suppression,</span>
+<span id="L923"><a aria-label="Line 923" href="#L923"> 923</a>         a.suppression_start_age,</span>
+<span id="L924"><a aria-label="Line 924" href="#L924"> 924</a>         gs::date AS byte_date,</span>
+<span id="L925"><a aria-label="Line 925" href="#L925"> 925</a>         ROW_NUMBER() OVER (</span>
+<span id="L926"><a aria-label="Line 926" href="#L926"> 926</a>             PARTITION BY a.account</span>
+<span id="L927"><a aria-label="Line 927" href="#L927"> 927</a>             ORDER BY gs DESC</span>
+<span id="L928"><a aria-label="Line 928" href="#L928"> 928</a>         ) - 1 AS perf_age</span>
+<span id="L929"><a aria-label="Line 929" href="#L929"> 929</a>     FROM module1.metro2_account_blueprint a</span>
+<span id="L930"><a aria-label="Line 930" href="#L930"> 930</a>     CROSS JOIN LATERAL generate_series(</span>
+<span id="L931"><a aria-label="Line 931" href="#L931"> 931</a>         a.start_date - INTERVAL &#x27;1 month&#x27;,</span>
+<span id="L932"><a aria-label="Line 932" href="#L932"> 932</a>         a.end_date   - INTERVAL &#x27;1 month&#x27;,</span>
+<span id="L933"><a aria-label="Line 933" href="#L933"> 933</a>         INTERVAL &#x27;1 month&#x27;</span>
+<span id="L934"><a aria-label="Line 934" href="#L934"> 934</a>     ) AS gs</span>
+<span id="L935"><a aria-label="Line 935" href="#L935"> 935</a> ),</span>
+<span id="L936"><a aria-label="Line 936" href="#L936"> 936</a> </span>
+<span id="L937"><a aria-label="Line 937" href="#L937"> 937</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L938"><a aria-label="Line 938" href="#L938"> 938</a> -- CTE: status_history_raw</span>
+<span id="L939"><a aria-label="Line 939" href="#L939"> 939</a> -- Purpose:</span>
+<span id="L940"><a aria-label="Line 940" href="#L940"> 940</a> --   Translate each account’s pattern string into raw month-level statuses.</span>
+<span id="L941"><a aria-label="Line 941" href="#L941"> 941</a> --</span>
+<span id="L942"><a aria-label="Line 942" href="#L942"> 942</a> -- SQL mechanics:</span>
+<span id="L943"><a aria-label="Line 943" href="#L943"> 943</a> --   - If the account has no meaningful pattern, assign 0</span>
+<span id="L944"><a aria-label="Line 944" href="#L944"> 944</a> --   - If perf_age falls inside the pattern window, pull the corresponding character</span>
+<span id="L945"><a aria-label="Line 945" href="#L945"> 945</a> --     from pattern_string using SUBSTRING</span>
+<span id="L946"><a aria-label="Line 946" href="#L946"> 946</a> --   - Otherwise assign 0</span>
+<span id="L947"><a aria-label="Line 947" href="#L947"> 947</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L948"><a aria-label="Line 948" href="#L948"> 948</a> status_history_raw AS (</span>
+<span id="L949"><a aria-label="Line 949" href="#L949"> 949</a>     SELECT</span>
+<span id="L950"><a aria-label="Line 950" href="#L950"> 950</a>         p.account,</span>
+<span id="L951"><a aria-label="Line 951" href="#L951"> 951</a>         p.byte_date,</span>
+<span id="L952"><a aria-label="Line 952" href="#L952"> 952</a>         p.perf_age,</span>
+<span id="L953"><a aria-label="Line 953" href="#L953"> 953</a>         CASE</span>
+<span id="L954"><a aria-label="Line 954" href="#L954"> 954</a>             WHEN p.pattern_mode = &#x27;NONE&#x27; THEN &#x27;0&#x27;</span>
+<span id="L955"><a aria-label="Line 955" href="#L955"> 955</a>             WHEN p.perf_age BETWEEN p.episode_start_age</span>
+<span id="L956"><a aria-label="Line 956" href="#L956"> 956</a>                                AND     p.episode_start_age + p.pattern_length - 1</span>
+<span id="L957"><a aria-label="Line 957" href="#L957"> 957</a>             THEN SUBSTRING(</span>
+<span id="L958"><a aria-label="Line 958" href="#L958"> 958</a>                     p.pattern_string</span>
+<span id="L959"><a aria-label="Line 959" href="#L959"> 959</a>                     FROM ((p.perf_age - p.episode_start_age + 1)::int)</span>
+<span id="L960"><a aria-label="Line 960" href="#L960"> 960</a>                     FOR 1</span>
+<span id="L961"><a aria-label="Line 961" href="#L961"> 961</a>                  )</span>
+<span id="L962"><a aria-label="Line 962" href="#L962"> 962</a>             ELSE &#x27;0&#x27;</span>
+<span id="L963"><a aria-label="Line 963" href="#L963"> 963</a>         END AS status,</span>
+<span id="L964"><a aria-label="Line 964" href="#L964"> 964</a>         p.has_suppression,</span>
+<span id="L965"><a aria-label="Line 965" href="#L965"> 965</a>         p.suppression_start_age</span>
+<span id="L966"><a aria-label="Line 966" href="#L966"> 966</a>     FROM performance_months p</span>
+<span id="L967"><a aria-label="Line 967" href="#L967"> 967</a> )</span>
+<span id="L968"><a aria-label="Line 968" href="#L968"> 968</a> </span>
+<span id="L969"><a aria-label="Line 969" href="#L969"> 969</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L970"><a aria-label="Line 970" href="#L970"> 970</a> -- Final SELECT for metro2_status_history</span>
+<span id="L971"><a aria-label="Line 971" href="#L971"> 971</a> -- Purpose:</span>
+<span id="L972"><a aria-label="Line 972" href="#L972"> 972</a> --   Overlay suppression after raw pattern logic is created.</span>
+<span id="L973"><a aria-label="Line 973" href="#L973"> 973</a> --</span>
+<span id="L974"><a aria-label="Line 974" href="#L974"> 974</a> -- Why this exists:</span>
+<span id="L975"><a aria-label="Line 975" href="#L975"> 975</a> --   This original D means payment history was unavailable to the study. It supplies no evidence of current performance.</span>
+<span id="L976"><a aria-label="Line 976" href="#L976"> 976</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L977"><a aria-label="Line 977" href="#L977"> 977</a> SELECT</span>
+<span id="L978"><a aria-label="Line 978" href="#L978"> 978</a>     account,</span>
+<span id="L979"><a aria-label="Line 979" href="#L979"> 979</a>     byte_date,</span>
+<span id="L980"><a aria-label="Line 980" href="#L980"> 980</a>     perf_age,</span>
+<span id="L981"><a aria-label="Line 981" href="#L981"> 981</a>     CASE</span>
+<span id="L982"><a aria-label="Line 982" href="#L982"> 982</a>         WHEN has_suppression = 1</span>
+<span id="L983"><a aria-label="Line 983" href="#L983"> 983</a>          AND perf_age BETWEEN suppression_start_age AND suppression_start_age + 1</span>
+<span id="L984"><a aria-label="Line 984" href="#L984"> 984</a>         THEN &#x27;D&#x27;</span>
+<span id="L985"><a aria-label="Line 985" href="#L985"> 985</a>         ELSE status</span>
+<span id="L986"><a aria-label="Line 986" href="#L986"> 986</a>     END AS status</span>
+<span id="L987"><a aria-label="Line 987" href="#L987"> 987</a> FROM status_history_raw</span>
+<span id="L988"><a aria-label="Line 988" href="#L988"> 988</a> ORDER BY account, byte_date DESC;</span>
+<span id="L989"><a aria-label="Line 989" href="#L989"> 989</a> </span>
+<span id="L990"><a aria-label="Line 990" href="#L990"> 990</a> CREATE UNIQUE INDEX ix_status_history_account_byte_date</span>
+<span id="L991"><a aria-label="Line 991" href="#L991"> 991</a>     ON module1.metro2_status_history (account, byte_date DESC);</span>
+<span id="L992"><a aria-label="Line 992" href="#L992"> 992</a> </span>
+<span id="L993"><a aria-label="Line 993" href="#L993"> 993</a> </span>
+<span id="L994"><a aria-label="Line 994" href="#L994"> 994</a> -- ====================================================================================================</span>
+<span id="L995"><a aria-label="Line 995" href="#L995"> 995</a> -- SECTION 6: BUILD LONGITUDINAL SNAPSHOT TABLE</span>
+<span id="L996"><a aria-label="Line 996" href="#L996"> 996</a> -- ====================================================================================================</span>
+<span id="L997"><a aria-label="Line 997" href="#L997"> 997</a> -- Purpose:</span>
+<span id="L998"><a aria-label="Line 998" href="#L998"> 998</a> --   Create the synthetic ingestion dataset:</span>
+<span id="L999"><a aria-label="Line 999" href="#L999"> 999</a> --      account, date_of_account_information, php</span>
+<span id="L1000"><a aria-label="Line 1000" href="#L1000">1000</a> --</span>
+<span id="L1001"><a aria-label="Line 1001" href="#L1001">1001</a> -- Why this exists:</span>
+<span id="L1002"><a aria-label="Line 1002" href="#L1002">1002</a> --   This mimics the kind of monthly tradeline snapshot input your later remediation module will use.</span>
+<span id="L1003"><a aria-label="Line 1003" href="#L1003">1003</a> --</span>
+<span id="L1004"><a aria-label="Line 1004" href="#L1004">1004</a> -- SQL mechanics:</span>
+<span id="L1005"><a aria-label="Line 1005" href="#L1005">1005</a> --   - snapshot_rows creates each account’s DOAI timeline</span>
+<span id="L1006"><a aria-label="Line 1006" href="#L1006">1006</a> --   - snapshot_bytes expands each DOAI into 24 represented byte months</span>
+<span id="L1007"><a aria-label="Line 1007" href="#L1007">1007</a> --   - LEFT JOIN to metro2_status_history pulls the month-level status if it exists</span>
+<span id="L1008"><a aria-label="Line 1008" href="#L1008">1008</a> --   - COALESCE(..., &#x27;B&#x27;) fills missing older months with B</span>
+<span id="L1009"><a aria-label="Line 1009" href="#L1009">1009</a> --   - STRING_AGG assembles the 24 bytes into one PHP string</span>
+<span id="L1010"><a aria-label="Line 1010" href="#L1010">1010</a> -- ====================================================================================================</span>
+<span id="L1011"><a aria-label="Line 1011" href="#L1011">1011</a> CREATE TABLE module1.metro2_sample AS</span>
+<span id="L1012"><a aria-label="Line 1012" href="#L1012">1012</a> WITH</span>
+<span id="L1013"><a aria-label="Line 1013" href="#L1013">1013</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1014"><a aria-label="Line 1014" href="#L1014">1014</a> -- CTE: snapshot_rows</span>
+<span id="L1015"><a aria-label="Line 1015" href="#L1015">1015</a> -- Purpose:</span>
+<span id="L1016"><a aria-label="Line 1016" href="#L1016">1016</a> --   Create one row per account per DOAI.</span>
+<span id="L1017"><a aria-label="Line 1017" href="#L1017">1017</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1018"><a aria-label="Line 1018" href="#L1018">1018</a> snapshot_rows AS (</span>
+<span id="L1019"><a aria-label="Line 1019" href="#L1019">1019</a>     SELECT</span>
+<span id="L1020"><a aria-label="Line 1020" href="#L1020">1020</a>         a.account,</span>
+<span id="L1021"><a aria-label="Line 1021" href="#L1021">1021</a>         gs::date AS date_of_account_information</span>
+<span id="L1022"><a aria-label="Line 1022" href="#L1022">1022</a>     FROM module1.metro2_account_blueprint a</span>
+<span id="L1023"><a aria-label="Line 1023" href="#L1023">1023</a>     CROSS JOIN LATERAL generate_series(</span>
+<span id="L1024"><a aria-label="Line 1024" href="#L1024">1024</a>         a.start_date,</span>
+<span id="L1025"><a aria-label="Line 1025" href="#L1025">1025</a>         a.end_date,</span>
+<span id="L1026"><a aria-label="Line 1026" href="#L1026">1026</a>         INTERVAL &#x27;1 month&#x27;</span>
+<span id="L1027"><a aria-label="Line 1027" href="#L1027">1027</a>     ) AS gs</span>
+<span id="L1028"><a aria-label="Line 1028" href="#L1028">1028</a> ),</span>
+<span id="L1029"><a aria-label="Line 1029" href="#L1029">1029</a> </span>
+<span id="L1030"><a aria-label="Line 1030" href="#L1030">1030</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1031"><a aria-label="Line 1031" href="#L1031">1031</a> -- CTE: snapshot_bytes</span>
+<span id="L1032"><a aria-label="Line 1032" href="#L1032">1032</a> -- Purpose:</span>
+<span id="L1033"><a aria-label="Line 1033" href="#L1033">1033</a> --   Expand each DOAI into 24 PHP byte positions.</span>
+<span id="L1034"><a aria-label="Line 1034" href="#L1034">1034</a> --</span>
+<span id="L1035"><a aria-label="Line 1035" href="#L1035">1035</a> -- SQL mechanics:</span>
+<span id="L1036"><a aria-label="Line 1036" href="#L1036">1036</a> --   - generate_series(1,24) creates the 24 byte positions</span>
+<span id="L1037"><a aria-label="Line 1037" href="#L1037">1037</a> --   - byte_date = DOAI - pos months</span>
+<span id="L1038"><a aria-label="Line 1038" href="#L1038">1038</a> --   - because byte 1 is one month prior to DOAI in this project</span>
+<span id="L1039"><a aria-label="Line 1039" href="#L1039">1039</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1040"><a aria-label="Line 1040" href="#L1040">1040</a> snapshot_bytes AS (</span>
+<span id="L1041"><a aria-label="Line 1041" href="#L1041">1041</a>     SELECT</span>
+<span id="L1042"><a aria-label="Line 1042" href="#L1042">1042</a>         s.account,</span>
+<span id="L1043"><a aria-label="Line 1043" href="#L1043">1043</a>         s.date_of_account_information,</span>
+<span id="L1044"><a aria-label="Line 1044" href="#L1044">1044</a>         pos,</span>
+<span id="L1045"><a aria-label="Line 1045" href="#L1045">1045</a>         (s.date_of_account_information - (pos * INTERVAL &#x27;1 month&#x27;))::date AS byte_date</span>
+<span id="L1046"><a aria-label="Line 1046" href="#L1046">1046</a>     FROM snapshot_rows s</span>
+<span id="L1047"><a aria-label="Line 1047" href="#L1047">1047</a>     CROSS JOIN generate_series(1, 24) AS pos</span>
+<span id="L1048"><a aria-label="Line 1048" href="#L1048">1048</a> )</span>
+<span id="L1049"><a aria-label="Line 1049" href="#L1049">1049</a> </span>
+<span id="L1050"><a aria-label="Line 1050" href="#L1050">1050</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1051"><a aria-label="Line 1051" href="#L1051">1051</a> -- Final SELECT for metro2_sample</span>
+<span id="L1052"><a aria-label="Line 1052" href="#L1052">1052</a> -- Purpose:</span>
+<span id="L1053"><a aria-label="Line 1053" href="#L1053">1053</a> --   Assemble a 24-byte PHP for every account / DOAI row.</span>
+<span id="L1054"><a aria-label="Line 1054" href="#L1054">1054</a> --</span>
+<span id="L1055"><a aria-label="Line 1055" href="#L1055">1055</a> -- SQL mechanics:</span>
+<span id="L1056"><a aria-label="Line 1056" href="#L1056">1056</a> --   - LEFT JOIN finds the underlying month-level status</span>
+<span id="L1057"><a aria-label="Line 1057" href="#L1057">1057</a> --   - COALESCE fills missing history with B</span>
+<span id="L1058"><a aria-label="Line 1058" href="#L1058">1058</a> --   - STRING_AGG(... ORDER BY pos) assembles bytes from left to right</span>
+<span id="L1059"><a aria-label="Line 1059" href="#L1059">1059</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1060"><a aria-label="Line 1060" href="#L1060">1060</a> SELECT</span>
+<span id="L1061"><a aria-label="Line 1061" href="#L1061">1061</a>     b.account,</span>
+<span id="L1062"><a aria-label="Line 1062" href="#L1062">1062</a>     b.date_of_account_information,</span>
+<span id="L1063"><a aria-label="Line 1063" href="#L1063">1063</a>     STRING_AGG(COALESCE(h.status, &#x27;B&#x27;), &#x27;&#x27; ORDER BY b.pos) AS php</span>
+<span id="L1064"><a aria-label="Line 1064" href="#L1064">1064</a> FROM snapshot_bytes b</span>
+<span id="L1065"><a aria-label="Line 1065" href="#L1065">1065</a> LEFT JOIN module1.metro2_status_history h</span>
+<span id="L1066"><a aria-label="Line 1066" href="#L1066">1066</a>     ON h.account = b.account</span>
+<span id="L1067"><a aria-label="Line 1067" href="#L1067">1067</a>    AND h.byte_date = b.byte_date</span>
+<span id="L1068"><a aria-label="Line 1068" href="#L1068">1068</a> GROUP BY b.account, b.date_of_account_information</span>
+<span id="L1069"><a aria-label="Line 1069" href="#L1069">1069</a> ORDER BY b.account, b.date_of_account_information DESC;</span>
+<span id="L1070"><a aria-label="Line 1070" href="#L1070">1070</a> </span>
+<span id="L1071"><a aria-label="Line 1071" href="#L1071">1071</a> CREATE UNIQUE INDEX ix_sample_account_doai</span>
+<span id="L1072"><a aria-label="Line 1072" href="#L1072">1072</a>     ON module1.metro2_sample (account, date_of_account_information DESC);</span>
+<span id="L1073"><a aria-label="Line 1073" href="#L1073">1073</a> </span>
+<span id="L1074"><a aria-label="Line 1074" href="#L1074">1074</a> </span>
+<span id="L1075"><a aria-label="Line 1075" href="#L1075">1075</a> -- ====================================================================================================</span>
+<span id="L1076"><a aria-label="Line 1076" href="#L1076">1076</a> -- SECTION 7: BUILD FINAL ACCOUNT-LEVEL OUTPUT</span>
+<span id="L1077"><a aria-label="Line 1077" href="#L1077">1077</a> -- ====================================================================================================</span>
+<span id="L1078"><a aria-label="Line 1078" href="#L1078">1078</a> -- Purpose:</span>
+<span id="L1079"><a aria-label="Line 1079" href="#L1079">1079</a> --   Produce one row per account with stitched history and latest-state Metro 2 fields.</span>
+<span id="L1080"><a aria-label="Line 1080" href="#L1080">1080</a> --</span>
+<span id="L1081"><a aria-label="Line 1081" href="#L1081">1081</a> -- Why this exists:</span>
+<span id="L1082"><a aria-label="Line 1082" href="#L1082">1082</a> --   This is the main output table for downstream review and future remediation modules.</span>
+<span id="L1083"><a aria-label="Line 1083" href="#L1083">1083</a> --</span>
+<span id="L1084"><a aria-label="Line 1084" href="#L1084">1084</a> -- Major improvement vs Version 1:</span>
+<span id="L1085"><a aria-label="Line 1085" href="#L1085">1085</a> --   We derive this table directly from metro2_status_history rather than re-exploding metro2_sample.</span>
+<span id="L1086"><a aria-label="Line 1086" href="#L1086">1086</a> -- ====================================================================================================</span>
+<span id="L1087"><a aria-label="Line 1087" href="#L1087">1087</a> CREATE TABLE module1.metro2_final AS</span>
+<span id="L1088"><a aria-label="Line 1088" href="#L1088">1088</a> WITH</span>
+<span id="L1089"><a aria-label="Line 1089" href="#L1089">1089</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1090"><a aria-label="Line 1090" href="#L1090">1090</a> -- CTE: latest_status</span>
+<span id="L1091"><a aria-label="Line 1091" href="#L1091">1091</a> -- Purpose:</span>
+<span id="L1092"><a aria-label="Line 1092" href="#L1092">1092</a> --   Find the most recent represented status byte for each account.</span>
+<span id="L1093"><a aria-label="Line 1093" href="#L1093">1093</a> --</span>
+<span id="L1094"><a aria-label="Line 1094" href="#L1094">1094</a> -- SQL mechanics:</span>
+<span id="L1095"><a aria-label="Line 1095" href="#L1095">1095</a> --   - DISTINCT ON (account) keeps only the first row per account</span>
+<span id="L1096"><a aria-label="Line 1096" href="#L1096">1096</a> --   - ORDER BY account, byte_date DESC ensures the first row is the newest byte_date</span>
+<span id="L1097"><a aria-label="Line 1097" href="#L1097">1097</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1098"><a aria-label="Line 1098" href="#L1098">1098</a> latest_status AS (</span>
+<span id="L1099"><a aria-label="Line 1099" href="#L1099">1099</a>     SELECT DISTINCT ON (account)</span>
+<span id="L1100"><a aria-label="Line 1100" href="#L1100">1100</a>         account,</span>
+<span id="L1101"><a aria-label="Line 1101" href="#L1101">1101</a>         byte_date AS php_left_byte_date,</span>
+<span id="L1102"><a aria-label="Line 1102" href="#L1102">1102</a>         status AS latest_byte</span>
+<span id="L1103"><a aria-label="Line 1103" href="#L1103">1103</a>     FROM module1.metro2_status_history</span>
+<span id="L1104"><a aria-label="Line 1104" href="#L1104">1104</a>     ORDER BY account, byte_date DESC</span>
+<span id="L1105"><a aria-label="Line 1105" href="#L1105">1105</a> ),</span>
+<span id="L1106"><a aria-label="Line 1106" href="#L1106">1106</a> </span>
+<span id="L1107"><a aria-label="Line 1107" href="#L1107">1107</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1108"><a aria-label="Line 1108" href="#L1108">1108</a> -- CTE: full_timeline</span>
+<span id="L1109"><a aria-label="Line 1109" href="#L1109">1109</a> -- Purpose:</span>
+<span id="L1110"><a aria-label="Line 1110" href="#L1110">1110</a> --   Stitch each account’s full month-level history into one long PHP-like string.</span>
+<span id="L1111"><a aria-label="Line 1111" href="#L1111">1111</a> --</span>
+<span id="L1112"><a aria-label="Line 1112" href="#L1112">1112</a> -- Why this exists:</span>
+<span id="L1113"><a aria-label="Line 1113" href="#L1113">1113</a> --   This gives a deduplicated, most-recently-reported timeline for each account.</span>
+<span id="L1114"><a aria-label="Line 1114" href="#L1114">1114</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1115"><a aria-label="Line 1115" href="#L1115">1115</a> full_timeline AS (</span>
+<span id="L1116"><a aria-label="Line 1116" href="#L1116">1116</a>     SELECT</span>
+<span id="L1117"><a aria-label="Line 1117" href="#L1117">1117</a>         account,</span>
+<span id="L1118"><a aria-label="Line 1118" href="#L1118">1118</a>         STRING_AGG(status, &#x27;&#x27; ORDER BY byte_date DESC) AS full_php,</span>
+<span id="L1119"><a aria-label="Line 1119" href="#L1119">1119</a>         MAX(byte_date) AS php_left_byte_date,</span>
+<span id="L1120"><a aria-label="Line 1120" href="#L1120">1120</a>         MIN(byte_date) AS php_right_byte_date</span>
+<span id="L1121"><a aria-label="Line 1121" href="#L1121">1121</a>     FROM module1.metro2_status_history</span>
+<span id="L1122"><a aria-label="Line 1122" href="#L1122">1122</a>     GROUP BY account</span>
+<span id="L1123"><a aria-label="Line 1123" href="#L1123">1123</a> ),</span>
+<span id="L1124"><a aria-label="Line 1124" href="#L1124">1124</a> </span>
+<span id="L1125"><a aria-label="Line 1125" href="#L1125">1125</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1126"><a aria-label="Line 1126" href="#L1126">1126</a> -- CTE: latest_doai</span>
+<span id="L1127"><a aria-label="Line 1127" href="#L1127">1127</a> -- Purpose:</span>
+<span id="L1128"><a aria-label="Line 1128" href="#L1128">1128</a> --   Define the latest reporting date per account.</span>
+<span id="L1129"><a aria-label="Line 1129" href="#L1129">1129</a> --</span>
+<span id="L1130"><a aria-label="Line 1130" href="#L1130">1130</a> -- Why this exists:</span>
+<span id="L1131"><a aria-label="Line 1131" href="#L1131">1131</a> --   In this module, latest_doai aligns to the blueprint end_date.</span>
+<span id="L1132"><a aria-label="Line 1132" href="#L1132">1132</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1133"><a aria-label="Line 1133" href="#L1133">1133</a> latest_doai AS (</span>
+<span id="L1134"><a aria-label="Line 1134" href="#L1134">1134</a>     SELECT</span>
+<span id="L1135"><a aria-label="Line 1135" href="#L1135">1135</a>         account,</span>
+<span id="L1136"><a aria-label="Line 1136" href="#L1136">1136</a>         end_date AS latest_doai</span>
+<span id="L1137"><a aria-label="Line 1137" href="#L1137">1137</a>     FROM module1.metro2_account_blueprint</span>
+<span id="L1138"><a aria-label="Line 1138" href="#L1138">1138</a> ),</span>
+<span id="L1139"><a aria-label="Line 1139" href="#L1139">1139</a> </span>
+<span id="L1140"><a aria-label="Line 1140" href="#L1140">1140</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1141"><a aria-label="Line 1141" href="#L1141">1141</a> -- CTE: ordered_status</span>
+<span id="L1142"><a aria-label="Line 1142" href="#L1142">1142</a> -- Purpose:</span>
+<span id="L1143"><a aria-label="Line 1143" href="#L1143">1143</a> --   Create a sequence over each account’s month-level history for DOFD analysis.</span>
+<span id="L1144"><a aria-label="Line 1144" href="#L1144">1144</a> --</span>
+<span id="L1145"><a aria-label="Line 1145" href="#L1145">1145</a> -- Why this exists:</span>
+<span id="L1146"><a aria-label="Line 1146" href="#L1146">1146</a> --   To derive a simple current adverse run, we need to identify the contiguous adverse segment</span>
+<span id="L1147"><a aria-label="Line 1147" href="#L1147">1147</a> --   from the most recent month backward until a non-adverse month appears.</span>
+<span id="L1148"><a aria-label="Line 1148" href="#L1148">1148</a> --</span>
+<span id="L1149"><a aria-label="Line 1149" href="#L1149">1149</a> -- SQL mechanics:</span>
+<span id="L1150"><a aria-label="Line 1150" href="#L1150">1150</a> --   - ROW_NUMBER creates a descending sequence</span>
+<span id="L1151"><a aria-label="Line 1151" href="#L1151">1151</a> --   - SUM(CASE...) as a window function counts non-adverse months seen so far</span>
+<span id="L1152"><a aria-label="Line 1152" href="#L1152">1152</a> --   - while non_adverse_seen = 0, we are still inside the initial adverse run</span>
+<span id="L1153"><a aria-label="Line 1153" href="#L1153">1153</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1154"><a aria-label="Line 1154" href="#L1154">1154</a> ordered_status AS (</span>
+<span id="L1155"><a aria-label="Line 1155" href="#L1155">1155</a>     SELECT</span>
+<span id="L1156"><a aria-label="Line 1156" href="#L1156">1156</a>         h.account,</span>
+<span id="L1157"><a aria-label="Line 1157" href="#L1157">1157</a>         h.byte_date,</span>
+<span id="L1158"><a aria-label="Line 1158" href="#L1158">1158</a>         h.status,</span>
+<span id="L1159"><a aria-label="Line 1159" href="#L1159">1159</a>         ROW_NUMBER() OVER (PARTITION BY h.account ORDER BY h.byte_date DESC) AS seq,</span>
+<span id="L1160"><a aria-label="Line 1160" href="#L1160">1160</a>         SUM(</span>
+<span id="L1161"><a aria-label="Line 1161" href="#L1161">1161</a>             CASE</span>
+<span id="L1162"><a aria-label="Line 1162" href="#L1162">1162</a>                 WHEN h.status NOT IN (&#x27;1&#x27;,&#x27;2&#x27;,&#x27;3&#x27;,&#x27;4&#x27;,&#x27;5&#x27;,&#x27;6&#x27;,&#x27;G&#x27;,&#x27;H&#x27;,&#x27;J&#x27;,&#x27;K&#x27;,&#x27;L&#x27;)</span>
+<span id="L1163"><a aria-label="Line 1163" href="#L1163">1163</a>                 THEN 1 ELSE 0</span>
+<span id="L1164"><a aria-label="Line 1164" href="#L1164">1164</a>             END</span>
+<span id="L1165"><a aria-label="Line 1165" href="#L1165">1165</a>         ) OVER (</span>
+<span id="L1166"><a aria-label="Line 1166" href="#L1166">1166</a>             PARTITION BY h.account</span>
+<span id="L1167"><a aria-label="Line 1167" href="#L1167">1167</a>             ORDER BY h.byte_date DESC</span>
+<span id="L1168"><a aria-label="Line 1168" href="#L1168">1168</a>             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</span>
+<span id="L1169"><a aria-label="Line 1169" href="#L1169">1169</a>         ) AS non_adverse_seen</span>
+<span id="L1170"><a aria-label="Line 1170" href="#L1170">1170</a>     FROM module1.metro2_status_history h</span>
+<span id="L1171"><a aria-label="Line 1171" href="#L1171">1171</a> ),</span>
+<span id="L1172"><a aria-label="Line 1172" href="#L1172">1172</a> </span>
+<span id="L1173"><a aria-label="Line 1173" href="#L1173">1173</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1174"><a aria-label="Line 1174" href="#L1174">1174</a> -- CTE: current_adverse_run</span>
+<span id="L1175"><a aria-label="Line 1175" href="#L1175">1175</a> -- Purpose:</span>
+<span id="L1176"><a aria-label="Line 1176" href="#L1176">1176</a> --   Find the first delinquency date inside the current contiguous adverse run.</span>
+<span id="L1177"><a aria-label="Line 1177" href="#L1177">1177</a> --</span>
+<span id="L1178"><a aria-label="Line 1178" href="#L1178">1178</a> -- Important methodology note:</span>
+<span id="L1179"><a aria-label="Line 1179" href="#L1179">1179</a> --   This is a simplified synthetic DOFD logic for a learning module.</span>
+<span id="L1180"><a aria-label="Line 1180" href="#L1180">1180</a> --   It is not a full production furnishing engine.</span>
+<span id="L1181"><a aria-label="Line 1181" href="#L1181">1181</a> --</span>
+<span id="L1182"><a aria-label="Line 1182" href="#L1182">1182</a> -- SQL mechanics:</span>
+<span id="L1183"><a aria-label="Line 1183" href="#L1183">1183</a> --   - Restrict to rows where non_adverse_seen = 0</span>
+<span id="L1184"><a aria-label="Line 1184" href="#L1184">1184</a> --     meaning we have not yet encountered a current/non-adverse break</span>
+<span id="L1185"><a aria-label="Line 1185" href="#L1185">1185</a> --   - Only numeric delinquency (1–6) supplies a date. A run of major codes alone can yield NULL.</span>
+<span id="L1186"><a aria-label="Line 1186" href="#L1186">1186</a> --   - An original D interrupts this synthetic run; an incomplete history cannot establish a real-world DOFD.</span>
+<span id="L1187"><a aria-label="Line 1187" href="#L1187">1187</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1188"><a aria-label="Line 1188" href="#L1188">1188</a> current_adverse_run AS (</span>
+<span id="L1189"><a aria-label="Line 1189" href="#L1189">1189</a>     SELECT</span>
+<span id="L1190"><a aria-label="Line 1190" href="#L1190">1190</a>         account,</span>
+<span id="L1191"><a aria-label="Line 1191" href="#L1191">1191</a>         MIN(byte_date) FILTER (WHERE status IN (&#x27;1&#x27;,&#x27;2&#x27;,&#x27;3&#x27;,&#x27;4&#x27;,&#x27;5&#x27;,&#x27;6&#x27;)) AS date_of_first_delinquency</span>
+<span id="L1192"><a aria-label="Line 1192" href="#L1192">1192</a>     FROM ordered_status</span>
+<span id="L1193"><a aria-label="Line 1193" href="#L1193">1193</a>     WHERE non_adverse_seen = 0</span>
+<span id="L1194"><a aria-label="Line 1194" href="#L1194">1194</a>     GROUP BY account</span>
+<span id="L1195"><a aria-label="Line 1195" href="#L1195">1195</a> ),</span>
+<span id="L1196"><a aria-label="Line 1196" href="#L1196">1196</a> </span>
+<span id="L1197"><a aria-label="Line 1197" href="#L1197">1197</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1198"><a aria-label="Line 1198" href="#L1198">1198</a> -- CTE: joined</span>
+<span id="L1199"><a aria-label="Line 1199" href="#L1199">1199</a> -- Purpose:</span>
+<span id="L1200"><a aria-label="Line 1200" href="#L1200">1200</a> --   Bring together all intermediate pieces needed for the final select.</span>
+<span id="L1201"><a aria-label="Line 1201" href="#L1201">1201</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1202"><a aria-label="Line 1202" href="#L1202">1202</a> joined AS (</span>
+<span id="L1203"><a aria-label="Line 1203" href="#L1203">1203</a>     SELECT</span>
+<span id="L1204"><a aria-label="Line 1204" href="#L1204">1204</a>         b.account,</span>
+<span id="L1205"><a aria-label="Line 1205" href="#L1205">1205</a>         b.profile_type,</span>
+<span id="L1206"><a aria-label="Line 1206" href="#L1206">1206</a>         d.latest_doai,</span>
+<span id="L1207"><a aria-label="Line 1207" href="#L1207">1207</a>         b.date_closed,</span>
+<span id="L1208"><a aria-label="Line 1208" href="#L1208">1208</a>         f.full_php,</span>
+<span id="L1209"><a aria-label="Line 1209" href="#L1209">1209</a>         f.php_left_byte_date,</span>
+<span id="L1210"><a aria-label="Line 1210" href="#L1210">1210</a>         f.php_right_byte_date,</span>
+<span id="L1211"><a aria-label="Line 1211" href="#L1211">1211</a>         l.latest_byte,</span>
+<span id="L1212"><a aria-label="Line 1212" href="#L1212">1212</a>         c.date_of_first_delinquency,</span>
+<span id="L1213"><a aria-label="Line 1213" href="#L1213">1213</a>         b.close_status_code</span>
+<span id="L1214"><a aria-label="Line 1214" href="#L1214">1214</a>     FROM module1.metro2_account_blueprint b</span>
+<span id="L1215"><a aria-label="Line 1215" href="#L1215">1215</a>     JOIN latest_doai d USING (account)</span>
+<span id="L1216"><a aria-label="Line 1216" href="#L1216">1216</a>     JOIN full_timeline f USING (account)</span>
+<span id="L1217"><a aria-label="Line 1217" href="#L1217">1217</a>     JOIN latest_status l USING (account)</span>
+<span id="L1218"><a aria-label="Line 1218" href="#L1218">1218</a>     LEFT JOIN current_adverse_run c USING (account)</span>
+<span id="L1219"><a aria-label="Line 1219" href="#L1219">1219</a> )</span>
+<span id="L1220"><a aria-label="Line 1220" href="#L1220">1220</a> </span>
+<span id="L1221"><a aria-label="Line 1221" href="#L1221">1221</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1222"><a aria-label="Line 1222" href="#L1222">1222</a> -- Final SELECT for metro2_final</span>
+<span id="L1223"><a aria-label="Line 1223" href="#L1223">1223</a> -- Purpose:</span>
+<span id="L1224"><a aria-label="Line 1224" href="#L1224">1224</a> --   Model 17A as of latest_doai. The generator uses the previous month’s PHP as a proxy when current-cycle servicing data is unavailable.</span>
+<span id="L1225"><a aria-label="Line 1225" href="#L1225">1225</a> --</span>
+<span id="L1226"><a aria-label="Line 1226" href="#L1226">1226</a> -- Business logic:</span>
+<span id="L1227"><a aria-label="Line 1227" href="#L1227">1227</a> --   - close_status_code takes precedence over latest_byte when the account is closed</span>
+<span id="L1228"><a aria-label="Line 1228" href="#L1228">1228</a> --   - a latest original D on an open account supplies no 17A, 17B or DOFD under the generator rules</span>
+<span id="L1229"><a aria-label="Line 1229" href="#L1229">1229</a> --   - DOFD describes the active adverse run. Consumer Information Indicators and their Field 25 exceptions are outside these synthetic inputs.</span>
+<span id="L1230"><a aria-label="Line 1230" href="#L1230">1230</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1231"><a aria-label="Line 1231" href="#L1231">1231</a> SELECT</span>
+<span id="L1232"><a aria-label="Line 1232" href="#L1232">1232</a>     account,</span>
+<span id="L1233"><a aria-label="Line 1233" href="#L1233">1233</a>     profile_type,</span>
+<span id="L1234"><a aria-label="Line 1234" href="#L1234">1234</a>     latest_doai,</span>
+<span id="L1235"><a aria-label="Line 1235" href="#L1235">1235</a>     date_closed,</span>
+<span id="L1236"><a aria-label="Line 1236" href="#L1236">1236</a>     full_php,</span>
+<span id="L1237"><a aria-label="Line 1237" href="#L1237">1237</a>     php_left_byte_date,</span>
+<span id="L1238"><a aria-label="Line 1238" href="#L1238">1238</a>     php_right_byte_date,</span>
+<span id="L1239"><a aria-label="Line 1239" href="#L1239">1239</a> </span>
+<span id="L1240"><a aria-label="Line 1240" href="#L1240">1240</a>     CASE</span>
+<span id="L1241"><a aria-label="Line 1241" href="#L1241">1241</a>         WHEN close_status_code IS NOT NULL THEN close_status_code</span>
+<span id="L1242"><a aria-label="Line 1242" href="#L1242">1242</a>         ELSE</span>
+<span id="L1243"><a aria-label="Line 1243" href="#L1243">1243</a>             CASE latest_byte</span>
+<span id="L1244"><a aria-label="Line 1244" href="#L1244">1244</a>                 WHEN &#x27;0&#x27; THEN &#x27;11&#x27;</span>
+<span id="L1245"><a aria-label="Line 1245" href="#L1245">1245</a>                 WHEN &#x27;1&#x27; THEN &#x27;71&#x27;</span>
+<span id="L1246"><a aria-label="Line 1246" href="#L1246">1246</a>                 WHEN &#x27;2&#x27; THEN &#x27;78&#x27;</span>
+<span id="L1247"><a aria-label="Line 1247" href="#L1247">1247</a>                 WHEN &#x27;3&#x27; THEN &#x27;80&#x27;</span>
+<span id="L1248"><a aria-label="Line 1248" href="#L1248">1248</a>                 WHEN &#x27;4&#x27; THEN &#x27;82&#x27;</span>
+<span id="L1249"><a aria-label="Line 1249" href="#L1249">1249</a>                 WHEN &#x27;5&#x27; THEN &#x27;83&#x27;</span>
+<span id="L1250"><a aria-label="Line 1250" href="#L1250">1250</a>                 WHEN &#x27;6&#x27; THEN &#x27;84&#x27;</span>
+<span id="L1251"><a aria-label="Line 1251" href="#L1251">1251</a>                 WHEN &#x27;G&#x27; THEN &#x27;93&#x27;</span>
+<span id="L1252"><a aria-label="Line 1252" href="#L1252">1252</a>                 WHEN &#x27;H&#x27; THEN &#x27;94&#x27;</span>
+<span id="L1253"><a aria-label="Line 1253" href="#L1253">1253</a>                 WHEN &#x27;J&#x27; THEN &#x27;95&#x27;</span>
+<span id="L1254"><a aria-label="Line 1254" href="#L1254">1254</a>                 WHEN &#x27;K&#x27; THEN &#x27;96&#x27;</span>
+<span id="L1255"><a aria-label="Line 1255" href="#L1255">1255</a>                 WHEN &#x27;L&#x27; THEN &#x27;97&#x27;</span>
+<span id="L1256"><a aria-label="Line 1256" href="#L1256">1256</a>                 ELSE NULL</span>
+<span id="L1257"><a aria-label="Line 1257" href="#L1257">1257</a>             END</span>
+<span id="L1258"><a aria-label="Line 1258" href="#L1258">1258</a>     END AS account_status_17A,</span>
+<span id="L1259"><a aria-label="Line 1259" href="#L1259">1259</a> </span>
+<span id="L1260"><a aria-label="Line 1260" href="#L1260">1260</a>     CASE</span>
+<span id="L1261"><a aria-label="Line 1261" href="#L1261">1261</a>         WHEN close_status_code = &#x27;13&#x27; THEN &#x27;0&#x27;</span>
+<span id="L1262"><a aria-label="Line 1262" href="#L1262">1262</a>         WHEN close_status_code IN (&#x27;61&#x27;,&#x27;62&#x27;,&#x27;63&#x27;,&#x27;64&#x27;,&#x27;65&#x27;) THEN NULL</span>
+<span id="L1263"><a aria-label="Line 1263" href="#L1263">1263</a>         ELSE</span>
+<span id="L1264"><a aria-label="Line 1264" href="#L1264">1264</a>             CASE latest_byte</span>
+<span id="L1265"><a aria-label="Line 1265" href="#L1265">1265</a>                 WHEN &#x27;0&#x27; THEN &#x27;0&#x27;</span>
+<span id="L1266"><a aria-label="Line 1266" href="#L1266">1266</a>                 WHEN &#x27;1&#x27; THEN &#x27;1&#x27;</span>
+<span id="L1267"><a aria-label="Line 1267" href="#L1267">1267</a>                 WHEN &#x27;2&#x27; THEN &#x27;2&#x27;</span>
+<span id="L1268"><a aria-label="Line 1268" href="#L1268">1268</a>                 WHEN &#x27;3&#x27; THEN &#x27;3&#x27;</span>
+<span id="L1269"><a aria-label="Line 1269" href="#L1269">1269</a>                 WHEN &#x27;4&#x27; THEN &#x27;4&#x27;</span>
+<span id="L1270"><a aria-label="Line 1270" href="#L1270">1270</a>                 WHEN &#x27;5&#x27; THEN &#x27;5&#x27;</span>
+<span id="L1271"><a aria-label="Line 1271" href="#L1271">1271</a>                 WHEN &#x27;6&#x27; THEN &#x27;6&#x27;</span>
+<span id="L1272"><a aria-label="Line 1272" href="#L1272">1272</a>                 WHEN &#x27;G&#x27; THEN &#x27;G&#x27;</span>
+<span id="L1273"><a aria-label="Line 1273" href="#L1273">1273</a>                 WHEN &#x27;L&#x27; THEN &#x27;L&#x27;</span>
+<span id="L1274"><a aria-label="Line 1274" href="#L1274">1274</a>                 ELSE NULL</span>
+<span id="L1275"><a aria-label="Line 1275" href="#L1275">1275</a>             END</span>
+<span id="L1276"><a aria-label="Line 1276" href="#L1276">1276</a>     END AS payment_rating_17B,</span>
+<span id="L1277"><a aria-label="Line 1277" href="#L1277">1277</a> </span>
+<span id="L1278"><a aria-label="Line 1278" href="#L1278">1278</a>     CASE</span>
+<span id="L1279"><a aria-label="Line 1279" href="#L1279">1279</a>         WHEN close_status_code IS NOT NULL THEN NULL</span>
+<span id="L1280"><a aria-label="Line 1280" href="#L1280">1280</a>         WHEN latest_byte IN (&#x27;1&#x27;,&#x27;2&#x27;,&#x27;3&#x27;,&#x27;4&#x27;,&#x27;5&#x27;,&#x27;6&#x27;,&#x27;G&#x27;,&#x27;H&#x27;,&#x27;J&#x27;,&#x27;K&#x27;,&#x27;L&#x27;)</span>
+<span id="L1281"><a aria-label="Line 1281" href="#L1281">1281</a>         THEN date_of_first_delinquency</span>
+<span id="L1282"><a aria-label="Line 1282" href="#L1282">1282</a>         ELSE NULL</span>
+<span id="L1283"><a aria-label="Line 1283" href="#L1283">1283</a>     END AS date_of_first_delinquency</span>
+<span id="L1284"><a aria-label="Line 1284" href="#L1284">1284</a> </span>
+<span id="L1285"><a aria-label="Line 1285" href="#L1285">1285</a> FROM joined</span>
+<span id="L1286"><a aria-label="Line 1286" href="#L1286">1286</a> ORDER BY account;</span>
+<span id="L1287"><a aria-label="Line 1287" href="#L1287">1287</a> </span>
+<span id="L1288"><a aria-label="Line 1288" href="#L1288">1288</a> CREATE UNIQUE INDEX ix_final_account</span>
+<span id="L1289"><a aria-label="Line 1289" href="#L1289">1289</a>     ON module1.metro2_final (account);</span>
+<span id="L1290"><a aria-label="Line 1290" href="#L1290">1290</a> </span>
+<span id="L1291"><a aria-label="Line 1291" href="#L1291">1291</a> </span>
+<span id="L1292"><a aria-label="Line 1292" href="#L1292">1292</a> -- ====================================================================================================</span>
+<span id="L1293"><a aria-label="Line 1293" href="#L1293">1293</a> -- SECTION 8: QA / REVIEW QUERIES</span>
+<span id="L1294"><a aria-label="Line 1294" href="#L1294">1294</a> -- ====================================================================================================</span>
+<span id="L1295"><a aria-label="Line 1295" href="#L1295">1295</a> -- Purpose:</span>
+<span id="L1296"><a aria-label="Line 1296" href="#L1296">1296</a> --   Provide inspection queries for learning, validation, screenshots, and walkthroughs.</span>
+<span id="L1297"><a aria-label="Line 1297" href="#L1297">1297</a> --</span>
+<span id="L1298"><a aria-label="Line 1298" href="#L1298">1298</a> -- Why this exists:</span>
+<span id="L1299"><a aria-label="Line 1299" href="#L1299">1299</a> --   Now that this script is running locally, it is practical to keep the QA in the same file.</span>
+<span id="L1300"><a aria-label="Line 1300" href="#L1300">1300</a> --</span>
+<span id="L1301"><a aria-label="Line 1301" href="#L1301">1301</a> -- Teaching note:</span>
+<span id="L1302"><a aria-label="Line 1302" href="#L1302">1302</a> --   These queries do not build new artifacts. They help the user inspect what was built.</span>
+<span id="L1303"><a aria-label="Line 1303" href="#L1303">1303</a> -- ====================================================================================================</span>
+<span id="L1304"><a aria-label="Line 1304" href="#L1304">1304</a> </span>
+<span id="L1305"><a aria-label="Line 1305" href="#L1305">1305</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1306"><a aria-label="Line 1306" href="#L1306">1306</a> -- QA 1: Echo the user parameters</span>
+<span id="L1307"><a aria-label="Line 1307" href="#L1307">1307</a> -- Why:</span>
+<span id="L1308"><a aria-label="Line 1308" href="#L1308">1308</a> --   Confirms the configured sample size and portfolio mix used for the run</span>
+<span id="L1309"><a aria-label="Line 1309" href="#L1309">1309</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1310"><a aria-label="Line 1310" href="#L1310">1310</a> SELECT * FROM pg_temp.module1_params;</span>
+<span id="L1311"><a aria-label="Line 1311" href="#L1311">1311</a> </span>
+<span id="L1312"><a aria-label="Line 1312" href="#L1312">1312</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1313"><a aria-label="Line 1313" href="#L1313">1313</a> -- QA 2: Review the resulting profile mix</span>
+<span id="L1314"><a aria-label="Line 1314" href="#L1314">1314</a> -- Why:</span>
+<span id="L1315"><a aria-label="Line 1315" href="#L1315">1315</a> --   Helps confirm the generated population roughly aligns with the requested portfolio mix</span>
+<span id="L1316"><a aria-label="Line 1316" href="#L1316">1316</a> -- SQL mechanics:</span>
+<span id="L1317"><a aria-label="Line 1317" href="#L1317">1317</a> --   GROUP BY profile_type counts accounts by profile bucket</span>
+<span id="L1318"><a aria-label="Line 1318" href="#L1318">1318</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1319"><a aria-label="Line 1319" href="#L1319">1319</a> SELECT</span>
+<span id="L1320"><a aria-label="Line 1320" href="#L1320">1320</a>     profile_type,</span>
+<span id="L1321"><a aria-label="Line 1321" href="#L1321">1321</a>     COUNT(*) AS account_count</span>
+<span id="L1322"><a aria-label="Line 1322" href="#L1322">1322</a> FROM module1.metro2_account_blueprint</span>
+<span id="L1323"><a aria-label="Line 1323" href="#L1323">1323</a> GROUP BY profile_type</span>
+<span id="L1324"><a aria-label="Line 1324" href="#L1324">1324</a> ORDER BY profile_type;</span>
+<span id="L1325"><a aria-label="Line 1325" href="#L1325">1325</a> </span>
+<span id="L1326"><a aria-label="Line 1326" href="#L1326">1326</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1327"><a aria-label="Line 1327" href="#L1327">1327</a> -- QA 3: Review closed-status mix</span>
+<span id="L1328"><a aria-label="Line 1328" href="#L1328">1328</a> -- Why:</span>
+<span id="L1329"><a aria-label="Line 1329" href="#L1329">1329</a> --   Confirms that both open and closed-status scenarios were generated</span>
+<span id="L1330"><a aria-label="Line 1330" href="#L1330">1330</a> -- SQL mechanics:</span>
+<span id="L1331"><a aria-label="Line 1331" href="#L1331">1331</a> --   COALESCE replaces NULL with &#x27;OPEN&#x27; for reporting convenience</span>
+<span id="L1332"><a aria-label="Line 1332" href="#L1332">1332</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1333"><a aria-label="Line 1333" href="#L1333">1333</a> SELECT</span>
+<span id="L1334"><a aria-label="Line 1334" href="#L1334">1334</a>     COALESCE(close_status_code, &#x27;OPEN&#x27;) AS close_status_code,</span>
+<span id="L1335"><a aria-label="Line 1335" href="#L1335">1335</a>     COUNT(*) AS account_count</span>
+<span id="L1336"><a aria-label="Line 1336" href="#L1336">1336</a> FROM module1.metro2_account_blueprint</span>
+<span id="L1337"><a aria-label="Line 1337" href="#L1337">1337</a> GROUP BY COALESCE(close_status_code, &#x27;OPEN&#x27;)</span>
+<span id="L1338"><a aria-label="Line 1338" href="#L1338">1338</a> ORDER BY close_status_code;</span>
+<span id="L1339"><a aria-label="Line 1339" href="#L1339">1339</a> </span>
+<span id="L1340"><a aria-label="Line 1340" href="#L1340">1340</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1341"><a aria-label="Line 1341" href="#L1341">1341</a> -- QA 4: Sample month-level status history</span>
+<span id="L1342"><a aria-label="Line 1342" href="#L1342">1342</a> -- Why:</span>
+<span id="L1343"><a aria-label="Line 1343" href="#L1343">1343</a> --   Lets users inspect the computational backbone directly</span>
+<span id="L1344"><a aria-label="Line 1344" href="#L1344">1344</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1345"><a aria-label="Line 1345" href="#L1345">1345</a> SELECT *</span>
+<span id="L1346"><a aria-label="Line 1346" href="#L1346">1346</a> FROM module1.metro2_status_history</span>
+<span id="L1347"><a aria-label="Line 1347" href="#L1347">1347</a> ORDER BY account, byte_date DESC</span>
+<span id="L1348"><a aria-label="Line 1348" href="#L1348">1348</a> LIMIT 100;</span>
+<span id="L1349"><a aria-label="Line 1349" href="#L1349">1349</a> </span>
+<span id="L1350"><a aria-label="Line 1350" href="#L1350">1350</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1351"><a aria-label="Line 1351" href="#L1351">1351</a> -- QA 5: Sample longitudinal snapshot rows</span>
+<span id="L1352"><a aria-label="Line 1352" href="#L1352">1352</a> -- Why:</span>
+<span id="L1353"><a aria-label="Line 1353" href="#L1353">1353</a> --   Lets users inspect the synthetic input table account / DOAI / PHP</span>
+<span id="L1354"><a aria-label="Line 1354" href="#L1354">1354</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1355"><a aria-label="Line 1355" href="#L1355">1355</a> SELECT *</span>
+<span id="L1356"><a aria-label="Line 1356" href="#L1356">1356</a> FROM module1.metro2_sample</span>
+<span id="L1357"><a aria-label="Line 1357" href="#L1357">1357</a> ORDER BY account, date_of_account_information DESC</span>
+<span id="L1358"><a aria-label="Line 1358" href="#L1358">1358</a> LIMIT 100;</span>
+<span id="L1359"><a aria-label="Line 1359" href="#L1359">1359</a> </span>
+<span id="L1360"><a aria-label="Line 1360" href="#L1360">1360</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1361"><a aria-label="Line 1361" href="#L1361">1361</a> -- QA 6: Sample final output rows</span>
+<span id="L1362"><a aria-label="Line 1362" href="#L1362">1362</a> -- Why:</span>
+<span id="L1363"><a aria-label="Line 1363" href="#L1363">1363</a> --   Lets users inspect the main deliverable of Module 1</span>
+<span id="L1364"><a aria-label="Line 1364" href="#L1364">1364</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1365"><a aria-label="Line 1365" href="#L1365">1365</a> SELECT *</span>
+<span id="L1366"><a aria-label="Line 1366" href="#L1366">1366</a> FROM module1.metro2_final</span>
+<span id="L1367"><a aria-label="Line 1367" href="#L1367">1367</a> ORDER BY account</span>
+<span id="L1368"><a aria-label="Line 1368" href="#L1368">1368</a> LIMIT 100;</span>
+<span id="L1369"><a aria-label="Line 1369" href="#L1369">1369</a> </span>
+<span id="L1370"><a aria-label="Line 1370" href="#L1370">1370</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1371"><a aria-label="Line 1371" href="#L1371">1371</a> -- QA 7: Review paid / closed examples</span>
+<span id="L1372"><a aria-label="Line 1372" href="#L1372">1372</a> -- Why:</span>
+<span id="L1373"><a aria-label="Line 1373" href="#L1373">1373</a> --   Specifically surfaces statuses 13 and 61–65</span>
+<span id="L1374"><a aria-label="Line 1374" href="#L1374">1374</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1375"><a aria-label="Line 1375" href="#L1375">1375</a> SELECT *</span>
+<span id="L1376"><a aria-label="Line 1376" href="#L1376">1376</a> FROM module1.metro2_final</span>
+<span id="L1377"><a aria-label="Line 1377" href="#L1377">1377</a> WHERE account_status_17A IN (&#x27;13&#x27;,&#x27;61&#x27;,&#x27;62&#x27;,&#x27;63&#x27;,&#x27;64&#x27;,&#x27;65&#x27;)</span>
+<span id="L1378"><a aria-label="Line 1378" href="#L1378">1378</a> ORDER BY account</span>
+<span id="L1379"><a aria-label="Line 1379" href="#L1379">1379</a> LIMIT 50;</span>
+<span id="L1380"><a aria-label="Line 1380" href="#L1380">1380</a> </span>
+<span id="L1381"><a aria-label="Line 1381" href="#L1381">1381</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1382"><a aria-label="Line 1382" href="#L1382">1382</a> -- QA 8: Review reversed-major-derog examples</span>
+<span id="L1383"><a aria-label="Line 1383" href="#L1383">1383</a> -- Why:</span>
+<span id="L1384"><a aria-label="Line 1384" href="#L1384">1384</a> --   Surfaces the rare remediation-style scenario included in the synthetic population</span>
+<span id="L1385"><a aria-label="Line 1385" href="#L1385">1385</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1386"><a aria-label="Line 1386" href="#L1386">1386</a> SELECT *</span>
+<span id="L1387"><a aria-label="Line 1387" href="#L1387">1387</a> FROM module1.metro2_final</span>
+<span id="L1388"><a aria-label="Line 1388" href="#L1388">1388</a> WHERE profile_type = &#x27;REVERSED_MAJOR_DEROG&#x27;</span>
+<span id="L1389"><a aria-label="Line 1389" href="#L1389">1389</a> ORDER BY account;</span>
+<span id="L1390"><a aria-label="Line 1390" href="#L1390">1390</a> </span>
+<span id="L1391"><a aria-label="Line 1391" href="#L1391">1391</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1392"><a aria-label="Line 1392" href="#L1392">1392</a> -- QA 9: Count final accounts by latest 17A status</span>
+<span id="L1393"><a aria-label="Line 1393" href="#L1393">1393</a> -- Why:</span>
+<span id="L1394"><a aria-label="Line 1394" href="#L1394">1394</a> --   Gives a quick top-line view of the latest-state status distribution</span>
+<span id="L1395"><a aria-label="Line 1395" href="#L1395">1395</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1396"><a aria-label="Line 1396" href="#L1396">1396</a> SELECT</span>
+<span id="L1397"><a aria-label="Line 1397" href="#L1397">1397</a>     account_status_17A,</span>
+<span id="L1398"><a aria-label="Line 1398" href="#L1398">1398</a>     COUNT(*) AS account_count</span>
+<span id="L1399"><a aria-label="Line 1399" href="#L1399">1399</a> FROM module1.metro2_final</span>
+<span id="L1400"><a aria-label="Line 1400" href="#L1400">1400</a> GROUP BY account_status_17A</span>
+<span id="L1401"><a aria-label="Line 1401" href="#L1401">1401</a> ORDER BY account_status_17A;</span>
+<span id="L1402"><a aria-label="Line 1402" href="#L1402">1402</a> </span>
+<span id="L1403"><a aria-label="Line 1403" href="#L1403">1403</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1404"><a aria-label="Line 1404" href="#L1404">1404</a> -- QA 10: Inspect currently adverse latest-state accounts</span>
+<span id="L1405"><a aria-label="Line 1405" href="#L1405">1405</a> -- Why:</span>
+<span id="L1406"><a aria-label="Line 1406" href="#L1406">1406</a> --   Useful for reviewing consistency among:</span>
+<span id="L1407"><a aria-label="Line 1407" href="#L1407">1407</a> --      - account_status_17A</span>
+<span id="L1408"><a aria-label="Line 1408" href="#L1408">1408</a> --      - payment_rating_17B</span>
+<span id="L1409"><a aria-label="Line 1409" href="#L1409">1409</a> --      - DOFD</span>
+<span id="L1410"><a aria-label="Line 1410" href="#L1410">1410</a> --      - full_php</span>
+<span id="L1411"><a aria-label="Line 1411" href="#L1411">1411</a> -- --------------------------------------------------------------------------------------------</span>
+<span id="L1412"><a aria-label="Line 1412" href="#L1412">1412</a> SELECT</span>
+<span id="L1413"><a aria-label="Line 1413" href="#L1413">1413</a>     account,</span>
+<span id="L1414"><a aria-label="Line 1414" href="#L1414">1414</a>     profile_type,</span>
+<span id="L1415"><a aria-label="Line 1415" href="#L1415">1415</a>     account_status_17A,</span>
+<span id="L1416"><a aria-label="Line 1416" href="#L1416">1416</a>     payment_rating_17B,</span>
+<span id="L1417"><a aria-label="Line 1417" href="#L1417">1417</a>     date_of_first_delinquency,</span>
+<span id="L1418"><a aria-label="Line 1418" href="#L1418">1418</a>     full_php</span>
+<span id="L1419"><a aria-label="Line 1419" href="#L1419">1419</a> FROM module1.metro2_final</span>
+<span id="L1420"><a aria-label="Line 1420" href="#L1420">1420</a> WHERE account_status_17A IN (&#x27;71&#x27;,&#x27;78&#x27;,&#x27;80&#x27;,&#x27;82&#x27;,&#x27;83&#x27;,&#x27;84&#x27;,&#x27;93&#x27;,&#x27;94&#x27;,&#x27;95&#x27;,&#x27;96&#x27;,&#x27;97&#x27;)</span>
+<span id="L1421"><a aria-label="Line 1421" href="#L1421">1421</a> ORDER BY account</span>
+<span id="L1422"><a aria-label="Line 1422" href="#L1422">1422</a> LIMIT 100;</span>
+<span id="L1423"><a aria-label="Line 1423" href="#L1423">1423</a> </span>
+<span id="L1424"><a aria-label="Line 1424" href="#L1424">1424</a> COMMIT;</span></code></pre></main></body></html>

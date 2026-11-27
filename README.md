@@ -1,484 +1,61 @@
-# Metro 2 Remediation Sandbox: Synthetic Portfolio and Impact Engine
+# Metro 2 Remediation Sandbox
 
-## Strategic Intent: Synthetic Credit Reporting Remediation Without PII
+A bank error can affect a customer’s credit reporting after the underlying issue ends. This PostgreSQL project follows each synthetic account from the first affected month through a proposed correction, a documented cure, or the next monthly review. The account explorer pairs each proposed decision with the original account fields and dated payment history.
 
-How do you simulate high-stakes credit reporting remediation logic without exposing customer data, risking production reporting integrity, or relying on opaque before-and-after outputs?
+[Open the teaching exhibit](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html) · [Run your own simulation](https://andrew-goad.github.io/metro2-remediation-sandbox/run.html) · [Explore 25,000 accounts](https://andrew-goad.github.io/metro2-remediation-sandbox/scale/index.html) · [Open the monthly review queue](https://andrew-goad.github.io/metro2-remediation-sandbox/manual-review/index.html)
 
-This project is a modular PostgreSQL remediation sandbox that builds a synthetic longitudinal Metro 2-style portfolio, applies credit-impact window logic, evaluates cure behavior, assigns remediation treatments, and produces audit-ready before-and-after outputs.
+## Start with account 24064
 
-The objective is not to reproduce a production furnishing system. The objective is to create a governed, synthetic environment where remediation logic can be tested, explained, validated, and reviewed before any production-like implementation.
+The customer was already 30–59 days late in November 2023. The bank issue began in December, ended in January, and the account continued to fall further behind. The history cannot tell us whether the customer would have caught up without the bank’s error. The bank bears that uncertainty in this exercise. It preserves the pre-issue delinquency and corrects the affected months while waiting for evidence of recovery.
 
-This project demonstrates a practical remediation design principle:
+| History month | Original reporting | Sandbox decision |
+| --- | --- | --- |
+| November 2023, before the issue | `1` | Keep November’s accurate delinquency. |
+| December 2023 and January 2024, during the issue | `2`, `3` | Change each to `D`, meaning no payment history reported for that month. |
+| February through April 2024, after the issue | `4`, `5`, `6` | Extend the credit-impact window and change all three to `D`. The original months show continuing delinquency. |
+| May 1, 2024 reporting snapshot | April is the latest history month. None of the three post-issue months is current. | Cure start and confirmation are unknown. Keep the account open for review. May’s original history will appear in the June 1 snapshot. |
 
-> Remediation logic should be tested against a behavioral truth source before it is applied to reported artifacts.
+On May 1 the bank elects current status `11` and proposes clearing the active date of first delinquency. Its internal modeled payment rating changes from `6` to `0`. Standard Field 17B is blank at both status `84` and `11` under the historical guide. The reviewer can inspect all five proposed changes alongside the original observations. [Inspect account 24064 in the 25,000-account study](https://andrew-goad.github.io/metro2-remediation-sandbox/scale/index.html#account=24064)
 
----
+## Follow the evidence to the next decision
 
-## Executive Dashboard
+- **Account 175 shows an observed cure.** Its bank issue ran from April 2024 through March 2025. February, March and April 2025 showed `1`, `2`, `1`. The bank corrects all three. Original May, June and July each showed `0`. May starts the cure and July confirms it. The correction window ends in April and monthly review closes. [Account 175 in the 1,000-account replay](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html#account=175)
+- **Account 327 separates reversal from cure.** The issue ran from December 2024 through January 2025. A March charge-off occurred during continuing credit impact. April’s original `5` is the model’s proxy for reversal and still denotes delinquency. On the October 1 snapshot, the bank retains the tradeline, corrects nine months and has just one current observation toward cure. October is the next history month to request. [Account 327 in the 1,000-account replay](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html#account=327)
+- **Account 17899 explains the date of first delinquency (Field 25).** December 2024’s original `1` stays. The January 1 reconstruction shows status `71` and a December 1 delinquency date. The bank issue covers January alone. On February 1 the retained source still shows `71`. The bank changes January’s `1` to `D`, elects current status `11` and clears the active date. The internal rating moves from `1` to `0`. The historical standard leaves Field 17B blank at both statuses. February’s history first appears March 1. Cure has yet to be established. [Account 17899 in the 25,000-account study](https://andrew-goad.github.io/metro2-remediation-sandbox/scale/index.html#account=17899) · [Standard Field 25 format](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html#field-25)
 
-[![Metro 2 Remediation Sandbox Dashboard](./docs/executive_dashboard_preview.png)](./docs/executive_dashboard_preview.png)
+Account status (17A) describes the condition on the Date of Account Information. The first Payment History Profile (PHP) byte describes the previous reporting month. Only original current months count toward cure. An original `D` means that month’s payment history is unavailable. It supplies no evidence that an earlier delinquency ended. An unrelated later status or delinquency onset can remain accurate when an older month needs correction.
 
-[Open dashboard full size](./docs/executive_dashboard_preview.png)
+Read the [business requirements](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/BUSINESS_REQUIREMENTS.md) for the rules behind these cases and the [validation report](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/VALIDATION.md) for the observed results.
 
-The dashboard translates the remediation engine into an executive view of treatment distribution, monitoring risk, and a case-level before-and-after payment history profile example.
+## Run your own simulation
 
----
+Use the same tool to test a pre-production credit-reporting strategy. In two runs of the same 1,000 accounts, moving the cure threshold from three to four original current months changed confirmed cures from 555 to 494 and open monthly reviews from 133 to 147. Account 57 shows which month the reviewer needs next. Account 975 explains why one more tradeline receives a deletion proposal. Three current months establish a cure before the later charge-off. A four-month requirement keeps the charge-off inside the credit-impact window. [Compare the two decisions](https://andrew-goad.github.io/metro2-remediation-sandbox/run.html#case-975)
 
-## System Overview
+1. Download and extract the PowerShell study kit. Open PowerShell in the folder containing `src`, `tools` and `explorer-template`. Use a local PostgreSQL server and a login that can create a study database.
+2. Run `./tools/Run-Metro2Study.ps1 -AccountCount 1000 -CureMonths 3`. Change the threshold to `4` for a second run. Each run creates a fresh database and writes a new result folder.
+3. Use the guide’s commands to open your own account explorer and compare the dated evidence in the two runs. Keep the run receipts, configured SQL, reviewer handoff and comparison together.
 
-The sandbox contains two PostgreSQL modules.
+[Configure your PowerShell commands](https://andrew-goad.github.io/metro2-remediation-sandbox/run.html) · [Download the self-contained kit](https://andrew-goad.github.io/metro2-remediation-sandbox/downloads/Metro2_PowerShell_Study.zip) · [Inspect the measured comparison](https://andrew-goad.github.io/metro2-remediation-sandbox/downloads/Metro2_Threshold_Comparison_1000.json)
 
-| Module | Purpose | Primary Outputs |
-|---|---|---|
-| **Module 1: Synthetic Portfolio Generator** | Builds a synthetic Metro 2-style portfolio with account-level blueprints, month-level status history, longitudinal snapshots, and final account-level output. | `metro2_account_blueprint`, `metro2_status_history`, `metro2_sample`, `metro2_final` |
-| **Module 2: Remediation Engine** | Builds simulated remediation inputs, evaluates credit impact windows, determines cure behavior, assigns remediation treatments, and produces remediated delta fields. | `metro2_remediation_input`, `metro2_remediation_window_eval`, `metro2_remediation_php_detail`, `metro2_remediation_final` |
+## Two SQL modules
 
-High-level flow:
+| Module | What you can inspect or reuse |
+| --- | --- |
+| [Synthetic portfolio generator](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/src/module_01_metro2_synthetic_portfolio_generator.sql) | Account blueprints, one original observation per account-month, 24-position history snapshots and account-level outputs. The generator can be run independently to test reporting logic with synthetic data. |
+| [Remediation engine](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/src/module_02_metro2_remediation_engine.sql) | Incident dates, credit-impact windows, cure evidence, treatment decisions and original versus proposed fields. The engine preserves accurate pre-issue months and can reevaluate the same incident as new history arrives. |
 
-```text
-Synthetic Account Blueprint
-→ Month-Level Status History
-→ Longitudinal PHP Snapshots
-→ Final Account-Level Metro 2-Style Output
-→ Simulated Remediation Input
-→ Credit Impact Window Evaluation
-→ Cure and Manual Review Logic
-→ Treatment Assignment
-→ Month-Level Remediation Detail
-→ Final Before / After Delta Output
-→ QA Review
-```
+The 25,000-account study contains **873,193 original account-months**. It proposes **11,071 monthly corrections** across 4,028 accounts and **466 whole-tradeline deletions**. It flags **3,048 accounts** for the next cure review. Account 987 shows the deletion route when the latest in-window charge-off has no modeled reversal. [Account 987 in the 1,000-account replay](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html#account=987)
 
----
+Of the 2,340 proposed date clears, 329 preserve an earlier delinquent month that predates the bank issue. A separate source check identifies 130 retained accounts already missing a date called for by the historical field rules, including 129 at paid derogatory statuses 61–65. A separate servicing handoff identifies 26 missing required ratings. Three status-65 accounts are on both field worklists. The cure queue and the date investigation answer different questions. [Field 25 findings](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/CODE_AUDIT.md#manual-review-and-delinquency-date-audit)
 
-## Module 1: Synthetic Portfolio Generator
+## Explore or reproduce the study
 
-Primary source file:
+- Open `docs/index.html` from an extracted copy for the offline exhibit. The [original dashboard](https://andrew-goad.github.io/metro2-remediation-sandbox/executive_dashboard_preview.png) illustrates a separate 500-account study scaled by 10,000.
+- [Run the study on Windows](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/tools/RUN_STUDY.md) or [export retained DBeaver results](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/tools/README.md) from `metro2_lab`, schemas `module1` and `module2`.
+- Inspect the [review workbook](https://andrew-goad.github.io/metro2-remediation-sandbox/downloads/Metro2_Manual_Review_25000.xlsx), [Field 25 source exceptions](https://andrew-goad.github.io/metro2-remediation-sandbox/downloads/Metro2_Field25_Source_Exceptions_25000.csv), [code audit](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/CODE_AUDIT.md), [changelog](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/CHANGELOG.md) and [regression tests](https://github.com/andrew-goad/metro2-remediation-sandbox/blob/main/tests/README.md).
 
-[`src/module_01_metro2_synthetic_portfolio_generator.sql`](./src/module_01_metro2_synthetic_portfolio_generator.sql)
+The independent audit reproduced the four featured cases, both study sizes and the three- versus four-month experiment. It closed the earlier hold and identified two operator errors that could still change a result. The current kit checks the identity and contents of a saved comparison input. It also checks the saved cure threshold before rerunning a bank incident. The 25,000-account reference keeps the original run receipt and the SQL that produced it. [Release corrections and evidence](https://andrew-goad.github.io/metro2-remediation-sandbox/retest.html)
 
-Module 1 builds the synthetic behavioral backbone used by the remediation engine.
+## Reporting guidance
 
-### Core Design Principle
-
-Payment History Profile strings are treated as output artifacts, not as the computational backbone.
-
-Instead of repeatedly exploding and reassembling PHP strings, Module 1 materializes a reusable month-level truth table:
-
-```text
-metro2_status_history
-```
-
-This table stores one row per account per represented month and becomes the source for both longitudinal snapshots and final account-level outputs.
-
-### Default Portfolio Scale
-
-The default sample size is:
-
-```text
-5,000,000 synthetic accounts
-```
-
-Default profile mix:
-
-```text
-CURRENT  = 70%
-MILD     = 15%
-MOD      =  8%
-SEVERE   =  4%
-DEROG    =  3%
-```
-
-The script validates that percentages are within range and sum to 1.000000 before generating the portfolio.
-
-### Modeled Account Profiles
-
-Module 1 generates synthetic behavioral patterns across:
-
-- current accounts
-- mild delinquency accounts
-- moderate delinquency accounts
-- severe delinquency accounts
-- derogatory accounts
-- reversed-major-derogatory examples
-
-The reversed-major-derogatory pattern is intentionally included to support remediation testing where post-derog recovery evidence matters.
-
-### Metro 2-Style Fields Modeled
-
-The synthetic output includes:
-
-- account
-- latest date of account information
-- date closed
-- full payment history profile
-- account status 17A
-- payment rating 17B
-- date of first delinquency
-
-### Main Module 1 Outputs
-
-| Output Table | Purpose |
-|---|---|
-| `metro2_account_blueprint` | Account-level generation metadata and behavioral pattern assignment |
-| `metro2_status_history` | Month-level truth table for account performance |
-| `metro2_sample` | Longitudinal account / DOAI / PHP snapshot table |
-| `metro2_final` | Final account-level Metro 2-style output for downstream remediation logic |
-
----
-
-## Module 2: Credit Impact Window and Remediation Engine
-
-Primary source file:
-
-[`src/module_02_metro2_remediation_engine.sql`](./src/module_02_metro2_remediation_engine.sql)
-
-Module 2 builds the remediation layer on top of the Module 1 synthetic portfolio.
-
-### Main Objectives
-
-Module 2 performs four major jobs:
-
-1. Simulates a bank-side financial remediation input table.
-2. Determines the credit reporting impact timeframe.
-3. Assigns a remediation treatment.
-4. Produces remediated delta fields and audit flags.
-
-### Key Concepts
-
-#### Financial Impact Window
-
-The financial impact window is the simulated business input:
-
-```text
-impact_start_date
-impact_end_date
-```
-
-#### Credit Impact Window
-
-The credit impact window is the reporting impact period evaluated by the remediation engine:
-
-```text
-credit_impact_start_date
-credit_impact_end_date
-credit_cure_date
-```
-
-The credit impact end date may extend beyond the financial impact end date because the project allows time for the customer to stabilize from a credit reporting standpoint.
-
-#### Cure Logic
-
-The default cure rule requires:
-
-```text
-3 consecutive post-impact months of literal status = '0'
-```
-
-Important boundaries:
-
-- cure is evaluated after `impact_end_date`
-- only literal `0` counts as cure
-- `B` and `D` do not count as cure
-- the default 3-month rule is a conservative project assumption, not presented as a formal Metro 2 requirement
-
-### Manual Review Logic
-
-Manual review is intended to identify accounts where credit reporting impact may still be ongoing.
-
-The framework distinguishes between:
-
-- closed accounts with no cure
-- open accounts with insufficient post-impact history
-- open accounts with no cure
-- accounts with no delinquency or derogatory content in the credit impact window
-
-This prevents the engine from sending clean, no-impact cases to unnecessary manual review.
-
-### Remediation Treatments
-
-Module 2 assigns one of four treatments:
-
-| Treatment | Meaning |
-|---|---|
-| `TRADELINE_DELETION` | Most conservative treatment when unresolved derogatory impact remains |
-| `FULL_DEROGATORY_PHP_CLEANUP` | Suppresses delinquency and derogatory bytes inside the credit impact window |
-| `SIMPLE_DELINQUENCY_PHP_CLEANUP` | Suppresses delinquency bytes inside the credit impact window |
-| `NO_IMPACT_CLEAN_PHP_HISTORY` | No credit reporting impact identified |
-
-### Version 2 Deletion Override Logic
-
-Version 2 corrects a false-positive deletion risk for reversed-major-derogatory scenarios.
-
-Tradeline deletion now requires:
-
-```text
-derogatory event in the credit impact window
-AND
-no later payment-performance recovery evidence after the most recent derog month
-```
-
-This matters because an account can recover from a major derogatory state but still fail the configured cure threshold. That case should route through normal evaluation / cleanup logic, not automatic deletion.
-
-### Remediated Delta Fields
-
-Module 2 produces delta-based remediated fields:
-
-- `remediated_full_php`
-- `remediated_account_status_17A`
-- `remediated_payment_rating_17B`
-- `remediated_date_of_first_delinquency`
-
-Delta-based design means remediated fields are populated only when a change is actually made. If a field does not change, the remediated field remains `NULL`.
-
-### Main Module 2 Outputs
-
-| Output Table | Purpose |
-|---|---|
-| `metro2_remediation_input` | Simulated remediation input: account, impact start, impact end |
-| `metro2_remediation_window_eval` | Credit impact window, cure, manual review, recovery, and treatment logic |
-| `metro2_remediation_php_detail` | Month-level original vs remediated status detail |
-| `metro2_remediation_final` | Final account-level remediation output with before / after delta fields |
-
----
-
-## Executive Interpretation
-
-### The Cure Philosophy
-
-This project defines behavioral cure as a sustained post-impact sequence of current performance, not a single status change.
-
-That creates a defensible recovery point and helps distinguish between:
-
-- customers who stabilized after the issue ended
-- open accounts with insufficient post-impact history
-- open accounts with no cure
-- accounts needing ongoing monitoring
-
-### Defending the Recovery
-
-The Version 2 deletion override protects accounts with post-derogatory recovery evidence from unnecessary tradeline deletion.
-
-This supports a more nuanced approach than blunt wipe logic:
-
-```text
-protect favorable recovery evidence
-avoid false-positive deletions
-preserve customer-centric reporting outcomes
-```
-
-### Before / After Evidence
-
-The final remediation output provides a clear view of original context, credit impact dates, treatment assignment, remediated fields, and audit flags.
-
-The goal is to make the remediation decision explainable to technical reviewers, business owners, risk stakeholders, and governance teams.
-
-### Ongoing Monitoring Signals
-
-The dashboard highlights no-cure and insufficient-history populations that may require monitoring rather than immediate remediation closure.
-
-This supports a practical remediation distinction:
-
-```text
-resolved impact
-vs.
-open monitoring signal
-vs.
-manual review need
-```
-
----
-
-## Technical Architecture
-
-### PostgreSQL-First Design
-
-The project is built in PostgreSQL and intended for local execution in DBeaver.
-
-The scripts are not optimized for lightweight browser sandboxes. They are designed as working SQL modules and teaching artifacts.
-
-### Dedicated Schemas
-
-The modules use separate schemas:
-
-```text
-module1
-module2
-```
-
-This keeps generation outputs and remediation outputs organized and easier to inspect.
-
-### Deterministic Synthetic Logic
-
-Both modules use deterministic hash-based variation so reruns with the same parameters produce stable synthetic behavior.
-
-This supports repeatable demonstrations, validation, and walkthroughs.
-
-### Month-Level Truth Source
-
-The core design choice is to compute a month-level status history once and reuse it downstream.
-
-This makes the project:
-
-- easier to validate
-- easier to audit
-- easier to explain
-- more efficient than repeatedly exploding PHP strings
-
-### Parameterized Controls
-
-Module 1 centralizes portfolio mix and sample size parameters.
-
-Module 2 centralizes the cure threshold:
-
-```text
-cure_consecutive_months_required
-```
-
-This allows reviewers to test what-if scenarios, such as changing the number of post-impact current months required for cure.
-
-### QA and Review Queries
-
-The scripts include review queries that inspect:
-
-- parameter settings
-- profile mix
-- closed-status mix
-- month-level status history
-- synthetic snapshots
-- final outputs
-- remediation treatment counts
-- manual review reasons
-- month-level remediation detail
-- tradeline deletion examples
-- full derogatory cleanup examples
-- simple delinquency cleanup examples
-- no-impact examples
-- remediated field changes
-- post-derog recovery edge cases
-
----
-
-## Repository Contents
-
-```text
-metro2-remediation-sandbox/
-│
-├── README.md
-│
-├── docs/
-│   └── executive_dashboard_preview.png
-│
-└── src/
-    ├── module_01_metro2_synthetic_portfolio_generator.sql
-    └── module_02_metro2_remediation_engine.sql
-```
-
-### Core Artifacts
-
-| Artifact | Purpose |
-|---|---|
-| [`docs/executive_dashboard_preview.png`](./docs/executive_dashboard_preview.png) | Executive dashboard preview |
-| [`src/module_01_metro2_synthetic_portfolio_generator.sql`](./src/module_01_metro2_synthetic_portfolio_generator.sql) | Synthetic longitudinal tradeline and Metro 2-style portfolio generator |
-| [`src/module_02_metro2_remediation_engine.sql`](./src/module_02_metro2_remediation_engine.sql) | Credit impact window and remediation treatment engine |
-
----
-
-## How to Run
-
-### 1. Execute Module 1
-
-Run:
-
-```text
-src/module_01_metro2_synthetic_portfolio_generator.sql
-```
-
-This builds:
-
-```text
-module1.metro2_account_blueprint
-module1.metro2_status_history
-module1.metro2_sample
-module1.metro2_final
-```
-
-### 2. Execute Module 2
-
-Run:
-
-```text
-src/module_02_metro2_remediation_engine.sql
-```
-
-This builds:
-
-```text
-module2.metro2_remediation_input
-module2.metro2_remediation_window_eval
-module2.metro2_remediation_php_detail
-module2.metro2_remediation_final
-```
-
-### 3. Review QA Queries
-
-Both scripts include QA / review sections at the bottom.
-
-For Module 2, the most important final output is:
-
-```text
-module2.metro2_remediation_final
-```
-
-Use it to inspect:
-
-- original PHP
-- credit impact start / end dates
-- cure date
-- remediation treatment
-- remediated PHP
-- remediated 17A
-- remediated 17B
-- remediated DOFD
-- manual review flag
-- remediation fields modified
-
----
-
-## Supported Boundaries
-
-This is a synthetic remediation-learning module, not a production furnishing engine.
-
-Important boundaries:
-
-- The project models Metro 2-style concepts but does not reproduce every production furnishing edge case.
-- The default 3-month cure rule is a project assumption, not a formal Metro 2 requirement.
-- Remediated fields are delta-based and remain `NULL` when no change is written.
-- Tradeline deletion is represented using a synthetic remediation code `DA`.
-- D behaves like 0 only for remediated derived field logic.
-- The synthetic remediation input table is deterministically generated for demonstration purposes.
-- The engine evaluates methodology and governance logic; it does not make production credit reporting decisions.
-
----
-
-## Data Privacy and Interpretation Boundaries
-
-All data and visual outputs in this repository are generated from synthetic or anonymized datasets to protect proprietary information.
-
-This framework demonstrates methodology for high-stakes enterprise and regulatory environments, but it does not expose real customer data, proprietary furnishing rules, confidential remediation controls, or regulated production pipelines.
-
-Important interpretation boundaries:
-
-- Outputs are synthetic portfolio artifacts.
-- The engine is not a production Metro 2 furnishing system.
-- The remediation treatments are simulation outputs.
-- QA queries are review aids, not formal regulatory certifications.
-- Any production remediation logic would require legal, compliance, furnishing, model risk, and operational governance review.
-
----
-
-## Portfolio Philosophy
-
-**No Cold Handoffs** — engineering zero-defect, audit-ready results so stakeholders internalize the underlying “why.”
-
-This project is designed to ensure that remediation logic does not stop at technical execution. The goal is to make the treatment logic, recovery assumptions, monitoring signals, and before-and-after outputs clear enough for technical, risk, legal, finance, and operations stakeholders to understand the remediation rationale.
+CDIA maintains the Metro 2® format and lists the 2026 Credit Reporting Resource Guide®. Approved users can access the current field rules. The detailed field examples use the publicly reviewable 2020 definitions. CDIA retired status 05 in April 2022. The three-current-month cure threshold, severe-event reversal proxy and choice of favorable as-of status for an affected account are sandbox policy choices. [Current CDIA guide and access](https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/) · [CDIA publications](https://www.cdiaonline.org/publications/) · [Field 17B, 2020 guide](https://autodealerplus.com/dealerzone/metro2.pdf#page=64) · [CDIA retirement of status 05](https://www.cdiaonline.org/ondemand-retirement-of-account-status-05-transferred/) · [Field 25 teaching notes](https://andrew-goad.github.io/metro2-remediation-sandbox/index.html#field-25)

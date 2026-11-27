@@ -1,0 +1,1313 @@
+{
+  "release": {
+    "description": "Private developer retest of the two listed changes following independent review of a1c3b077. Independent guidance on the preceding package was Ready after listed changes. Owner release decision is pending.",
+    "audited_package_sha256": "a1c3b077f0e3164f9c23078b13b9a0f8c20da1891fa8b9bea251b859cabc14e7",
+    "audited_manifest_sha256": "497ea9405b7a3f059628bd20a760a47ac3279f57a00d0ad4851a197e9a0803f5",
+    "public_reference_commit": "1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7",
+    "severe_policy": "REVERSAL_AWARE_SEVERE_V2",
+    "field_policy": "EVIDENCE_SCOPED_FIELDS_V2"
+  },
+  "source_files": {
+    "src/module_01_metro2_synthetic_portfolio_generator.sql": "8a10a6310df2dd14bea3473176d4b71b2f46420123ac34726f76514274058290",
+    "src/module_02_metro2_remediation_engine.sql": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+    "tests/audit_counterexamples.py": "90ac746a8876187e701fcc2ff538ff20651956a7bd47a554da6767248f189275",
+    "tests/check_policy_cases.sql": "d5240c391656b053bc75b3713e01355eb6c7ff1332d692dcea55151729889681",
+    "tests/closed_field_cases.sql": "d436ca04f02dcbd97de481a53ee2cdefcdcc859ab6bf38d747c0d82c2189b5f9",
+    "tests/field25_controls.py": "d443af07f872fc83eb605627e775c83e449723ebdedaac0a58609b789b2046be",
+    "tests/followup_controls.py": "fca683ea9c70d196f71f12775dcee3f0dc72c6750f4e8b447410ee6d16038ab1",
+    "tests/generator_controls.py": "f56e1f02aad7ce01268bb4b4b4c34ff2f590bccfeeeec1f45675e51567ba946e",
+    "tests/owner_case_controls.py": "2477b744c1d7ca586d9cfc39e81cdd812478b0ea1f01ecef221df45603ebc0ee",
+    "tests/policy_cases.sql": "bf94b159ead1df074a4b91fe3d81888fa242399c6eda909ed364071860b3566e",
+    "tests/review_handoff_controls.py": "e9d75cdced4f79a3c36488bc9eabea738ac95866197eaecf07ebbe3c9b5f1795",
+    "tests/rolling_review_controls.py": "bf75e39b746526ca89e00a271922627d09641e048af7c09b24ccc2dcce5a0e10",
+    "tests/run_regression.py": "ede542ee8c99ab2e20a80865d125c27283d175a947593819fdf0154fb5f9af1e",
+    "tests/test_comparison_integrity.py": "1056cc4e49c61c56841d8db12d461274696694904973765bd86ce4e44ab2b5af",
+    "tests/threshold_reuse_controls.py": "5921a9d73743ad8e398c0646cf40e45ea70793244f6248c8a7da4100f6241ea0",
+    "tests/verify_export_controls.py": "aed708f05f3f43b10d10eb585a82d66f11ac2a9853712deb28522cbbad3cb25b",
+    "tests/verify_featured_cases.py": "56ef156b562336fcd68ac74d58ff837e676c3b142ea49acd13fad9e56dac8241",
+    "tools/Run-Metro2Study.ps1": "d9529631a4df9904aade6a75891fc4800fed7aa27cfe624fe90ec3160caa2ac4",
+    "tools/Write-ManualReviewWorkbook.ps1": "78ae4ea85ede73aea2dcbf7126956336c0821e1764d4ac02b02e488e710d35ab",
+    "tools/build_compact.py": "64b52c62456db903250ceaa2b9ce1b762a2ef72113c31e1d01ba7f5e4de7b833",
+    "tools/build_explorer.py": "72eea8abbee1d45caad9315f34286c26ebe3a63fea6131076e82024f6d8f4602",
+    "tools/compare_study_thresholds.py": "5aa2063e7b4c6815622bf484b9fb77960e577524652ffb60b447704b4254be25",
+    "tools/export_account_field_review.sql": "16cad8b3b39acb557733d66ccb5f89686292d728100252168bf4732122f406a4",
+    "tools/export_explorer.sql": "41e0e932081d6589b6b0b7841bcb4038fab3d9b3253b74098f46aa328bb971be",
+    "tools/export_field25_exceptions.sql": "655ed6eb12faecebc6b2fe5a5e3b0c871cdeefaab6b2f7693487fc4ccab452d2",
+    "tools/export_manual_review.sql": "23d05a0fcbcb8cff3f27576706cab1ccea000c3a016a51b4b537f2bf0d681a1a",
+    "tools/verify_study.sql": "64f699cb28eb53271bce9ae9e933f19b018143e19596e58e7c0d471bbbfa3173"
+  },
+  "independent_audit": {
+    "report_sha256": "49e9e1e5273c8b16c1d07d9fb348d990bf9e4bf731376542c0e2f30661be17b7",
+    "evidence_archive_sha256": "0c25340decf93838fe6591000de12b5c51de9583078c90d4b8a7bed6c7a2fe0d",
+    "verified_manifest_entries": 170,
+    "prior_disposition": "Ready after listed changes",
+    "subject_package_sha256": "a1c3b077f0e3164f9c23078b13b9a0f8c20da1891fa8b9bea251b859cabc14e7",
+    "scope": "Two listed medium integrity findings, seven earlier findings closed in their reported scope. New changes below are developer retests."
+  },
+  "findings": {
+    "saved_comparison": {
+      "source": "tools/compare_study_thresholds.py and tools/build_explorer.py",
+      "intact": {
+        "three_month_reviews": 133,
+        "four_month_reviews": 147,
+        "source_accounts": 1000,
+        "source_months": 35395
+      },
+      "reported_mutations": {
+        "changed_57_referral": {
+          "audited_readback": {
+            "monthly_cure_reviews": [
+              133,
+              146
+            ],
+            "accounts": [
+              1000,
+              1000
+            ],
+            "months": [
+              35395,
+              35395
+            ],
+            "example_account": 111
+          },
+          "audited_exit": 0,
+          "audited_prior_sha256": "8a1d69d613ee5455af6b3b14b60e3f61b95c26aa1df29ea51eafd9c469dcb7f9",
+          "audited_result_sha256": "ffef24cb401d7c07fce10f482df979344286c02d5a2004aa44750e0b42ca46a4",
+          "successor_exit": 1,
+          "successor_reason": "Comparison failed: Account 57: ongoing review differs from cure, closure and treatment",
+          "successor_before_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "successor_after_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "previous_comparison_preserved": true
+        },
+        "row_threshold_only": {
+          "audited_readback": {
+            "monthly_cure_reviews": [
+              133,
+              133
+            ],
+            "accounts": [
+              1000,
+              1000
+            ],
+            "months": [
+              35395,
+              35395
+            ],
+            "example_account": 2
+          },
+          "audited_exit": 0,
+          "audited_prior_sha256": "8a1d69d613ee5455af6b3b14b60e3f61b95c26aa1df29ea51eafd9c469dcb7f9",
+          "audited_result_sha256": "5adf4020f5d3e18912cac15004af325b0606ac0211e1945e641305ce1238dbfe",
+          "successor_exit": 1,
+          "successor_reason": "Comparison failed: Account 3: stored cure differs from consecutive post-issue original zeros",
+          "successor_before_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "successor_after_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "previous_comparison_preserved": true
+        },
+        "same_999_rows_filtered": {
+          "audited_readback": {
+            "monthly_cure_reviews": [
+              133,
+              147
+            ],
+            "accounts": [
+              999,
+              999
+            ],
+            "months": [
+              35390,
+              35390
+            ],
+            "example_account": 57
+          },
+          "audited_exit": 0,
+          "audited_prior_sha256": "8a1d69d613ee5455af6b3b14b60e3f61b95c26aa1df29ea51eafd9c469dcb7f9",
+          "audited_result_sha256": "48412bde6a208c4e104df076da185876e396f4bea3089573e1f58c98d2e44264",
+          "successor_exit": 1,
+          "successor_reason": "Comparison failed: The export digest differs from the saved accounts or run metadata.",
+          "successor_before_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "successor_after_sha256": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "previous_comparison_preserved": true
+        }
+      },
+      "all_independent_adversarial_controls": {
+        "changed_57_referral": {
+          "baseline_exit": 0,
+          "baseline_comparison_sha_after": "ffef24cb401d7c07fce10f482df979344286c02d5a2004aa44750e0b42ca46a4",
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Account 57: ongoing review differs from cure, closure and treatment"
+        },
+        "row_threshold_only": {
+          "baseline_exit": 0,
+          "baseline_comparison_sha_after": "5adf4020f5d3e18912cac15004af325b0606ac0211e1945e641305ce1238dbfe",
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Account 3: stored cure differs from consecutive post-issue original zeros"
+        },
+        "same_999_rows_filtered": {
+          "baseline_exit": 0,
+          "baseline_comparison_sha_after": "48412bde6a208c4e104df076da185876e396f4bea3089573e1f58c98d2e44264",
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: The export digest differs from the saved accounts or run metadata."
+        },
+        "genuinely_changed_source": {
+          "baseline_exit": 1,
+          "baseline_comparison_sha_after": "8a1d69d613ee5455af6b3b14b60e3f61b95c26aa1df29ea51eafd9c469dcb7f9",
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Account 1: bank issue dates are outside represented monthly history or reversed"
+        },
+        "changed_57_referral_with_recomputed_local_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Account 57: ongoing review differs from cure, closure and treatment"
+        },
+        "same_999_rows_filtered_with_recomputed_local_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Export metadata accountCount differs from the observed accounts, months or threshold."
+        },
+        "row_threshold_only_with_recomputed_local_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Account 3: stored cure differs from consecutive post-issue original zeros"
+        },
+        "missing_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Unbound or unsupported viewer. Re-export using build_explorer.py and the verified run receipt to compare policies."
+        },
+        "edited_digest": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: The export digest differs from the saved accounts or run metadata."
+        },
+        "wrong_configured_engine_with_recomputed_local_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: configuredModule2Sha256 differs from the supplied Module 2 template or its configured threshold. Use the template from these runs."
+        },
+        "copied_receipt_claims_with_recomputed_local_binding": {
+          "baseline_exit": null,
+          "baseline_comparison_sha_after": null,
+          "revised_exit": 1,
+          "revised_sha_before": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_sha_after": "0867ff7bb400f69d4981c19979a300ec3d3da42431d5de0e7fc61434b0e52286",
+          "revised_prior_preserved": true,
+          "revised_reason": "Comparison failed: Native receipt cure_months differs from the observed study."
+        }
+      },
+      "repository_controls": {
+        "pass": true,
+        "native_open_reviews": [
+          133,
+          147
+        ],
+        "example": 57,
+        "treatment_example": 975,
+        "last_good_comparison_sha256": "97a3f935ac5eeca29f974920aeef4616b472a5e5a55930960b956a2d6a6367c5",
+        "rejections_preserved_prior_bytes": {
+          "changed referral": "Comparison failed: Account 57: ongoing review differs from cure, closure and treatment",
+          "relabeled three-month rows": "Comparison failed: Account 3: stored cure differs from consecutive post-issue original zeros",
+          "corresponding filtered accounts": "Comparison failed: The export digest differs from the saved accounts or run metadata.",
+          "changed referral with recomputed digest": "Comparison failed: Account 57: ongoing review differs from cure, closure and treatment",
+          "corresponding filtered accounts with recomputed digests": "Comparison failed: Export metadata accountCount differs from the observed accounts, months or threshold.",
+          "rewritten counts with genuine run receipt": "Comparison failed: Native receipt account_count differs from the observed study.",
+          "copied configured SQL identity": "Comparison failed: configuredModule2Sha256 differs from the supplied Module 2 template or its configured threshold. Use the template from these runs.",
+          "changed metadata": "Comparison failed: The export digest differs from the saved accounts or run metadata.",
+          "unbound older viewer": "Comparison failed: Unbound or unsupported viewer. Re-export using build_explorer.py and the verified run receipt to compare policies.",
+          "missing native run receipt": "Comparison failed: This viewer lacks a verified native run receipt. Re-export with --run-receipt."
+        }
+      },
+      "evidence": "receipts/comparison/paired.json",
+      "limit": "The export-time digest supports local artifact integrity. A source-signed or external attestation is outside this study."
+    },
+    "continuing_incident": {
+      "source": "src/module_02_metro2_remediation_engine.sql",
+      "audited_wrong_file_observation": "57|2025-10-01|2024-05-01|2025-06-01|3|2025-07-01|0|",
+      "audited_original_and_after_fingerprints": {
+        "before": {
+          "input": "1000|4aa020f6f770ca71f447574115da7adc",
+          "window_eval": "1000|d276b56de9c8bd4e2cdc63fd71a81f66",
+          "php_detail": "35395|eacf576520d897cc03e2e1e5eef320e3",
+          "final": "1000|5bb19a905ac690cf1e3c8000eb7af5ba"
+        },
+        "after": {
+          "input": "1000|4aa020f6f770ca71f447574115da7adc",
+          "window_eval": "1000|b8c8e4c0ae9361adf58cf6b932f94f2e",
+          "php_detail": "35395|7f00f69938bd9116167794ea3b5a174c",
+          "final": "1000|34028cde2e115b230fcfa45901166abc"
+        }
+      },
+      "audited_four_month_verifier_mismatches": 1000,
+      "current_wrong_file": {
+        "rejected": true,
+        "diagnostic": "MODULE 2 INCIDENT REUSE FAILED: the configured cure threshold must match both saved thresholds for every account. Use the original configured Module 2 for follow-up or create a separate study.",
+        "before": {
+          "input": "1000|4aa020f6f770ca71f447574115da7adc",
+          "window_eval": "1000|d276b56de9c8bd4e2cdc63fd71a81f66",
+          "php_detail": "35395|eacf576520d897cc03e2e1e5eef320e3",
+          "final": "1000|5bb19a905ac690cf1e3c8000eb7af5ba"
+        },
+        "after": {
+          "input": "1000|4aa020f6f770ca71f447574115da7adc",
+          "window_eval": "1000|d276b56de9c8bd4e2cdc63fd71a81f66",
+          "php_detail": "35395|eacf576520d897cc03e2e1e5eef320e3",
+          "final": "1000|5bb19a905ac690cf1e3c8000eb7af5ba"
+        }
+      },
+      "current_controls": [
+        "same_cutoff_four",
+        "wrong_three_month_file",
+        "one_account_advanced_under_four",
+        "independent_fresh_three",
+        "window_eval_different_one_account",
+        "window_eval_unknown_one_account",
+        "window_eval_missing_saved_column",
+        "final_different_one_account",
+        "final_unknown_one_account",
+        "final_missing_saved_column",
+        "same_corrupt_threshold_on_one_member_of_both_copies"
+      ],
+      "current_rejected_preserving_all_four": 8,
+      "current_advance": {
+        "record": {
+          "latest_doai": "2025-11-01",
+          "impact_end_date": "2025-06-01",
+          "credit_cure_date": "2025-07-01",
+          "impact_start_date": "2024-05-01",
+          "manual_review_flag": 0,
+          "manual_review_reason": null,
+          "cure_consecutive_months_required": 4
+        },
+        "verified_original_months": 35396
+      },
+      "separate_three_month_study": {
+        "record": {
+          "latest_doai": "2025-10-01",
+          "impact_end_date": "2025-06-01",
+          "credit_cure_date": "2025-07-01",
+          "impact_start_date": "2024-05-01",
+          "manual_review_flag": 0,
+          "manual_review_reason": null,
+          "cure_consecutive_months_required": 3
+        },
+        "verified_original_months": 35395
+      },
+      "evidence": "receipts/followup/paired.json"
+    }
+  },
+  "regression": {
+    "baseline": {
+      "48": {
+        "checks": 48,
+        "passed": 48,
+        "failed": 0,
+        "evidence": "receipts/regression/baseline-48.json"
+      },
+      "55": {
+        "checks": 55,
+        "passed": 55,
+        "failed": 0,
+        "evidence": "receipts/regression/baseline-55.json"
+      }
+    },
+    "successor": {
+      "48": {
+        "checks": 48,
+        "passed": 48,
+        "failed": 0,
+        "evidence": "receipts/regression/successor-48.json"
+      },
+      "55": {
+        "checks": 55,
+        "passed": 55,
+        "failed": 0,
+        "evidence": "receipts/regression/successor-55.json"
+      }
+    }
+  },
+  "cohorts": {
+    "1000": {
+      "accounts": 1000,
+      "source_months": 35395,
+      "threshold": 3,
+      "database": "metro_review_gate_1000",
+      "cure_queue_rows": 133,
+      "field_research_rows": 0,
+      "missing_required_date_rows": 3,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "source_receipt": "receipts/studies/1000/run.json"
+    },
+    "1000-cure4": {
+      "accounts": 1000,
+      "source_months": 35395,
+      "threshold": 4,
+      "database": "metro_review_gate_1000_cure4",
+      "cure_queue_rows": 147,
+      "field_research_rows": 0,
+      "missing_required_date_rows": 3,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "source_receipt": "receipts/studies/1000-cure4/run.json"
+    },
+    "187-cure4": {
+      "accounts": 187,
+      "source_months": 6800,
+      "threshold": 4,
+      "database": "metro_review_gate_187_cure4",
+      "cure_queue_rows": 33,
+      "field_research_rows": 0,
+      "missing_required_date_rows": 0,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "source_receipt": "receipts/studies/187-cure4/run.json"
+    }
+  },
+  "featured_cases": {
+    "pass": true,
+    "scope": "Four featured synthetic accounts in their specified replay cohorts",
+    "sources": [
+      {
+        "file": "1000/full.js",
+        "sha256": "176aa54bfb321ccd0b68aab56dc770853a914c89d14034253419fe6650dc6e1f",
+        "database": "metro_review_gate_1000",
+        "accounts": 1000,
+        "source_months": 35395,
+        "policy": "REVERSAL_AWARE_SEVERE_V2",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "module2_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6"
+      },
+      {
+        "file": "scale/data.js",
+        "sha256": "27f001f16d971d3939f61cf22cdfbd7be05430b69ed9afcaff873b89c6bad314",
+        "database": "metro_episode_scoped_25000",
+        "accounts": 25000,
+        "source_months": 873193,
+        "policy": "REVERSAL_AWARE_SEVERE_V2",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "module2_sha256": "1a1566dee12d142ca5da080ed0db4ac600822e0216c9e24544212f200e343090"
+      }
+    ],
+    "cases": [
+      {
+        "source_cohort": 25000,
+        "account": 24064,
+        "reporting_date_field24": "2024-05-01",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "account_field_review_reason": null,
+        "latest_php_month": "2024-04-01",
+        "oldest_php_month": "2023-04-01",
+        "represented_months": 13,
+        "bank_start": "2023-12-01",
+        "bank_end": "2024-01-01",
+        "bank_end_original_mark": "3",
+        "credit_impact_start": "2023-12-01",
+        "credit_impact_through": "2024-04-01",
+        "cure_start": null,
+        "cure_confirmed_through": null,
+        "first_reporting_date_with_cure_evidence": null,
+        "latest_severe_month": null,
+        "first_subsequent_numeric_month": null,
+        "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+        "monthly_review_flag": 1,
+        "review_reason": "NO_CURE_OPEN_ACCOUNT",
+        "original_post_bank_months": 3,
+        "trailing_post_bank_current_months": 0,
+        "next_php_month_if_under_review": "2024-05-01",
+        "next_reporting_date_if_under_review": "2024-06-01",
+        "original_php_newest_first": "6543210000000",
+        "proposed_php_newest_first": "DDDDD10000000",
+        "changes_month_original_proposed": [
+          [
+            "2023-12-01",
+            "2",
+            "D"
+          ],
+          [
+            "2024-01-01",
+            "3",
+            "D"
+          ],
+          [
+            "2024-02-01",
+            "4",
+            "D"
+          ],
+          [
+            "2024-03-01",
+            "5",
+            "D"
+          ],
+          [
+            "2024-04-01",
+            "6",
+            "D"
+          ]
+        ],
+        "changed_months": 5,
+        "changes_after_bank_end": 3,
+        "pre_issue_adverse_months_preserved": [
+          [
+            "2023-11-01",
+            "1"
+          ]
+        ],
+        "status_17a_at_reporting_date": {
+          "original": "84",
+          "proposed": "11"
+        },
+        "synthetic_rating_17b": {
+          "original": "6",
+          "proposed": "0"
+        },
+        "internal_field25": {
+          "original": "2023-11-01",
+          "proposed": null,
+          "action": "clear"
+        }
+      },
+      {
+        "source_cohort": 1000,
+        "account": 175,
+        "reporting_date_field24": "2025-10-01",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "account_field_review_reason": null,
+        "latest_php_month": "2025-09-01",
+        "oldest_php_month": "2021-09-01",
+        "represented_months": 49,
+        "bank_start": "2024-04-01",
+        "bank_end": "2025-03-01",
+        "bank_end_original_mark": "2",
+        "credit_impact_start": "2024-04-01",
+        "credit_impact_through": "2025-04-01",
+        "cure_start": "2025-05-01",
+        "cure_confirmed_through": "2025-07-01",
+        "first_reporting_date_with_cure_evidence": "2025-08-01",
+        "latest_severe_month": null,
+        "first_subsequent_numeric_month": null,
+        "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+        "monthly_review_flag": 0,
+        "review_reason": null,
+        "original_post_bank_months": 6,
+        "trailing_post_bank_current_months": 5,
+        "next_php_month_if_under_review": null,
+        "next_reporting_date_if_under_review": null,
+        "original_php_newest_first": "0000012100000000000000000000000000000000000000000",
+        "proposed_php_newest_first": "00000DDD00000000000000000000000000000000000000000",
+        "changes_month_original_proposed": [
+          [
+            "2025-02-01",
+            "1",
+            "D"
+          ],
+          [
+            "2025-03-01",
+            "2",
+            "D"
+          ],
+          [
+            "2025-04-01",
+            "1",
+            "D"
+          ]
+        ],
+        "changed_months": 3,
+        "changes_after_bank_end": 1,
+        "pre_issue_adverse_months_preserved": [],
+        "status_17a_at_reporting_date": {
+          "original": "11",
+          "proposed": "11"
+        },
+        "synthetic_rating_17b": {
+          "original": "0",
+          "proposed": "0"
+        },
+        "internal_field25": {
+          "original": null,
+          "proposed": null,
+          "action": "retain absent"
+        }
+      },
+      {
+        "source_cohort": 1000,
+        "account": 327,
+        "reporting_date_field24": "2025-10-01",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "account_field_review_reason": null,
+        "latest_php_month": "2025-09-01",
+        "oldest_php_month": "2023-12-01",
+        "represented_months": 22,
+        "bank_start": "2024-12-01",
+        "bank_end": "2025-01-01",
+        "bank_end_original_mark": "4",
+        "credit_impact_start": "2024-12-01",
+        "credit_impact_through": "2025-09-01",
+        "cure_start": null,
+        "cure_confirmed_through": null,
+        "first_reporting_date_with_cure_evidence": null,
+        "latest_severe_month": "2025-03-01",
+        "first_subsequent_numeric_month": "2025-04-01",
+        "treatment": "FULL_DEROGATORY_PHP_CLEANUP",
+        "monthly_review_flag": 1,
+        "review_reason": "NO_CURE_OPEN_ACCOUNT",
+        "original_post_bank_months": 8,
+        "trailing_post_bank_current_months": 1,
+        "next_php_month_if_under_review": "2025-10-01",
+        "next_reporting_date_if_under_review": "2025-11-01",
+        "original_php_newest_first": "012345L543210000000000",
+        "proposed_php_newest_first": "0DDDDDDDDD210000000000",
+        "changes_month_original_proposed": [
+          [
+            "2024-12-01",
+            "3",
+            "D"
+          ],
+          [
+            "2025-01-01",
+            "4",
+            "D"
+          ],
+          [
+            "2025-02-01",
+            "5",
+            "D"
+          ],
+          [
+            "2025-03-01",
+            "L",
+            "D"
+          ],
+          [
+            "2025-04-01",
+            "5",
+            "D"
+          ],
+          [
+            "2025-05-01",
+            "4",
+            "D"
+          ],
+          [
+            "2025-06-01",
+            "3",
+            "D"
+          ],
+          [
+            "2025-07-01",
+            "2",
+            "D"
+          ],
+          [
+            "2025-08-01",
+            "1",
+            "D"
+          ]
+        ],
+        "changed_months": 9,
+        "changes_after_bank_end": 7,
+        "pre_issue_adverse_months_preserved": [
+          [
+            "2024-10-01",
+            "1"
+          ],
+          [
+            "2024-11-01",
+            "2"
+          ]
+        ],
+        "status_17a_at_reporting_date": {
+          "original": "11",
+          "proposed": "11"
+        },
+        "synthetic_rating_17b": {
+          "original": "0",
+          "proposed": "0"
+        },
+        "internal_field25": {
+          "original": null,
+          "proposed": null,
+          "action": "retain absent"
+        }
+      },
+      {
+        "source_cohort": 25000,
+        "account": 17899,
+        "reporting_date_field24": "2025-02-01",
+        "account_field_policy": "EVIDENCE_SCOPED_FIELDS_V2",
+        "account_field_review_reason": null,
+        "latest_php_month": "2025-01-01",
+        "oldest_php_month": "2024-05-01",
+        "represented_months": 9,
+        "bank_start": "2025-01-01",
+        "bank_end": "2025-01-01",
+        "bank_end_original_mark": "1",
+        "credit_impact_start": "2025-01-01",
+        "credit_impact_through": "2025-01-01",
+        "cure_start": null,
+        "cure_confirmed_through": null,
+        "first_reporting_date_with_cure_evidence": null,
+        "latest_severe_month": null,
+        "first_subsequent_numeric_month": null,
+        "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+        "monthly_review_flag": 1,
+        "review_reason": "INSUFFICIENT_POST_IMPACT_HISTORY",
+        "original_post_bank_months": 0,
+        "trailing_post_bank_current_months": 0,
+        "next_php_month_if_under_review": "2025-02-01",
+        "next_reporting_date_if_under_review": "2025-03-01",
+        "original_php_newest_first": "110000000",
+        "proposed_php_newest_first": "D10000000",
+        "changes_month_original_proposed": [
+          [
+            "2025-01-01",
+            "1",
+            "D"
+          ]
+        ],
+        "changed_months": 1,
+        "changes_after_bank_end": 0,
+        "pre_issue_adverse_months_preserved": [
+          [
+            "2024-12-01",
+            "1"
+          ]
+        ],
+        "status_17a_at_reporting_date": {
+          "original": "71",
+          "proposed": "11"
+        },
+        "synthetic_rating_17b": {
+          "original": "1",
+          "proposed": "0"
+        },
+        "internal_field25": {
+          "original": "2024-12-01",
+          "proposed": null,
+          "action": "clear"
+        }
+      }
+    ]
+  },
+  "threshold_comparison": {
+    "pass": true,
+    "studies": [
+      {
+        "database": "metro_review_gate_1000",
+        "cure_months": 3,
+        "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+        "module2_configured_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+        "snapshot_utc": "2026-11-27T15:57:11Z",
+        "export_sha256": "5048f3c78177042a535c320f136e8fa5fd8758214f0775ef0282e327994e0a9b"
+      },
+      {
+        "database": "metro_review_gate_1000_cure4",
+        "cure_months": 4,
+        "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+        "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+        "snapshot_utc": "2026-11-27T15:57:11Z",
+        "export_sha256": "8d5eba720105964609a1637024a4e2ac6ad851b685adc35d556a275196b41e18"
+      }
+    ],
+    "identical_input_sha256": {
+      "account_ids": "67d4ff71d43921d5739f387da09746f405e425b07d727e4c69d029461d1f051f",
+      "source_account_fields": "51781344e26700c60aa929e855073aa8ea367bf972e02531a9fc01566fc32f8b",
+      "original_dated_months": "9461c57371b1e57dcc9ef2aa537251224fd9cd57f7ba2078ab6316fc057b705e",
+      "incident_dates": "7dc4314f0fa15f4e26c516059a71aa634511d8ce1b78c0c6d99013f7066ee620"
+    },
+    "first": {
+      "accounts": 1000,
+      "represented_months": 35395,
+      "confirmed_cures": 555,
+      "monthly_cure_reviews": 133,
+      "monthly_edits": 461,
+      "field_research": 0,
+      "explicit_dofd_clears": 100,
+      "accounts_with_monthly_edits": 175,
+      "NO_IMPACT_CLEAN_PHP_HISTORY": 803,
+      "SIMPLE_DELINQUENCY_PHP_CLEANUP": 172,
+      "FULL_DEROGATORY_PHP_CLEANUP": 3,
+      "TRADELINE_DELETION": 22
+    },
+    "second": {
+      "accounts": 1000,
+      "represented_months": 35395,
+      "confirmed_cures": 494,
+      "monthly_cure_reviews": 147,
+      "monthly_edits": 496,
+      "field_research": 0,
+      "explicit_dofd_clears": 109,
+      "accounts_with_monthly_edits": 188,
+      "NO_IMPACT_CLEAN_PHP_HISTORY": 789,
+      "SIMPLE_DELINQUENCY_PHP_CLEANUP": 185,
+      "FULL_DEROGATORY_PHP_CLEANUP": 3,
+      "TRADELINE_DELETION": 23
+    },
+    "accounts_changed_by_measure": {
+      "cure_start": 62,
+      "confirmed_through": 555,
+      "credit_through": 62,
+      "treatment": 14,
+      "cure_review": 14,
+      "review_reason": 30,
+      "monthly_edits": 13
+    },
+    "example": {
+      "account": 57,
+      "bank_start": "2024-05-01",
+      "bank_end": "2025-06-01",
+      "as_of": "2025-10-01",
+      "latest_original_month": "2025-09-01",
+      "original_history_newest_first": "000000000000100000000000000000000000000000000000000000000000",
+      "first": {
+        "threshold": 3,
+        "cure_start": "2025-07-01",
+        "confirmed_through": "2025-09-01",
+        "credit_through": "2025-06-01",
+        "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+        "cure_review": 0,
+        "review_reason": null,
+        "monthly_edits": 1
+      },
+      "second": {
+        "threshold": 4,
+        "cure_start": null,
+        "confirmed_through": null,
+        "credit_through": "2025-09-01",
+        "treatment": "SIMPLE_DELINQUENCY_PHP_CLEANUP",
+        "cure_review": 1,
+        "review_reason": "INSUFFICIENT_POST_IMPACT_HISTORY",
+        "monthly_edits": 1
+      }
+    },
+    "treatment_example": {
+      "account": 975,
+      "bank_start": "2023-09-01",
+      "bank_end": "2024-11-01",
+      "as_of": "2025-10-01",
+      "latest_original_month": "2025-09-01",
+      "original_history_newest_first": "L654321000000000000000000000000000000000000000000",
+      "first": {
+        "threshold": 3,
+        "cure_start": "2024-12-01",
+        "confirmed_through": "2025-02-01",
+        "credit_through": "2024-11-01",
+        "treatment": "NO_IMPACT_CLEAN_PHP_HISTORY",
+        "cure_review": 0,
+        "review_reason": null,
+        "monthly_edits": 0
+      },
+      "second": {
+        "threshold": 4,
+        "cure_start": null,
+        "confirmed_through": null,
+        "credit_through": "2025-09-01",
+        "treatment": "TRADELINE_DELETION",
+        "cure_review": 0,
+        "review_reason": null,
+        "monthly_edits": 0
+      }
+    }
+  },
+  "case_975": {
+    "verified": true,
+    "receipt_type": "native PostgreSQL",
+    "three_months": {
+      "as_of": "2025-10-01",
+      "account": 975,
+      "bank_end": "2024-11-01",
+      "threshold": 3,
+      "treatment": "NO_IMPACT_CLEAN_PHP_HISTORY",
+      "bank_start": "2023-09-01",
+      "cure_start": "2024-12-01",
+      "credit_start": "2023-09-01",
+      "monthly_edits": 0,
+      "credit_through": "2024-11-01",
+      "field_referral": null,
+      "original_status": "97",
+      "post_issue_evidence": [
+        [
+          "2024-12-01",
+          "0",
+          "0",
+          0
+        ],
+        [
+          "2025-01-01",
+          "0",
+          "0",
+          0
+        ],
+        [
+          "2025-02-01",
+          "0",
+          "0",
+          0
+        ],
+        [
+          "2025-03-01",
+          "1",
+          "1",
+          0
+        ],
+        [
+          "2025-04-01",
+          "2",
+          "2",
+          0
+        ],
+        [
+          "2025-05-01",
+          "3",
+          "3",
+          0
+        ],
+        [
+          "2025-06-01",
+          "4",
+          "4",
+          0
+        ],
+        [
+          "2025-07-01",
+          "5",
+          "5",
+          0
+        ],
+        [
+          "2025-08-01",
+          "6",
+          "6",
+          0
+        ],
+        [
+          "2025-09-01",
+          "L",
+          "L",
+          0
+        ]
+      ],
+      "confirmation_through": "2025-02-01",
+      "latest_original_month": "2025-09-01",
+      "monthly_cure_referral": 0,
+      "severe_reversal_month": null,
+      "latest_severe_in_impact": null,
+      "proposed_status_instruction": null,
+      "confirmation_first_observable": "2025-03-01"
+    },
+    "four_months": {
+      "as_of": "2025-10-01",
+      "account": 975,
+      "bank_end": "2024-11-01",
+      "threshold": 4,
+      "treatment": "TRADELINE_DELETION",
+      "bank_start": "2023-09-01",
+      "cure_start": null,
+      "credit_start": "2023-09-01",
+      "monthly_edits": 0,
+      "credit_through": "2025-09-01",
+      "field_referral": null,
+      "original_status": "97",
+      "post_issue_evidence": [
+        [
+          "2024-12-01",
+          "0",
+          "0",
+          1
+        ],
+        [
+          "2025-01-01",
+          "0",
+          "0",
+          1
+        ],
+        [
+          "2025-02-01",
+          "0",
+          "0",
+          1
+        ],
+        [
+          "2025-03-01",
+          "1",
+          "1",
+          1
+        ],
+        [
+          "2025-04-01",
+          "2",
+          "2",
+          1
+        ],
+        [
+          "2025-05-01",
+          "3",
+          "3",
+          1
+        ],
+        [
+          "2025-06-01",
+          "4",
+          "4",
+          1
+        ],
+        [
+          "2025-07-01",
+          "5",
+          "5",
+          1
+        ],
+        [
+          "2025-08-01",
+          "6",
+          "6",
+          1
+        ],
+        [
+          "2025-09-01",
+          "L",
+          "L",
+          1
+        ]
+      ],
+      "confirmation_through": null,
+      "latest_original_month": "2025-09-01",
+      "monthly_cure_referral": 0,
+      "severe_reversal_month": null,
+      "latest_severe_in_impact": "2025-09-01",
+      "proposed_status_instruction": "DA",
+      "confirmation_first_observable": null
+    }
+  },
+  "operator_187": {
+    "native": {
+      "accounts": 187,
+      "source_months": 6800,
+      "threshold": 4,
+      "database": "metro_review_gate_187_cure4",
+      "cure_queue_rows": 33,
+      "field_research_rows": 0,
+      "missing_required_date_rows": 0,
+      "module2_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "source_receipt": "receipts/studies/187-cure4/run.json"
+    },
+    "guide_execution": {
+      "pass": true,
+      "entry": "PowerShell commands from the live guide DOM with 187 and 4 selected",
+      "account_count": 187,
+      "account_months": 6800,
+      "cure_months": 4,
+      "opened_offline_account": 187,
+      "server": "PostgreSQL 16.2",
+      "powershell": "7.7.0",
+      "platform": "Linux",
+      "adaptations": [
+        "test login and port",
+        "python3 for Windows py -3",
+        "headless Chromium opened returned local index.html in place of Windows Invoke-Item"
+      ],
+      "receipt_sha256": "2b39f2f4db9831dcf4f0c199ee9680d82e7516e7f34377cd90516f819c767386",
+      "module2_configured_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "kit_sha256": "df35bd806aad4bc912f7b45599aaf2be1a5d5e3a9251bb98f59af4a7d84f5f7c"
+    },
+    "export": {
+      "verified": true,
+      "input_archive_sha256": "df35bd806aad4bc912f7b45599aaf2be1a5d5e3a9251bb98f59af4a7d84f5f7c",
+      "database": "metro_review_gate_187_cure4",
+      "population": 187,
+      "represented_months": 6800,
+      "cure_months": 4,
+      "cure_referrals": 33,
+      "field_research_rows": 0,
+      "field25_exception_rows": 0,
+      "original_runtime_source_sha256": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+      "executed_engine_sha256": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+      "export_integrity": {
+        "format": "metro2-full-export-v1",
+        "sha256": "fa0fcc349f048ff8525953d8cfafde700fbdd593442fe2700bccf97131e59ff2"
+      },
+      "export_file_sha256": "195c911496775e47fd1f0dceec6153392c51283353cb769a20e94c8167e36dcd",
+      "run_sha256": "713a084378f6e68227868434efad299a1be763f4ef4454eee3550f63a5896079",
+      "source_kind": "retained",
+      "exported_snapshot_utc": "2026-11-27T16:00:17Z",
+      "fresh_viewer": "187-cure4/explorer/index.html",
+      "empty_kit_template_preserved": true,
+      "verified_input_template_and_scripts": {
+        "tools/Run-Metro2Study.ps1": "d9529631a4df9904aade6a75891fc4800fed7aa27cfe624fe90ec3160caa2ac4",
+        "tools/build_explorer.py": "72eea8abbee1d45caad9315f34286c26ebe3a63fea6131076e82024f6d8f4602",
+        "tools/export_explorer.sql": "41e0e932081d6589b6b0b7841bcb4038fab3d9b3253b74098f46aa328bb971be",
+        "src/module_01_metro2_synthetic_portfolio_generator.sql": "8a10a6310df2dd14bea3473176d4b71b2f46420123ac34726f76514274058290",
+        "src/module_02_metro2_remediation_engine.sql": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+        "explorer-template/index.html": "7adee56f4fa368eb76027829ffd4e0c9f70f9b55ba913a34213d2826ee8ee807",
+        "explorer-template/explorer.js": "d65d63907302466b7ae47a47ed44fa523aea16497551ede7e5ad9920074057f1"
+      }
+    },
+    "browser": {
+      "pass": true,
+      "browser": "offline and loopback Chromium",
+      "layouts": [
+        {
+          "mode": "file",
+          "width": 320,
+          "entry": "home",
+          "clipboard": "copy-or-select tested",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        },
+        {
+          "mode": "file",
+          "width": 390,
+          "entry": "home",
+          "clipboard": "copy-or-select tested",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        },
+        {
+          "mode": "file",
+          "width": 1440,
+          "entry": "home",
+          "clipboard": "copy-or-select tested",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        },
+        {
+          "mode": "http",
+          "width": 320,
+          "entry": "home",
+          "clipboard": "matched",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        },
+        {
+          "mode": "http",
+          "width": 390,
+          "entry": "home",
+          "clipboard": "matched",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        },
+        {
+          "mode": "http",
+          "width": 1440,
+          "entry": "home",
+          "clipboard": "matched",
+          "valid_and_invalid_configuration": true,
+          "overflow": false
+        }
+      ],
+      "guide_sha256": "cfc9b4b4a1cbb9bd0f10bcfea06a76dbfa536a96f6223a526f97ff37c146ec4f"
+    }
+  },
+  "retained_25000": {
+    "status": "Archived 25,000 study from the audited package, independently regenerated by the reviewer. The two current changes were qualified on fresh smaller cohorts.",
+    "confirmed_by_external_audit": {
+      "accounts": 25000,
+      "original_months": 873193,
+      "monthly_edits": 11071,
+      "cure_queue": 3048,
+      "rating_research": 26,
+      "missing_required_date": 130,
+      "overlap_research_and_date": 3
+    },
+    "archived_result_zip_sha256": "69d3b1b2fd985337a7c8e912fcb1f116eee312e968485038542535c14764633a",
+    "archived_months_js_sha256": "27f001f16d971d3939f61cf22cdfbd7be05430b69ed9afcaff873b89c6bad314",
+    "source_sha256": {
+      "src/module_01_metro2_synthetic_portfolio_generator.sql": "8a10a6310df2dd14bea3473176d4b71b2f46420123ac34726f76514274058290",
+      "src/module_02_metro2_remediation_engine.sql": "1a1566dee12d142ca5da080ed0db4ac600822e0216c9e24544212f200e343090",
+      "tools/Run-Metro2Study.ps1": "d9529631a4df9904aade6a75891fc4800fed7aa27cfe624fe90ec3160caa2ac4",
+      "tools/Write-ManualReviewWorkbook.ps1": "78ae4ea85ede73aea2dcbf7126956336c0821e1764d4ac02b02e488e710d35ab",
+      "tools/build_compact.py": "64b52c62456db903250ceaa2b9ce1b762a2ef72113c31e1d01ba7f5e4de7b833",
+      "tools/build_explorer.py": "dca1b3e456e8543bb639d4cb2cc982ed3902ee16fb751f5424cf51706943fa7c",
+      "tools/compare_study_thresholds.py": "532c7ef56f85d8f736dbc9a2c4010768f77ea0717dc7435ec5cedf0d4609509e",
+      "tools/export_account_field_review.sql": "16cad8b3b39acb557733d66ccb5f89686292d728100252168bf4732122f406a4",
+      "tools/export_explorer.sql": "41e0e932081d6589b6b0b7841bcb4038fab3d9b3253b74098f46aa328bb971be",
+      "tools/export_field25_exceptions.sql": "655ed6eb12faecebc6b2fe5a5e3b0c871cdeefaab6b2f7693487fc4ccab452d2",
+      "tools/export_manual_review.sql": "23d05a0fcbcb8cff3f27576706cab1ccea000c3a016a51b4b537f2bf0d681a1a",
+      "tools/verify_study.sql": "64f699cb28eb53271bce9ae9e933f19b018143e19596e58e7c0d471bbbfa3173",
+      "tests/audit_counterexamples.py": "90ac746a8876187e701fcc2ff538ff20651956a7bd47a554da6767248f189275",
+      "tests/check_policy_cases.sql": "d5240c391656b053bc75b3713e01355eb6c7ff1332d692dcea55151729889681",
+      "tests/closed_field_cases.sql": "d436ca04f02dcbd97de481a53ee2cdefcdcc859ab6bf38d747c0d82c2189b5f9",
+      "tests/field25_controls.py": "d443af07f872fc83eb605627e775c83e449723ebdedaac0a58609b789b2046be",
+      "tests/followup_controls.py": "fca683ea9c70d196f71f12775dcee3f0dc72c6750f4e8b447410ee6d16038ab1",
+      "tests/generator_controls.py": "f56e1f02aad7ce01268bb4b4b4c34ff2f590bccfeeeec1f45675e51567ba946e",
+      "tests/owner_case_controls.py": "2477b744c1d7ca586d9cfc39e81cdd812478b0ea1f01ecef221df45603ebc0ee",
+      "tests/policy_cases.sql": "bf94b159ead1df074a4b91fe3d81888fa242399c6eda909ed364071860b3566e",
+      "tests/review_handoff_controls.py": "e9d75cdced4f79a3c36488bc9eabea738ac95866197eaecf07ebbe3c9b5f1795",
+      "tests/rolling_review_controls.py": "bf75e39b746526ca89e00a271922627d09641e048af7c09b24ccc2dcce5a0e10",
+      "tests/run_regression.py": "459d1ce0e437ed0d26bb1bbfd2a373a1743ef26f4222e9a1aeb19b20f7f5bf49",
+      "tests/verify_export_controls.py": "aed708f05f3f43b10d10eb585a82d66f11ac2a9853712deb28522cbbad3cb25b",
+      "tests/verify_featured_cases.py": "56ef156b562336fcd68ac74d58ff837e676c3b142ea49acd13fad9e56dac8241",
+      "docs/explorer.js": "d65d63907302466b7ae47a47ed44fa523aea16497551ede7e5ad9920074057f1",
+      "docs/manual-review/queue.js": "feea5ce6db89e8d625c6cb91ea25fe2a7408028bbd3765de8e8273202bc1f6b7",
+      "docs/lead-case.js": "76526157011fc491c55df7557c3949bd565474b94777c4e10d0b96d44bf75d9d",
+      "docs/scale/unpack.js": "87c61c095925153ab3abca7c88bc05e4e81ffb98534909e1581146c0853c7028"
+    },
+    "evidence": "receipts/historical/25000/run.json"
+  },
+  "historical": {
+    "prior_developer_receipt_sha256": "3bd91a7a167c165b3f566e35f477ee76fe4a2970be8718af599b356c668d9ad0",
+    "prior_evidence_zip_sha256": "cac834d95bc7f4950af82ac4130ec1e10a35b3adda11ffeb59069a534eb9e041",
+    "prior_42_of_55_failures_apply_to": "57390959d867b5a01ac48554ad73ccc8b0b9b2d080e1b20b5a4f0f9f139e6ad9",
+    "independent_export_rejections": {
+      "subject_package_sha256": "a1c3b077f0e3164f9c23078b13b9a0f8c20da1891fa8b9bea251b859cabc14e7",
+      "expected_rejections": 30,
+      "rejected_and_preceding_viewer_preserved": 30,
+      "scope": "Seven contradictory changes on the 1,000-account study across database/CSV with and without a receipt (28), plus withholding the genuine 17899 clear through database and CSV on one account (2).",
+      "strata": [
+        {
+          "accounts": 1,
+          "entrypoint": "csv",
+          "run_receipt": false,
+          "rejections": 1
+        },
+        {
+          "accounts": 1,
+          "entrypoint": "database",
+          "run_receipt": false,
+          "rejections": 1
+        },
+        {
+          "accounts": 1000,
+          "entrypoint": "csv",
+          "run_receipt": false,
+          "rejections": 7
+        },
+        {
+          "accounts": 1000,
+          "entrypoint": "csv",
+          "run_receipt": true,
+          "rejections": 7
+        },
+        {
+          "accounts": 1000,
+          "entrypoint": "database",
+          "run_receipt": false,
+          "rejections": 7
+        },
+        {
+          "accounts": 1000,
+          "entrypoint": "database",
+          "run_receipt": true,
+          "rejections": 7
+        }
+      ],
+      "evidence": "receipts/historical/export-native-30.json"
+    }
+  },
+  "evidence_files": {
+    "receipts/comparison/paired.json": "0bf43386a6e17b12352eaf4a2480cfab30ef1cf4819f9806443645f3d2c1e970",
+    "receipts/comparison/auditor-original.json": "29548a49526188bcbec44ba306d0bdd456e723e3ea6e54ad0a189333199fa7d4",
+    "receipts/comparison/auditor-browser-pair.json": "48644afb463229906647fc04f0063a1bf8891532fc5fbad8bbe83cb63fa50837",
+    "receipts/comparison/baseline-atomic.json": "7a01bd7f30d2a3f744e40b005aa9a4f2425b9122f70df0900e3e8ddb390bdac2",
+    "receipts/comparison/successor-atomic.json": "49fc097f34f6ea848a81388c31529c4f3e0e69dd0b288581039ff7f66fe962af",
+    "receipts/comparison/repository-controls.json": "442f4c6fd54b30d75a890fa304099f65b0ada161a341c67f3e5d402d1865164d",
+    "receipts/comparison/independent-retake.json": "a699fab89e43eebf65d7c9a1af1d6c045dec093671428ecdb1252febc576e9fb",
+    "receipts/comparison/engine-template-output-alias.json": "de4e1635212b100113c24ac368beebe4eee77106077ec3ef70049776ace3dabe",
+    "auditor-inputs/metro3/cohorts/check_comparator.py": "41eb01b4f6a1db24a613acd77018591956dd40b204857ad2db0a1c689b6b99d2",
+    "auditor-inputs/metro3/ui/compare_reader.py": "4c527848c59f743e9ae545cb3f97efec26786637257c77bdd47b6e8ebcc764af",
+    "auditor-inputs/metro3/work/policy_reuse.sh": "d8e219fc439fad8d12b2e27cb83c1336001e3e12b7cf78841b09a262eaf02845",
+    "receipts/followup/paired.json": "39dcda47b2b916ace8ae728917b611a3f871c34f5419ab6b43d5228b40c5bdb6",
+    "receipts/followup/auditor-original.out": "8d5a600e69f6d9df0b162f7aaab122f07af2aefd20737f4eeaaf15be3e2409b8",
+    "receipts/followup/auditor-verifier.json": "10e941a1c6d82de36eca13b49f82d5b9c65b044115de446262afa69e4a2a02ab",
+    "receipts/followup/current-normal-entry.json": "abb4a313397f6a452423370b410012578f18f3f73da417a6e9238c2de2d66638",
+    "receipts/followup/patch-identity.json": "bf4725e3b6ea380bcf1ac2ed816da5734d1e826080d88f14d16a1e14e326fa64",
+    "receipts/historical/auditor-k4/module_01_configured.sql": "664c7d66defdc8973431acb7ac045d94858057c5bb8c0499b6ec3be9a3a8f268",
+    "receipts/historical/auditor-k4/module_02_configured.sql": "11fa11979764b179821bd8d17507955dba25f8fdc5df43ab2297d94b98b11805",
+    "receipts/historical/auditor-k4/run.json": "ae16a4b5672e0372e88939f561f1d5a4c8afdb4d1900db3c585ec85ecf311348",
+    "receipts/regression/baseline-48.json": "419a1479e7c1e04d5457e8430a433910ace9342e76b2a6b10e99f4dfd0aa2bd9",
+    "receipts/regression/baseline-55.json": "34b96d3258a6d58a7cc756549da5d4413c15248a36db88fc4269f541178880f0",
+    "receipts/regression/baseline-rolling.json": "94a4f28b24afc01506abb065841b4bce4ff3436ebde5d9f32e7a36efc2bf00e8",
+    "receipts/regression/baseline-full.log": "168029d58867558726c41f2de33bd532541432a4d12715cf6bfa76752d2e972c",
+    "receipts/regression/successor-48.json": "419a1479e7c1e04d5457e8430a433910ace9342e76b2a6b10e99f4dfd0aa2bd9",
+    "receipts/regression/successor-55.json": "7726c05a8679c268252a545146da886f3985385b877fef9130cfca49c3bfcdd0",
+    "receipts/regression/successor-rolling.json": "94a4f28b24afc01506abb065841b4bce4ff3436ebde5d9f32e7a36efc2bf00e8",
+    "receipts/regression/successor-full.log": "01207439cc78a4c25f4f399e49bc43083b009677ae7e454731807171fd305b8d",
+    "receipts/historical/export-native-30.json": "0ae47071a1fcff747b6f71d3d1956872787f8365bf1f1e16d1b603f87c67a07b",
+    "receipts/historical/direct-export-csv-rechecks.json": "f4df62536802e1c3ff8c170b6d10b3d8b5e3c18349cae0b6b11c4ed73aaab247",
+    "receipts/historical/external-audit-inputs.json": "b1800d75bc57ca92eeec2bd777e4394c1f6088dcccd25783f7f35b78f92d2311",
+    "receipts/historical/independent-threshold-detail.json": "c90399c99eac56b29e76fdb610715a26ef2c254563712363cdef1d58f5c35690",
+    "receipts/historical/external-975-reconciliation.json": "0e19b4570ad88bac3cd8a9e5bd537337405e3922f5968c09ed87909bde66cd50",
+    "receipts/historical/independent-25000-reconciliation.json": "33a6bd2cf422424948727c1d935bd25fb0652b966868b0eed4bc6c596f39bb38",
+    "receipts/historical/25000/run.json": "29fc25294a1e3d410f9974f80ac24e31f2026469c09277e5341df7881de1b581",
+    "receipts/historical/25000/policy_audit.json": "e3e4c317b3efb0f742bbd3809579a8efd53a5ec56fb3caadcbf2054931bd0bdd",
+    "receipts/historical/25000/successor_comparison.json": "d68f47508586d4bfae9d58beab3b73709a3ddedb9efa035226229e76d8abfdde",
+    "receipts/historical/25000/summary.json": "141adb578da659684872806cfd8f0ca6f29803c08e7aa77110dc63cb0aba0da2",
+    "receipts/historical/25000/workbook_validation.json": "754b64da184b3e9981f184016f9ff8a7f249b3a40a7260ca8b9162f0e22c1945",
+    "receipts/studies/1000/run.json": "439208af4523325cbc2ff9492254c695c967f618ca7fe94747fb11bad21e0341",
+    "receipts/studies/1000/totals.csv": "c5b37c2d89ca9142e9b254e67bcff788da668d5585a6371d4b1961dd2a4e9619",
+    "receipts/studies/1000/outcomes.csv": "d7c71e31d4aa585cecb81cffc406ed308eaa223ad357e3076bce82d940431fbe",
+    "receipts/studies/1000/policy_audit.json": "713e19709b03f8c0b682253eedc7328a0f7fceb8eb78a1c188f2a2ad5e4979c5",
+    "receipts/studies/1000/module_01_configured.sql": "664c7d66defdc8973431acb7ac045d94858057c5bb8c0499b6ec3be9a3a8f268",
+    "receipts/studies/1000/module_02_configured.sql": "5fffaaee2cf665070d96ba55804a5b45c1e42935fe3c728d483a37f977e2c3f6",
+    "receipts/studies/1000/manual_review_handoff.csv": "330f4b2f35e5e1e536ee05c830ec6d368c7c441165f5fd582aed24a197c6c958",
+    "receipts/studies/1000/account_field_review.csv": "89a88b9e6b7d22962eafe2641b013aea273ff377f76809e31678a5310f528bbd",
+    "receipts/studies/1000/field25_source_exceptions.csv": "61b1b0e0c923ca353f7224afea54cdaf674237ba4656774d8dfb06bd81e2a05f",
+    "receipts/studies/1000-cure4/run.json": "51e041313b7ddd9ffe77dd8f68d5d710e3719f289168caccbbddb557b209801e",
+    "receipts/studies/1000-cure4/totals.csv": "81de2a3c969eeeaf92a221f56b0a004a6770b47200496fbb3d60930ba5644e30",
+    "receipts/studies/1000-cure4/outcomes.csv": "67f7ec1221ece508935ab7f713ceae547e2e5253cc58045b15f6830f338fb8df",
+    "receipts/studies/1000-cure4/policy_audit.json": "e9cfee6f0425cb251c5e1c4739d2463d6cd4ce71e47b91f6d5ce084cabce21ee",
+    "receipts/studies/1000-cure4/module_01_configured.sql": "664c7d66defdc8973431acb7ac045d94858057c5bb8c0499b6ec3be9a3a8f268",
+    "receipts/studies/1000-cure4/module_02_configured.sql": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+    "receipts/studies/1000-cure4/manual_review_handoff.csv": "badc69bc73698c7a2fefc2b57e2353c08d15ebe82cf7133b93660a8f6379ed64",
+    "receipts/studies/1000-cure4/account_field_review.csv": "89a88b9e6b7d22962eafe2641b013aea273ff377f76809e31678a5310f528bbd",
+    "receipts/studies/1000-cure4/field25_source_exceptions.csv": "d0e536b30521cae0479020556de21fdb81a8c62121b050800be4444ca24d4543",
+    "receipts/studies/187-cure4/run.json": "713a084378f6e68227868434efad299a1be763f4ef4454eee3550f63a5896079",
+    "receipts/studies/187-cure4/totals.csv": "4fca4641ec7237e896cd80447fefbdbd4b23bee7d777825832e3ac6bb99ee08a",
+    "receipts/studies/187-cure4/outcomes.csv": "f69449aa75d61b06dd6d444629ee2a5fbd77d6b94d408a010bec9b68a369404d",
+    "receipts/studies/187-cure4/policy_audit.json": "fba7b38ba1658bb3884321bb7c17813d33b3beb3c2774b5edc90d611a899edb7",
+    "receipts/studies/187-cure4/module_01_configured.sql": "5eb4aeb4781707d3e7c5ea360700e773e26fad76509ade614ebf90fb35dd892e",
+    "receipts/studies/187-cure4/module_02_configured.sql": "f4f0181d4c8f50a6bff8f0ecbc3e234a1da2169dfffe3dcec8ba139b0d3b803d",
+    "receipts/studies/187-cure4/manual_review_handoff.csv": "103f0076fbad050f883df78eda58cd260c2ae953742775ebbaaaa5600fe36028",
+    "receipts/studies/187-cure4/account_field_review.csv": "89a88b9e6b7d22962eafe2641b013aea273ff377f76809e31678a5310f528bbd",
+    "receipts/studies/187-cure4/field25_source_exceptions.csv": "63bbf7dbce5904fe3065982d1d49d7a84b98a13e3727cae296412895bf4663b1",
+    "receipts/studies/account-975.json": "f0f821de7f901a03ea367c02e4cf6f11d495cd7c021f1e93721e548c057f466f",
+    "receipts/studies/threshold-comparison.json": "97a3f935ac5eeca29f974920aeef4616b472a5e5a55930960b956a2d6a6367c5",
+    "receipts/studies/matched-native-cohorts.json": "f80b867b716fcc9e6d550a7c5b0208d0889b60623498b64a1c2991ae6daa9421",
+    "receipts/studies/featured-cases.json": "f509b73b47b557d85ac0c5c0d43c05b2f4f3d1a8bc4087fbf54a7a7ee15a6d1e",
+    "receipts/operator/guide-powershell.json": "3c1d4a02159071bdd32e6674a74e4d20cc2cfd41c73b0fa3f938aa2528eccec5",
+    "receipts/operator/guide-browser.json": "5f1ba9f149f4841941c8ec4c234bf29c1632225771bbd8a102057295785c0cf6",
+    "receipts/operator/fresh-187.json": "6bdd64061b927f39dc5b85231366e99b08f50d95d34d3a00e95edff84f0c5a6b",
+    "receipts/portable-replay/audited-native-replay.json": "46ad6d9aff243ce6161c03b0d5a9399c5a5cfc31ba8a6cd9cb3597b1bdaba6ea",
+    "receipts/portable-replay/successor-native-replay.json": "f613a3ee3eb288879ac9aacfda31b73324afa664753056262edd40a3c692d0cd",
+    "receipts/portable-replay/audited-comparison-replay.json": "7a01bd7f30d2a3f744e40b005aa9a4f2425b9122f70df0900e3e8ddb390bdac2",
+    "receipts/portable-replay/successor-comparison-replay.json": "9440e9188ae645261ec6ec8d3c028f3c869d9b7ce977f9b42bc1262572f44194",
+    "receipts/portable-replay/target-comparison-tests.json": "442f4c6fd54b30d75a890fa304099f65b0ada161a341c67f3e5d402d1865164d",
+    "receipts/portable-replay/from-archive-featured.json": "de0844a6f01bacae181693c35acbb7746819886960ddf0ba0a0ac518980be400"
+  }
+}

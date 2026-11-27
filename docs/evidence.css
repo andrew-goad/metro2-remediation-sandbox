@@ -1,0 +1,44 @@
+.evidence-body {
+  width: min(1060px, calc(100% - 40px));
+}
+.evidence-body h2, .evidence-body h3 {
+  scroll-margin-top: 1.5rem;
+}
+.evidence-body code {
+  overflow-wrap: anywhere;
+}
+.evidence-body pre {
+  max-width: 100%;
+  padding: 1rem;
+  overflow-x: auto;
+  background: var(--wash);
+}
+.evidence-body pre code {
+  overflow-wrap: normal;
+}
+.evidence-body .evidence-table {
+  max-width: 100%;
+  margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+.evidence-table table {
+  margin: 0;
+}
+.evidence-sections {
+  margin: 1.5rem 0;
+}
+.evidence-sections summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.evidence-sections ul {
+  padding-left: 1.3rem;
+}
+@media (max-width: 700px) {
+  .evidence-body {
+    width: calc(100% - 30px);
+  }
+  .evidence-wide table {
+    min-width: 42rem;
+  }
+}

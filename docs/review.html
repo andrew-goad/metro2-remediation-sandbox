@@ -1,0 +1,1436 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Code changelog and audit · Metro 2</title><link rel="stylesheet" href="style.css"><style>main {padding:32px 0 68px} .review-head {display:flex;flex-wrap:wrap;gap:16px} .code-review h1 {max-width:36ch;font-size:clamp(2.1rem,5vw,3.4rem)} .code-review h2 {font-size:1.8rem;margin-top:28px} .code-review h3 {margin-top:18px} .code-review section {padding:22px 0; min-width:0} .code-review p,.code-review ul,.code-review ol {max-width:82ch} .code-review table {border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%;margin:18px 0} .code-review th,.code-review td {border-bottom:1px solid var(--line);text-align:left;padding:8px;vertical-align:top} .code-review section {overflow-x:auto} </style></head><body><main class="wrap code-review"><nav class="review-head" aria-label="Code review"><a href="index.html">Return to the study</a><a href="#changelog">Changelog</a><a href="#audit">Audit</a><a href="manual-review/index.html">Manual review handoff</a><a href="code/engine.html">Read the engine</a><a href="downloads/Metro2_SQL_Changes.patch" download>Download the SQL diff</a></nav><section id="changelog"><h1 id="code-changelog">Code changelog</h1>
+<h2 id="27-november-2026--keep-the-selected-cure-policy-fixed">27
+November 2026 · Keep the selected cure policy fixed</h2>
+<p>The independent auditor rated private package
+<code>a1c3b077f0e3…</code> <strong>Ready after listed changes</strong>.
+Its ordinary 1,000-account comparison correctly reported 133 open
+reviews under three months and 147 under four. Two altered-input paths
+could still give a reader a false policy result. This update addresses
+the comparison file and the continuing database study. <a
+href="retest.html">Developer retest</a> · <a
+href="requirements.html#br-11">Business requirements</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Entry point</th>
+<th>Previous result</th>
+<th>New acceptance rule</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Saved threshold comparison</td>
+<td>Closing account 57 in a copy of the four-month viewer produced 146
+reviews. Relabeling three-month rows as four gave 133 versus 133.
+Removing the same account from both inputs yielded a passing comparison
+of 999 against a declared 1,000.</td>
+<td>Bind the complete viewer to its export-time digest. Before writing a
+comparison, check both viewers’ integrity, declared population and
+history size, policy threshold and configured SQL identity, then compare
+the original evidence. Reject altered inputs and preserve the previous
+comparison. <a
+href="downloads/Metro2_PowerShell_Study.zip">Comparator</a></td>
+</tr>
+<tr class="even">
+<td>Continuing incident</td>
+<td>On the same October 1 cutoff, selecting stock three-month SQL for
+the saved four-month study closed account 57 effective July. The
+external four-month verifier detected the switch only after the tables
+had changed.</td>
+<td>Check the incoming threshold against all saved window and final
+thresholds before rebuilding. Accept same-threshold reprocessing and
+newly observed performance. Test an alternative threshold in its own
+fresh study. <a
+href="code/engine.html#L506">Engine
+preflight</a></td>
+</tr>
+<tr class="odd">
+<td>Rating interpretation</td>
+<td>The internal <code>1 → 0</code> sentence followed the 17899
+variation that retains rating <code>1</code>. A nonblank invalid source
+rating at status 13 could also leave historical Field 25 eligibility
+indeterminate.</td>
+<td>Associate <code>1 → 0</code> with the supported February 1 election.
+Keep <code>1</code> and the May onset in the disconnected-episode
+variation. Document the import check for nonblank unsupported ratings.
+<a href="requirements.html#br-08">BR-08</a> · <a
+href="requirements.html#br-10">BR-10</a></td>
+</tr>
+</tbody>
+</table>
+<p>The two policies can still be run on the same 35,395 original
+observations in separate studies. Four months adds 14 monthly reviews.
+Account 975 explains the additional deletion. Under three months,
+December 2024–February 2025 establishes cure. Under four, March
+delinquency interrupts the streak, and September’s unresolved charge-off
+remains inside the modeled impact window. <a
+href="downloads/Metro2_Threshold_Comparison_1000.json">Threshold
+comparison</a> · <a href="validation.html">Validation report</a></p>
+<h2
+id="27-november-2026--protect-the-saved-incident-and-the-delinquency-episode">27
+November 2026 · Protect the saved incident and the delinquency
+episode</h2>
+<p>The independent re-audit found that even a correctly dated monthly
+correction could remove a date belonging to an earlier delinquency. It
+also found that an older cutoff, an altered incident start or an invalid
+explorer rebuild could replace a good decision. The corrected private
+release keeps <code>REVERSAL_AWARE_SEVERE_V2</code> for severe events
+and advances account-field decisions from
+<code>EVIDENCE_SCOPED_FIELDS_V1</code> to
+<code>EVIDENCE_SCOPED_FIELDS_V2</code>. The re-audited package is
+<code>57390959d867…</code>. The earlier independent audit reviewed
+<code>c946f81efe7a…</code>. The public Git baseline is
+<code>1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7</code>. <a
+href="validation.html">Validation, hashes and limits</a> · <a
+href="#audit">Code audit</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Change and reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="code/engine.html">Module 2</a> ·
+continuing incident</td>
+<td>When a reviewer reuses a saved incident, check its dates against the
+previous decisions and compare each incoming reporting cutoff with its
+prior cutoff before rebuilding. This protects December’s pre-issue
+delinquency on 17899 from a changed January start and preserves a May
+cure decision if an April snapshot arrives late. Same-cutoff corrections
+and forward progress are supported.</td>
+</tr>
+<tr class="even">
+<td><a href="code/engine.html">Module 2</a> ·
+account fields</td>
+<td>Before clearing a supplied DOFD, require an original numeric
+delinquency in its onset month and continuous adverse original
+observations through the corrected basis. An intervening current month
+separates episodes. An original unknown month leaves continuity
+unresolved. Retain the supplied fields and refer contradictory closure
+timing or unsupported onset evidence for servicing research. A
+documented, continuing pre-incident delinquency can still support the
+bank’s favorable election.</td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Servicing research
+export</a> · historical 17B and Field 25</td>
+<td>Route retained records with a missing applicable historical payment
+rating to an owner, even without a monthly edit. Include the servicing
+action and scope of the date check. For status 13 with unknown rating,
+the conditional Field 25 result remains unresolved. For status 65, the
+separate required-date screen can still identify an absent date.</td>
+</tr>
+<tr class="even">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Explorer builder</a> · SELECT-only
+and CSV paths</td>
+<td>Validate policy-specific treatment, monthly edits, sparse field
+actions, change summaries and referrals against the exported original
+history. Reject a contradictory proposal before replacing the reader’s
+last valid file. Preserve retained historical studies with their policy
+identity.</td>
+</tr>
+<tr class="odd">
+<td><a href="downloads/Metro2_PowerShell_Study.zip">Independent SQL verifier</a> · <a
+href="downloads/Metro2_PowerShell_Study.zip">regression suite</a></td>
+<td>Check original onset-to-basis continuity with an independent
+reconstruction, reject invalid incident month keys even when downstream
+copies agree, and require appropriate missing-rating research. The new
+controls cover direct mutations, rejected stale input, same-cutoff
+replay and genuine monthly advance.</td>
+</tr>
+<tr class="even">
+<td><a href="run.html">Study guide</a> · configurable cure
+threshold</td>
+<td>Supply an end-to-end path from generating a portfolio to comparing a
+second cure threshold on the same original observations and incident
+dates. On 1,000 accounts, changing three required current months to four
+moved observed cures from 555 to 494 and monthly reviews from 133 to
+147.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Measured effect.</strong> On the 25,000-account study, all
+873,193 monthly decisions, every effective account field and all 2,340
+date clears matched the re-audited release. All 329 pre-incident clear
+candidates had documented onset and continuous adverse evidence. The
+current field-research worklist adds 26 missing-rating referrals at
+statuses 65 (3), 94 (9) and 95 (14). The three at status 65 also appear
+in the 130 confirmed status/rating-based missing-date exceptions.
+Neither source worklist overlaps the 3,048 monthly cure reviews. <a
+href="validation.html#population-reconciliation">Three worklists and
+reconciliation</a> · <a
+href="downloads/Metro2_25000_Results.zip">Results and
+receipts</a></p>
+<p><strong>Retest.</strong> On the new 55 paired assertions the
+re-audited release failed 42 and the corrected release failed zero. Both
+passed the first audit’s 48 controls. The separate SQL verifier passed
+22 independently specified accounts and rejected 13 deliberate
+mutations. Developer retest is complete for these controls. Independent
+re-review and the owner’s publication decision remain open. <a
+href="validation.html#audit-findings">Acceptance results</a> · <a
+href="downloads/Metro2_Independent_Audit_Prompt.md">Reviewer handoff</a></p>
+<h2 id="27-november-2026--business-requirements-and-validation">27
+November 2026 · Business requirements and validation</h2>
+<p>The companion documents trace the owner’s remediation policy from
+source history to the next monthly decision. Thirteen numbered
+requirements link each rule to its implementation and worked evidence.
+The validation report records what was exercised and the limits of the
+tests. This documentation change adds no account treatment or field
+action. <a href="requirements.html">Business requirements</a> ·
+<a href="validation.html">Validation report</a></p>
+<h2 id="27-november-2026--successor-to-the-candidate-placed-on-hold">27
+November 2026 · Successor to the candidate placed on hold</h2>
+<p>The independent auditor reproduced the featured cases and the 1,000-
+and 25,000-account studies, then found three high-severity and four
+medium-severity issues on other inputs and reader routes. The hold
+applies to the reviewed archive (<code>c946f81e…edebca8</code>). This
+historical entry records the first successor, subsequently re-audited as
+archive <code>57390959d867…</code>. The entry above records its
+replacement. <a href="retest.html">What changed after audit</a> ·
+<a href="#audit">Technical findings</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Finding</th>
+<th>Change and reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>H1 / H2 · Account fields after a historical correction</td>
+<td>Scope a proposed field change to the reporting condition it
+corrects. Preserve a later independently supplied status, a surviving
+adverse rating and its supported delinquency onset. Closure or an
+unknown month cannot establish that a separate delinquency ended.
+Preserve the bank’s favorable election where suppression actually
+removes its basis. The successor supplies no new onset from payment
+history alone.</td>
+</tr>
+<tr class="even">
+<td>H3 / M1 · Reporting date and source history</td>
+<td>Check the monthly cutoff and allowed history before deriving cure or
+replacing a previous run. April’s original history first becomes
+observable on May 1. An unsupported mark or invalid placement cannot
+silently clear a supplied field.</td>
+</tr>
+<tr class="odd">
+<td>M2 / M3 · Links to accounts and retained data</td>
+<td>Distinguish the locally loaded study from the packaged 25,000
+example. A handoff address should survive a search, copy, reload and
+back navigation and still identify the account on screen.</td>
+</tr>
+<tr class="even">
+<td>M4 · Internal modeled payment rating</td>
+<td>Identify the internal rating where a reader sees it. At 84 → 11 or
+71 → 11, the 2020 standard leaves Field 17B blank on both sides. Three
+retained status-65 accounts in the study illustrate a required rating
+absent from the model.</td>
+</tr>
+</tbody>
+</table>
+<p>That first successor’s 25,000-account run produced 3,048 monthly cure
+referrals, 130 source-date exceptions and zero referrals in its separate
+<code>account_field_review.csv</code>. Two focused verifier cases
+exercised that last route with conflicting as-of and onset evidence. The
+three worklists answer different questions. <a
+href="downloads/Metro2_25000_Results.zip">Study and receipt</a></p>
+<p>The old 17899 follow-up expected the July date after May delinquency,
+June unknown history and July delinquency. The fixture rewarded moving
+an onset without evidence that the May episode had ended. The previous
+130090 readout similarly treated a recalculated June date after an
+earlier cure as a valid replacement. Their previous pass results
+document the defect. Against 48 paired audit controls the held input
+failed 34 expectations and the successor passed all 48. The full
+25,000-account comparison found zero differences in preexisting field
+outcomes and 873,193 matching original/proposed month records. <a
+href="#audit">Reporting-field findings</a> · <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">Field
+17B, 2020 guide</a></p>
+<h2 id="27-november-2026--teaching-cases-in-decision-order">27 November
+2026 · Teaching cases in decision order</h2>
+<p>The revised walkthrough opens with account 24064. Its November 2023
+delinquency stays, the December–January bank issue starts the
+credit-impact window, and three further delinquent months extend the
+correction through April 2024. There are five proposed monthly changes
+and no confirmed cure at the May 1 cutoff. Account 175 then shows how
+three observed current months establish and confirm cure. Account 327
+shows why a severe-event reversal can lead to continued cleanup and
+review. Account 17899 closes the sequence with the exact reporting
+dates, fields and no-date instruction. All four cases use recorded study
+output. <a href="scale/index.html#account=24064">24064</a> · <a
+href="index.html#account=175">175</a> · <a
+href="index.html#account=327">327</a> · <a
+href="scale/index.html#account=17899">17899</a></p>
+<h2
+id="27-november-2026--account-17899-the-origin-of-d-and-the-field-25-sample">27
+November 2026 · Account 17899, the origin of D and the Field 25
+sample</h2>
+<ul>
+<li><strong>Documented the bank’s election.</strong> December 2024’s
+history byte <code>1</code> remains accurately late. The January 1
+reconstruction uses status <code>71</code>, internal modeled payment
+rating <code>1</code> and a December 1 DOFD. After its January error,
+the bank cannot establish whether the customer would have caught up and
+chooses to bear that uncertainty. The February 1 source snapshot has
+current-cycle status <code>71</code> and a previous-month January PHP of
+<code>1</code>. January’s byte changes to <code>D</code>. The bank
+elects 17A <code>11</code> as of February 1 and explicitly proposes
+removing the active date. Its internal modeled payment rating becomes
+<code>0</code>. Standard character Field 17B is blank for both
+<code>71</code> and <code>11</code> under the 2020 guide. The December 1
+DOFD remains in the source evidence. There are zero original post-issue
+months. February is the next original observation for cure review,
+available in the March 1 snapshot. <a
+href="scale/index.html#account=17899">Account 17899</a></li>
+<li><strong>Preserved unknown source history.</strong> Module 2
+distinguishes an adverse byte changed to <code>D</code> by the bank’s
+correction from an original <code>D</code> that stays <code>D</code>.
+While correcting an older month on an open or unclassified account, the
+latest unchanged <code>D</code> preserves supplied 17A, 17B and DOFD.
+Closed-account rules and a whole-tradeline deletion have their own
+precedence. The independent verifier and controlled fixtures exercise
+the distinction. A fresh 25,000-account comparison found identical rows
+in all four Module 2 outputs. <a
+href="code/engine.html">Module 2</a> · <a
+href="downloads/Metro2_PowerShell_Study.zip">Independent SQL check</a></li>
+<li><strong>Corrected the analyst’s QA sample.</strong> Module 2 QA 15
+previously selected only non-null replacement dates and displayed zero
+of 2,340 explicit date clears in the 25,000-account study. The updated
+query shows the clear flag and returns the first 100 qualifying
+accounts. Account 17899 is 134th and appears in the complete export. QA
+13 likewise includes clears in its account-status sample. Both queries
+read recorded decisions. <a href="#audit">Code audit</a></li>
+<li><strong>Clarified standard reporting guidance.</strong> The teaching
+page and handoff distinguish the SQL’s proposed effective date from the
+character-format Field 25 value. Historical Field 25 guidance specifies
+zero fill where no date applies, with exceptions based on account
+condition and consumer indicators. The current CDIA guide governs the
+standard. <a href="index.html#field-25">Field 25 guide</a> · <a
+href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">Current
+CDIA access</a></li>
+</ul>
+<h2
+id="27-november-2026--reversed-charge-offs-return-to-cleanup-and-review">27
+November 2026 · Reversed charge-offs return to cleanup and review</h2>
+<p><strong>Policy correction.</strong> The previous private candidate
+incorrectly required confirmed cure to retain a tradeline after any
+charge-off in the credit-impact window. That condition overrode the
+model’s evidence for a reversal. The current candidate evaluates the
+most recent severe event in the affected period and uses the original
+current-month streak to decide when ongoing impact ends.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Observed evidence at this reporting cutoff</th>
+<th>Current treatment</th>
+<th>Follow-up</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Latest in-window severe event (<code>G</code>, <code>H</code>,
+<code>J</code>, <code>K</code> or <code>L</code>) still unresolved</td>
+<td>Propose deletion of the tradeline using <code>DA</code> in 17A</td>
+<td>Retain evidence. Track any actual submission separately.</td>
+</tr>
+<tr class="even">
+<td>A later original <code>0</code>–<code>6</code> is the sandbox proxy
+for reversal of that event</td>
+<td>Retain the tradeline and clean affected delinquency and derogatory
+months</td>
+<td>While open and uncured, obtain the next original performance
+month.</td>
+</tr>
+<tr class="odd">
+<td>Later delinquency during continuing impact</td>
+<td>Correct the affected month</td>
+<td>Continue review.</td>
+</tr>
+<tr class="even">
+<td>Another severe event during continuing impact</td>
+<td>Reassess the most recent event for reversal</td>
+<td>Deletion is back in consideration if that event remains
+unresolved.</td>
+</tr>
+<tr class="odd">
+<td>Consecutive original current months establish cure</td>
+<td>Close the credit window immediately before the first qualifying
+month</td>
+<td>End monthly review for this incident.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Account 327.</strong> The bank issue ended in January 2025.
+March’s <code>L</code> brought deletion into consideration at that
+cutoff. April’s original <code>5</code> models a reversal to delinquent
+performance. Using September’s history in the October 1 snapshot, the
+rule proposes nine monthly suppressions, retains earlier delinquency and
+sends the case to October review with one of three qualifying current
+months. Each cutoff produces a proposal from the evidence then
+available. <a href="manual-review/index.html#account=327">Open the
+case</a></p>
+<h3 id="same-accounts-across-three-policy-versions">Same accounts across
+three policy versions</h3>
+<p>The spring public implementation recognized modeled reversals. The
+intervening private candidate added the charge-off cure override. The
+corrected candidate removes that override, dates the reversal evidence
+and preserves independent controls for source calendars, field deltas
+and the reviewer handoff.</p>
+<table>
+<thead>
+<tr class="header">
+<th>25,000-account measure</th>
+<th style="text-align: right;">Spring public SQL</th>
+<th style="text-align: right;">Superseded private candidate</th>
+<th style="text-align: right;">Corrected candidate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Retained accounts with severe-history cleanup</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">124</td>
+</tr>
+<tr class="even">
+<td>Proposed whole-tradeline deletions</td>
+<td style="text-align: right;">466</td>
+<td style="text-align: right;">529</td>
+<td style="text-align: right;">466</td>
+</tr>
+<tr class="odd">
+<td>Proposed monthly substitutions</td>
+<td style="text-align: right;">11,071</td>
+<td style="text-align: right;">10,431</td>
+<td style="text-align: right;">11,071</td>
+</tr>
+<tr class="even">
+<td>Open cure reviews</td>
+<td style="text-align: right;">3,048</td>
+<td style="text-align: right;">2,985</td>
+<td style="text-align: right;">3,048</td>
+</tr>
+</tbody>
+</table>
+<p>All 63 accounts that changed treatment from the preceding private
+candidate return to cleanup and monthly review. Their affected histories
+account for 640 proposed monthly corrections. The matched comparison
+holds the original monthly evidence and the bank-issue dates fixed. <a
+href="downloads/Metro2_25000_Results.zip">Comparison and execution
+receipts</a></p>
+<h3 id="code-and-handoff-changes">Code and handoff changes</h3>
+<ul>
+<li><strong>Module 2.</strong> Identify the most recent severe event
+within the inclusive credit-impact window. Record its month and the
+first subsequent original numeric month used as the reversal proxy,
+using only evidence available through the reporting cutoff or cure
+confirmation. Apply this decision consistently to the account treatment,
+monthly changes and review queue. Source comments explain the date
+boundaries.</li>
+<li><strong>Monthly follow-up.</strong> An opt-in rerun of Module 2
+keeps the existing account-level bank-issue dates while evaluating an
+updated original history. Invalid or mismatched incident inputs stop the
+rerun. First-time studies still generate synthetic incident dates.</li>
+<li><strong>Exports and workbook.</strong> Record the policy identity.
+Preserve the decisions from retained historical studies with their
+provenance. The account explorer, manual-review page, Excel and CSV are
+generated for the corrected study. The workbook gives reviewers actions
+for subsequent delinquency, a new severe event, reversal and cure.</li>
+<li><strong>Tests.</strong> Evaluate the same account at successive
+evidence cutoffs, including a second severe event and cure. Validate the
+rebuilt browser exports, handoff and retained-source checks against
+PostgreSQL. <a href="downloads/Metro2_PowerShell_Study.zip">Regression suite</a></li>
+<li><strong>Prior controls retained.</strong> The previous package added
+explicit clear flags for sparse status, rating and delinquency-date
+fields, transactions and reset protections, source validation, a Field
+25 research export and reproducible study outputs. These address data
+quality and auditability independently of the withdrawn policy.</li>
+</ul>
+<p><a href="#audit">Code audit</a> · <a
+href="downloads/Metro2_SQL_Changes.patch">SQL changes against the
+public revision</a> · <a
+href="https://github.com/andrew-goad/metro2-remediation-sandbox/tree/1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7">Public
+source baseline</a></p>
+</section><section id="audit"><h1 id="code-audit">Code audit</h1>
+<p><strong>Final independent audit · 27 November 2026.</strong> The
+final auditor cleared the teaching cases, published study counts and
+ordinary PowerShell workflow for owner review. Its disposition on the
+reviewed ZIP was <em>Ready after listed changes</em>. Two
+medium-severity findings concerned a saved comparison and reuse of the
+wrong cure threshold. This revision addresses those paths. Andrew Goad
+retains the publication decision. The public SQL baseline is commit
+<code>1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7</code>. <a
+href="https://github.com/andrew-goad/metro2-remediation-sandbox/tree/1201adcc0b3a74a0f81e8f456a9e3d901f0aaca7">Public
+baseline</a> · <a href="downloads/Metro2_SQL_Changes.patch">SQL
+comparison</a></p>
+<p><a href="requirements.html">Business rules and acceptance
+cases</a> · <a href="validation.html">Consolidated validation
+report</a></p>
+<h2 id="four-traces-from-the-original-account-months">Four traces from
+the original account-months</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Account and population</th>
+<th>Bank issue and correction window</th>
+<th>Decision checked against original evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="scale/index.html#account=24064">24064 · 25,000
+accounts</a></td>
+<td>Bank issue December 2023–January 2024. Credit impact December
+2023–April 2024.</td>
+<td>November’s original <code>1</code> stays. December and January
+<code>2,3</code> and February–April <code>4,5,6</code> each become
+<code>D</code>. All three post-issue originals remain delinquent. At the
+May 1 cutoff, cure start and confirmation are unknown, the case stays
+open and May is the next history month to obtain in June.</td>
+</tr>
+<tr class="even">
+<td><a href="index.html#account=175">175 · 1,000 accounts</a></td>
+<td>Bank issue April 2024–March 2025. Credit impact ends April
+2025.</td>
+<td>Three original late marks in February–April 2025 become
+<code>D</code>. Three original zeros in May–July establish cure start in
+May and confirmation in July. The account leaves monthly review.</td>
+</tr>
+<tr class="odd">
+<td><a href="index.html#account=327">327 · 1,000 accounts</a></td>
+<td>Bank issue December 2024–January 2025. Credit impact through
+September 2025.</td>
+<td>March’s <code>L</code> is followed by April’s <code>5</code>, a
+modeled reversal. October and November 2024 delinquencies stay, nine
+adverse months are corrected and September is the first original current
+month. Cure remains unconfirmed. October 2025 is due for review.</td>
+</tr>
+<tr class="even">
+<td><a href="scale/index.html#account=17899">17899 · 25,000
+accounts</a></td>
+<td>January 2025 bank issue and credit window. February 1 reporting
+snapshot.</td>
+<td>December’s accurate late month stays. January <code>1</code> becomes
+<code>D</code>. February 1 status <code>71</code> becomes elected
+<code>11</code>, the internal modeled payment rating becomes
+<code>0</code> and the date is explicitly cleared. Historical standard
+17B is blank at both statuses. There are zero observations after the
+issue.</td>
+</tr>
+</tbody>
+</table>
+<p>For 24064, the model cannot establish how the customer would have
+performed without the bank’s error. The owner elects to preserve the
+accurate pre-issue delinquency and bear the uncertainty during the issue
+and its continuing credit impact. The May 1 snapshot’s source status
+<code>84</code>, internal rating <code>6</code> and November 1 date
+become proposed <code>11</code>, <code>0</code> and no date under that
+election. The historical standard leaves 17B blank at both
+<code>84</code> and <code>11</code>. The proposed D marks provide no
+observed current months. Account 175 illustrates the original evidence
+required to end the review.</p>
+<h2 id="final-independent-audit-and-bounded-corrections">Final
+independent audit and bounded corrections</h2>
+<p>The independent report <em>Ready after listed changes</em> covers ZIP
+<code>a1c3b077f0e3164f9c23078b13b9a0f8c20da1891fa8b9bea251b859cabc14e7</code>.
+Its 79-entry manifest starts with <code>497ea9405b7a</code>. The
+supplied final audit evidence ZIP starts with <code>0c25340decf9</code>.
+All 170 listed evidence hashes and the ZIP CRCs checked. That auditor
+independently reproduced 48/48 and 55/55 on the reviewed package and the
+earlier 42 failures on the V1 release. They reproduced both reference
+studies, checked all 300 QA sample rows, followed the guide to a
+187-account local explorer and closed the original seven findings within
+their stated scope. <a href="validation.html">Validation and test
+lineage</a> · <a
+href="downloads/Metro2_Retest_Evidence.zip">Developer
+evidence</a></p>
+<p><strong>Comparing saved runs.</strong> The reviewed comparator
+checked original histories while accepting mutable saved decisions. One
+altered review flag changed the reported four-month count from 147 to
+146. A mislabeled three-month copy produced 133 versus 133, and a
+matched pair of shortened exports passed with 999 accounts. A valid
+comparison needs complete source-matched exports, a matching recorded
+identity for each, and genuinely different thresholds for the two
+configurations. Failing a check must leave the preceding comparison
+intact. The builder hashes each complete account and the export metadata
+using canonical JSON. The comparator rechecks account decisions, totals,
+policy identities and the threshold-specific SQL hash against the
+supplied Module 2 template. The auditor’s three altered pairs all
+failed, with the previous comparison unchanged byte for byte. Two intact
+1,000-account studies still returned 133 and 147 reviews. The digest
+detects changes against the stored check value. Origin authentication
+requires separately trusted source or receipt evidence. <a
+href="downloads/Metro2_PowerShell_Study.zip">Builder</a> · <a
+href="downloads/Metro2_PowerShell_Study.zip">Comparison tool</a></p>
+<p><strong>Continuing a single incident.</strong> Under the stock
+three-month SQL, account 57 could close in a four-month study without a
+new observation or a change to its bank dates. The revised preflight
+checks the configured threshold against the saved window and final
+decision on every account before replacing the four Module 2 tables. A
+genuine four-month follow-up may advance or process a corrected source
+at the same reporting cutoff. A fresh separate study can use three
+months on the same originals. Native tests rejected eight attempts,
+including the wrong configured file, and compared all four prior table
+contents after each refusal. At the October 1 cutoff a valid four-month
+replay kept 57 open. A controlled October zero first appeared November 1
+and established July cure at the four-month threshold. The severe and
+field policy IDs remain <code>REVERSAL_AWARE_SEVERE_V2</code> and
+<code>EVIDENCE_SCOPED_FIELDS_V2</code>. <a
+href="code/engine.html#L506">Threshold
+guard</a> · <a href="run.html">Study workflow</a></p>
+<p><strong>Threshold evidence on 975.</strong> Its bank issue ran
+September 2023–November 2024. All 15 original in-issue months were
+current. December 2024, January and February 2025 were current, March
+through August progressed from 1 to 6, and September was <code>L</code>.
+At three required months, cure starts December 1 and is confirmed in
+February, first observable March 1. The credit window ends November
+2024. At the October 1, 2025 cutoff the model retains status 97, the
+original March 1, 2025 DOFD and the later out-of-window charge-off. Four
+required months keeps the window open through September, with no cure
+start or confirmation. September’s unresolved charge-off produces
+<code>DA</code>. There is no monthly byte edit, date clear or cure-queue
+item in either final output. This one account explains why 22 proposed
+deletions become 23. Servicing and bureau evidence would be needed to
+establish cause and actual deletion in a real case. <a
+href="index.html#account=975">Three-month account 975</a> · <a
+href="validation.html#population-reconciliation">Paired
+measurements</a></p>
+<p><strong>Provenance of the larger study.</strong> The 25,000-account
+figures are preserved measured outputs from Module 2
+<code>1a1566dee12d…</code>, the engine the final auditor examined. The
+final audit matched five regenerated CSVs and all seven workbook XML
+components. The current Module 2 begins <code>5fffaaee2cf6…</code>; the
+fresh 1,000-account threshold comparisons and continuing-incident
+qualification use these revised source bytes. The 25,000-account
+workbook, decision CSVs, scale data and receipt keep their measured
+identities. The archive’s <code>audited_25000/</code> contains the
+executed source. The five retained items compared directly with the
+audited package include the handoff workbook and three CSVs plus the
+scale dataset. <a
+href="downloads/Metro2_25000_Results.zip">Retained results and
+source lineage</a></p>
+<p><strong>Input-quality limit.</strong> A supplied nonblank invalid
+Field 17B can pass the historical missing-rating screen. The auditor
+observed this at retained status 13 with <code>X</code> or
+<code>D</code> and no date. The source date requirement remains
+indeterminate, and the scoped queries can return no work item. No such
+received rating occurred at a historically required status in either
+reference population. For an imported account, validate the 17B code set
+and have servicing resolve the rating before evaluating its conditional
+Field 25 treatment. In the historical standard <code>D</code> belongs to
+the payment history profile. The sandbox’s cure threshold, modeled
+reversal test and election to delete after an unresolved significant
+event are choices of the bank in this study. The field specification
+describes how evidence is reported. <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">Historical
+17B</a> · <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=65">Historical
+PHP</a> · <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=70">Historical
+Field 25</a> · <a
+href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">CDIA
+access</a></p>
+<h2 id="second-independent-audit-and-current-field-policy">Second
+independent audit and current field policy</h2>
+<p>The second audit examined ZIP
+<code>57390959d867b5a01ac48554ad73ccc8b0b9b2d080e1b20b5a4f0f9f139e6ad9</code>
+and checked its 71 manifest entries. Its engine used
+<code>EVIDENCE_SCOPED_FIELDS_V1</code>. The current engine uses
+<code>EVIDENCE_SCOPED_FIELDS_V2</code> for account fields and retains
+<code>REVERSAL_AWARE_SEVERE_V2</code> for treatment. This new
+account-field policy applies to the corrected candidate. Older evidence
+keeps its recorded policy. <a href="requirements.html">Business
+acceptance criteria</a> · <a
+href="downloads/Metro2_25000_Results.zip">Current study
+results</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Second-audit finding</th>
+<th>Independent example</th>
+<th>Current decision and evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bank dates and reporting chronology</td>
+<td>A one-table January-to-December change caused 17899’s pre-issue late
+mark to be suppressed. Replaying a valid April 1 snapshot after May 1
+reopened a cured account.</td>
+<td>Require the complete original cohort and matching input/window/final
+bank dates. Reconcile both prior cutoffs and reject an earlier incoming
+DOAI for any account. Same-cutoff corrections, ordinary advances and
+accounts unchanged in a mixed refresh remain valid. <a
+href="code/engine.html#L527">Incident
+guard</a></td>
+</tr>
+<tr class="even">
+<td>Account-field evidence across episodes</td>
+<td>An original May 2024 delinquency, six current months, then
+December/January late marks did not support clearing the May onset. An
+intervening original <code>D</code> in a second fixture left continuity
+unknown.</td>
+<td>January’s monthly correction stands. Retain the supplied 17A,
+internal rating and onset and refer the episode to servicing. A supplied
+onset month must contain original <code>1</code>–<code>6</code>, with
+uninterrupted original adverse evidence through the basis removed. A
+populated date outside represented history fails this check. Positive
+continuous episodes can start before the bank error. <a
+href="code/engine.html#L1183">Episode and
+closure evidence</a></td>
+</tr>
+<tr class="odd">
+<td>Closure timing</td>
+<td>An open-status election had a supplied prior closure date. A
+separate status 13 had an original adverse month in the reported closure
+month, even though the monthly cleanup also suppressed that byte.</td>
+<td>Preserve the account fields and request the closure circumstances
+before a favorable field election. A recorded closure may limit new
+activity on a still-outstanding balance. Servicing must establish what
+the closure date means for that account. <a
+href="downloads/Metro2_PowerShell_Study.zip">Eligibility controls</a></td>
+</tr>
+<tr class="even">
+<td>Missing required rating</td>
+<td>A retained status 13 with missing closure rating and date had no
+owner. Its historical date test depends on the rating.</td>
+<td>Route the missing effective required rating to servicing, including
+clean-history cases. Recheck conditional Field 25 eligibility after
+obtaining the rating. A status such as 65 independently requires a date
+and can appear on both lists. A justified closed-status election that
+already supplies an effective rating has no unresolved rating item. <a
+href="code/engine.html#L1230">Field research
+decision</a> · <a href="downloads/Metro2_PowerShell_Study.zip">Servicing
+worklist</a></td>
+</tr>
+<tr class="odd">
+<td>Explorer accepted unsupported account actions</td>
+<td>A read-only database export installed an invented date on 327. A CSV
+import accepted a deletion on a clean account, removal of 17899’s
+genuine clear and an unsupported clear after latest original
+<code>D</code>.</td>
+<td>Evaluate account fields, the sole <code>DA</code> deletion action,
+actual change summary and servicing reason before either entry point
+replaces the existing data file. Apply the recorded historical policy
+where available and disclose legacy ambiguity. <a
+href="downloads/Metro2_PowerShell_Study.zip">Common importer</a> · <a
+href="downloads/Metro2_PowerShell_Study.zip">Export controls</a></td>
+</tr>
+</tbody>
+</table>
+<p>The same 55 native follow-up assertions failed 42 times on the
+audited V1 and passed all 55 on V2. Both passed the original 48. A
+separate 37-case engine comparison rejected seven previously admitted
+incident/cutoff conflicts with identical pre-call fingerprints across
+all four result tables. It retained all six justified positive closure
+elections, the original January 17899 election and the case with a
+continuous pre-issue onset. The original public SQL’s saved 27-account
+schema also supported fixed-incident migration. A mixed follow-up
+accepted one advancing account, one same-cutoff source correction and 25
+unchanged accounts while preserving all 27 bank intervals. <a
+href="downloads/Metro2_PowerShell_Study.zip">Reproduce the follow-up assertions</a>
+· <a href="downloads/Metro2_PowerShell_Study.zip">Regression instructions</a></p>
+<p>The large V2 run has 26 servicing referrals, 130 known required-date
+exceptions and 3,048 monthly cure reviews. Only three accounts appear in
+both field lists, all at status 65. Every account in the two field
+worklists is outside the monthly cure queue in this population. The
+remaining 23 rating cases already have source dates. The 1,000-account
+run has zero servicing referrals, three date exceptions and 133 monthly
+reviews. The 500-account run has one missing-rating referral at status
+95. All 2,340 large-study date clears remain supported. <a
+href="downloads/Metro2_Account_Field_Review_25000.csv">Account-field
+CSV</a> · <a
+href="downloads/Metro2_Field25_Source_Exceptions_25000.csv">Field
+25 CSV</a> · <a
+href="downloads/Metro2_Manual_Review_25000.csv">Monthly
+handoff</a></p>
+<h2 id="first-independent-audit-and-first-successor">First independent
+audit and first successor</h2>
+<p>The independent review checked all 58 entries in the supplied
+manifest. Its SHA-256 was
+<code>5f35f58f37ab0c28da880726df26598070287282447700cd7c902df69e62957c</code>.
+The input ZIP SHA-256 was
+<code>c946f81efe7aa54d72d5bba137fc59974d69e7ffb9e0cbf9c74646f6cedebca8</code>.
+Those identities describe the held input. The successor test receipt
+identifies the source used for its PostgreSQL challenges. <a
+href="retest.html">Developer retest</a> · <a
+href="downloads/Metro2_Developer_Retest.json">Download the
+evidence</a></p>
+<table>
+<thead>
+<tr class="header">
+<th>Independent finding</th>
+<th>What the held candidate actually did</th>
+<th>Successor acceptance test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>H1 · Unrelated later fields changed</strong></td>
+<td>On fixture 130090, January–February cleanup and March cure were
+followed by an August historical charge-off. The September 1 record
+supplied current status <code>11</code>; the engine proposed
+<code>97</code> and a June onset. On 17899’s hypothetical continuation,
+a June <code>D</code> between May and July delinquency moved a supported
+May onset to July.</td>
+<td>Preserve the supplied later status and onset where the incident
+corrected old history only. Keep the historical monthly cleanup. Verify
+a legitimate current-field correction on evidence that the cleanup
+directly changes.</td>
+</tr>
+<tr class="even">
+<td><strong>H2 · Required dates erased on closed accounts</strong></td>
+<td>With independent adverse conditions after cure, the earlier engine
+cleared the May source date at each of statuses 61–65. At status 13 with
+adverse rating 2 it proposed rating 0 and cleared the date, hiding its
+own error from the effective-field exception screen.</td>
+<td>Preserve the valid source date and applicable rating when the
+underlying adverse basis survives. Exercise status 13 and each of 61–65.
+Test positive controls for actual removal of a demonstrated basis.</td>
+</tr>
+<tr class="odd">
+<td><strong>H3 · Evidence used before the reporting date</strong></td>
+<td>The engine and verifier accepted April’s original history on the
+April 1 record for 17899 and closed review a month early. A July 1 test
+on 60003 reproduced the same problem.</td>
+<td>Under this study’s first-of-month contract, require a valid as-of
+date and a newest history month immediately preceding it. Reject a
+mismatched input before replacing current results. Valid April 1 has two
+original current observations; May 1 can have three.</td>
+</tr>
+<tr class="even">
+<td><strong>M1 · Unsupported or misplaced history</strong></td>
+<td>The previous inputs accepted <code>X</code> and a latest
+<code>B</code> after known history. Both could clear supplied account
+fields.</td>
+<td>Reject unknown symbols and <code>B</code> inserted after known
+history. Preserve valid missing evidence and existing results after a
+rejected run.</td>
+</tr>
+<tr class="odd">
+<td><strong>M2 · Wrong population opened</strong></td>
+<td>A DBeaver export contained 187 accounts and 6,800 months. The
+documented link opened the packaged 25,000 instead.</td>
+<td>Inspect the count, source and selected account on the loaded-study
+route, then follow the separately labeled packaged example.</td>
+</tr>
+<tr class="even">
+<td><strong>M3 · Shared handoff opened a different account</strong></td>
+<td>A reader searched from 24064 to 17899. The detail changed but the
+address still shared 24064.</td>
+<td>Search, copy and reopen 17899, exercise back/forward, then clear the
+search or request a missing account and confirm the stale ID
+disappears.</td>
+</tr>
+<tr class="odd">
+<td><strong>M4 · Internal rating looked like a furnishing
+value</strong></td>
+<td>An explorer or workbook opened directly labeled 17899’s simulated
+<code>1 → 0</code> as standard Payment Rating (17B). The same
+distinction applies to 24064’s <code>6 → 0</code>.</td>
+<td>Mark the internal modeled payment rating at each point of use and in
+the export dictionary. For these two cases the historical standard field
+is blank at both source and proposed status.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>First-successor field scope.</strong> A valid cleanup of
+older monthly history does not, by itself, change independently supplied
+as-of fields. On an eligible open account, a latest adverse month
+actually suppressed by the bank can support elected current status when
+the supplied as-of status agrees with that adverse code and the other
+fields support that basis. A missing, matching or already-favorable
+internal rating is eligible. A different adverse rating prevents the
+election. A history gap supplies no evidence of a new delinquency onset.
+At closed status 13, the relevant evidence is the rating at closure and
+the original month immediately preceding the known closure. At paid
+derogatory statuses 61–65 the engine checks whether the corresponding
+severe basis was actually removed and whether a separate adverse basis
+survives. A conflict can retain source fields and identify the need for
+servicing research. The ordinary three-month cure review and a
+field-evidence question can have different outcomes on the same account.
+The successor records the field rule in
+<code>account_field_policy</code> and unresolved evidence in
+<code>account_field_review_reason</code>. Its field-review export
+includes source status, internal rating and DOFD alongside their
+effective proposals. It can be read independently of the monthly cure
+queue and the missing-date list. The study kit writes
+<code>account_field_review.csv</code> using
+<code>tools/export_account_field_review.sql</code>. <a
+href="downloads/Metro2_PowerShell_Study.zip">PowerShell study
+kit</a></p>
+<p><strong>Date outputs.</strong> The successor can preserve a supplied
+date or explicitly clear it under a supported election. It does not
+derive a new calendar onset from PHP alone. The sparse date output still
+supports reading a populated replacement from a historical export. An
+eligible missing date requires source research. A proposed
+whole-tradeline deletion carries the separate <code>DA</code>
+instruction.</p>
+<p><strong>Why the previous tests passed.</strong> The old 17899 fixture
+explicitly expected a July onset following an unknown June even though
+the source retained May. The old QA 15 control for 130090 also rewarded
+a changed date outside the bank window. An aggregate count, a fixture
+repeating the engine’s assumption or an effective-only exception screen
+could all pass while losing a supported field. The next reviewer should
+compare each source field with its effective proposal, first on the
+unchanged later conditions above, then on a case where the incident
+genuinely changes the basis.</p>
+<h3 id="first-successor-developer-retests-under-v1">First-successor
+developer retests under V1</h3>
+<ul>
+<li><p><strong>48 paired audit controls.</strong> The first held
+candidate failed 34 expectations on the controlled corpus. The first
+successor passed all 48, including the valid and premature reporting
+clocks, populated and missing-date closed accounts, the later onset
+after an unknown month, positive field actions, atomic rejection and
+bounded follow-up. These are counts of test expectations. The original
+27 policy fixtures and 17 rolling snapshots also passed. <a
+href="downloads/Metro2_PowerShell_Study.zip">Repeat the regression suite</a></p></li>
+<li><p><strong>31 bounded native cases.</strong> Twenty-six valid cases
+ran through PostgreSQL and passed the independent verifier. Five
+malformed inputs were rejected with the previous results preserved. In
+the independent auditor’s separate six-row closed-account fixture,
+status 13 kept its internal adverse rating 2, all six kept the valid May
+date, and the date-exception query returned no manufactured omissions.
+Positive cases covered an attributable closure rating and an actually
+removed paid derogatory basis.</p></li>
+<li><p><strong>Archived first-successor synthetic studies.</strong> The
+500-, 1,000- and 25,000-account receipts identify the successor field
+policy <code>EVIDENCE_SCOPED_FIELDS_V1</code>. The large run returned
+25,000 accounts, 873,193 months, 11,071 history changes, 466 deletion
+proposals, 3,048 cure referrals and 2,340 explicit date clears. The
+archived V1 field-evidence referral file had zero data rows in all three
+studies. All 25,000 accounts matched on their preexisting fields, and
+all 873,193 original/proposed monthly records matched the prior verified
+run. The final table adds the field policy and the distinct servicing
+reason. The separate large-study date-exception file had 130. Controlled
+inputs exercise the field-evidence referrals absent from those generated
+populations.</p></li>
+<li><p><strong>14 verifier fixtures, 78 months.</strong> Literal field
+outcomes matched on all 14. Twelve deliberately corrupted states failed
+independent checks, including a wrong as-of date copied consistently
+across the source and outputs, an unsupported or misplaced mark,
+fabricated later date/status changes, suppression of a valid election
+and a changed field-review reason or policy marker. Two valid cases
+referred conflicting as-of or onset evidence for servicing
+research.</p></li>
+<li><p><strong>Reader routes.</strong> On a separately generated
+187-account, 6,800-month DBeaver export, the loaded-study link opened
+187 accounts and an exact ID search found account 187. The separate
+example opened the 25,000-account population and its 24064 record. The
+queue’s 24064 → 17899 search reopened 17899 from a copied address.
+Chromium tests exercised back/forward, reset, no match, filters and row
+selections offline and over local HTTP at 320 and 1,440 pixels. The two
+field examples and all three retained status-65 cases were checked at
+the point of use.</p></li>
+</ul>
+<p>These tests described the first successor under V1. Replicating a
+prior auditor’s inputs and checking new counterexamples supplies
+evidence for the re-audit. The prior independent hold and the owner’s
+release decision remain separate. <a href="retest.html">Review the
+dated examples and evidence</a></p>
+<h2 id="earlier-engineering-findings">Earlier engineering findings</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Finding</th>
+<th>Consequence observed or reproduced</th>
+<th>Disposition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>The interim private rule selected deletion after a charge-off even
+when the severe event had reversed.</td>
+<td>Account 327 lost nine proposed month corrections and disappeared
+from monthly review. Across 25,000 matched accounts the error affected
+63 tradelines.</td>
+<td>Removed the charge-off/cure override. Date the latest severe event
+within the credit window, check for subsequent original numeric
+performance in the available evidence, and decide monthly monitoring
+from original post-issue performance.</td>
+</tr>
+<tr class="even">
+<td>Regenerating synthetic incident dates during a follow-up could move
+the review period when new history arrived.</td>
+<td>The default incident generator uses the length of represented
+history.</td>
+<td>Added opt-in transactional reuse of existing incident dates.
+Follow-up fails on a missing or mismatched incident set. Keep historical
+as-of outputs separately.</td>
+</tr>
+<tr class="odd">
+<td>An empty replacement in the earlier sparse SQL output represented
+both a proposed removal and a field left untouched.</td>
+<td>An application reading the earlier sparse fields could miss a
+proposed removal of a previously populated date. The revised study
+proposed 2,340 internal date clears. Each accompanies a favorable
+account status elected by the bank for the modeled correction.</td>
+<td>Fixed. Add explicit clear flags for 17A, 17B and the delinquency
+date. The explorer and field-change summary honor them. No status or
+payment-rating clears were needed in the 25,000-account run. Fixtures
+exercise those cases.</td>
+</tr>
+<tr class="even">
+<td>A source <code>D</code> and a new <code>D</code> imposed by cleanup
+had been treated alike during field derivation.</td>
+<td>For an open account with unknown latest history, correcting an older
+adverse month could change original fields without an observation or
+election applicable to the latest month.</td>
+<td>Module 2 preserves the supplied 17A, 17B and DOFD when the latest
+original <code>D</code> stays <code>D</code> on an open or unclassified
+account. That revision checked the unchanged latest <code>D</code>. The
+later independent audit exposed errors on numeric later history and
+closed accounts, documented in H1/H2 above.</td>
+</tr>
+<tr class="odd">
+<td>Cure logic assumed the input contained one consecutive record per
+calendar month.</td>
+<td>Missing or duplicate months could make adjacent observations look
+consecutive, or make the proposed correction ambiguous.</td>
+<td>Fixed. Module 2 rejects missing, duplicated and misaligned months,
+duplicate account summaries, missing joins and original PHP
+inconsistencies before replacing results.</td>
+</tr>
+<tr class="even">
+<td>Unqualified reset names and separate autocommitted statements put
+other tables or a previous run at risk.</td>
+<td>A same-named table elsewhere in the search path could be selected
+when the target was absent. A later SQL failure could leave partial
+output.</td>
+<td>Fixed. Qualify reset targets, validate first, and transact each
+module’s rebuild. Tests preserve sentinel tables and prior outputs under
+forced errors. The PowerShell entry point runs in a newly created
+database.</td>
+</tr>
+<tr class="odd">
+<td>Integer arithmetic and ambiguous parameter cardinality weakened
+large-input handling.</td>
+<td>A large synthetic account ID could overflow the generator’s
+date-offset multiplication. A non-singleton parameter relation could be
+misread.</td>
+<td>Fixed. Widen the multiplication, bound cutoffs to the population,
+require one parameter row and enforce unique output keys. Limit checks
+retained the supported share tolerance.</td>
+</tr>
+<tr class="even">
+<td>Some browser links and account labels could imply the wrong record
+or policy.</td>
+<td>A malformed account link could appear to select a valid record.
+Fixed walkthrough IDs could point into a different replay. Deletion
+histories could appear to be furnished after deletion.</td>
+<td>Fixed. Validate links and guide selection, distinguish retained data
+from verified revised runs, display only original monthly evidence for
+deletion, and render explicit clear flags.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="field-25-in-account-17899">Field 25 in account 17899</h2>
+<p>December 2024 was accurately 30–59 days late before the incident.
+Reconstructing the January 1 snapshot from the original December history
+produces status <code>71</code>, sandbox payment rating <code>1</code>
+and a December 1 DOFD. The bank issue began and ended in January 2025.
+The February 1 source snapshot also has status <code>71</code> as of
+that date. Its PHP starts with original <code>1</code> for January,
+followed by December’s <code>1</code>. The first PHP byte describes the
+prior reporting month. The account status describes the current
+condition as of the Date of Account Information. February’s original
+history will first appear in the March 1 snapshot. It is still
+unobserved here.</p>
+<p>The bank cannot tell whether the customer would have caught up in
+January without its error. Its remediation policy assigns that
+uncertainty to the bank. It leaves December’s adverse month and original
+date available as evidence, changes January’s PHP byte to
+<code>D</code>, and elects current status <code>11</code> as of February
+1. The SQL derives internal payment rating <code>0</code> and explicitly
+clears Field 25 in that proposed record. The original December date
+remains accurate for the prior delinquency. A source system can retain
+it for audit while the corrected snapshot has no applicable date under
+the election.</p>
+<p>Neither cure start nor cure confirmation has been observed. The next
+original history month to request is February 2025. The bank continues
+the incident review monthly and counts only original post-issue
+<code>0</code> observations toward the configured threshold. The sandbox
+uses prior-month PHP in its case-specific status calculation.
+Determining the factual current-cycle servicing status requires
+independent evidence. A source <code>D</code> already present in the
+latest month has a different origin. It carries no evidence of payment
+and triggers no favorable election by itself. <a
+href="scale/index.html#account=17899">Account 17899</a> · <a
+href="index.html#field-25">Original and proposed fields</a></p>
+<h2 id="manual-review-and-delinquency-date-audit">Manual review and
+delinquency-date audit</h2>
+<p>The <a href="manual-review/index.html">manual review handoff</a>
+exports the recorded referrals and derives the next original performance
+month to request. Its working credit-impact end can move when more
+evidence arrives. Original and proposed account fields travel with the
+row so the reviewer can examine the stored date and corrected status
+offline. A blank cure date on these rows means the configured
+original-current streak has yet to qualify. The next evidence month
+identifies the record to request. Operational deadlines are set
+separately. The engine omits deletion, established cure, clean-window
+and closed-status cases from this monthly cure queue. It treats source
+statuses 13 and 61–65 as closed. Their field accuracy can still require
+research.</p>
+<table>
+<thead>
+<tr class="header">
+<th>25,000-account check</th>
+<th style="text-align: right;">Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>One row per unresolved cure review</td>
+<td style="text-align: right;">3,048</td>
+</tr>
+<tr class="even">
+<td>Too little post-issue history / enough history, still open without
+cure</td>
+<td style="text-align: right;">2,058 / 990</td>
+</tr>
+<tr class="odd">
+<td>Proposed stored-date clears in those two groups</td>
+<td style="text-align: right;">1,584 / 756</td>
+</tr>
+<tr class="even">
+<td>Clears where a numeric delinquency still appears in an earlier
+month</td>
+<td style="text-align: right;">330</td>
+</tr>
+<tr class="odd">
+<td>Retained accounts with a separately identified missing required
+date</td>
+<td style="text-align: right;">130</td>
+</tr>
+<tr class="even">
+<td>Overlap of the 130 source exceptions with the cure queue</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>All 2,340 date clears occurred on open accounts receiving simple
+delinquency cleanup. Their latest original numeric delinquency became
+<code>D</code>, leading to elected 17A <code>11</code>, internal rating
+<code>0</code> and a proposed no-date result. Each lacked a confirmed
+cure. Of their original DOFDs, 329 predate the incident, 1,160 fall
+during the bank issue and 851 fall after it ends inside the extended
+credit-impact window. Across the retained 24,534 accounts, 2,434
+populated original dates and 19,760 empty original dates were kept. The
+remaining 2,340 existing dates were proposed for removal. The other 466
+accounts had a whole-tradeline deletion proposal. All 329 pre-issue
+delinquent months remain visible. In total, 330 accounts retain an older
+numeric delinquency. The original date, replacement value and clear flag
+remain separately available in the final table.</p>
+<p><strong>Metro 2 guidance.</strong> CDIA lists its 2026 Credit
+Reporting Resource Guide® and provides the current field specifications
+to approved users. The publicly inspectable 2020 Field 25 definition
+calls for eight zeros (<code>00000000</code>) in the 426-character
+record when the no-date rule applies. A continuing reportable
+delinquency can require its original onset date. Specific bankruptcy or
+receivership indicators can require a date even at current standing. The
+2020 character specification requires Field 17B at statuses
+<code>05</code>, <code>13</code>, <code>65</code>, <code>88</code>,
+<code>89</code>, <code>94</code> and <code>95</code>, with a blank for
+every other status. CDIA retired <code>05</code> in April 2022. Its
+inclusion here identifies the historical rule. The stored rating
+<code>0</code> in the two favorable elections is an internal modeled
+value. The current licensed instructions govern actual formatting. <a
+href="https://www.cdiaonline.org/publications/">CDIA publications</a> ·
+<a
+href="https://www.cdiaonline.org/resources/furnishers-of-data-overview/metro2-information/">Current
+guide access</a> · <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=70">2020
+Field 25</a> · <a
+href="https://autodealerplus.com/dealerzone/metro2.pdf#page=64">2020
+Field 17B</a> · <a
+href="https://www.cdiaonline.org/ondemand-retirement-of-account-status-05-transferred/">CDIA
+retirement of 05</a></p>
+<p><strong>Federal sources.</strong> FCRA §623(a)(5) applies to
+delinquent accounts placed for collection, charged to profit or loss, or
+subjected to similar action. It addresses the month and year of the
+delinquency immediately preceding that action. In the Hyundai Capital
+consent order, the CFPB describes zero fill on return to current
+standing and documents errors from carrying, resetting and omitting
+delinquency dates in different circumstances. Neither source establishes
+the bank’s election for January or the three-month cure threshold. <a
+href="https://uscode.house.gov/us/usc/119-118/t15/s1681s-2/">15 U.S.C.
+§1681s–2(a)(5)</a> · <a
+href="https://files.consumerfinance.gov/f/documents/cfpb_hyundai-capital-america_consent-order_2022-07.pdf#page=16">CFPB
+Hyundai Capital order, ¶¶36–38 and 59</a></p>
+<p><strong>QA query correction.</strong> Module 2’s “DOFD changed”
+sample previously selected populated replacement dates only. This missed
+all 2,340 proposed clears in the large study, which had zero proposed
+replacement dates. QA 15 now includes explicit clears and replacements,
+showing both the original date and the clear flag. On the same 25,000
+final rows, the account-ordered QA 15 preview goes from zero displayed
+rows to 100, its sample limit. The full study export contains all 2,340.
+Account 17899 ranks 134th in account order and is visible in the full
+export and explorer. The matching Field 17A sample also includes
+explicit clears. The change updates the readout of decisions already
+present in the final table.</p>
+<p>A separate source check found 129 accounts at paid derogatory
+statuses 61–65 and one account at 97 with no date in the original or
+proposed fields. Counts by status were 61 (12), 62 (35), 63 (13), 64
+(66), 65 (3) and 97 (1). All three status-65 records also have an empty
+internal rating where historical 17B requires a rating. A separate tally
+of the independent auditor’s 25,000 native final rows found 26 retained
+accounts with an empty internal rating at statuses that historically
+required 17B. The V2 servicing CSV now assigns all 26 accounts to
+missing-rating research. Three were at status 65, nine at 94 and
+fourteen at 95. The latter 23 are outside the 130-date exception list.
+These counts compare internal model fields to historical standard
+applicability. They identify source research for a possible submission.
+No standard file was generated. All 130 retain their original history
+and fall outside the cure queue. Closure alone gives no general reason
+to remove a DOFD. Status 13 can also require a date when paired with a
+qualifying adverse payment rating. The screen covers represented status
+and rating conditions, while servicing records and consumer-information
+indicators supply facts missing from the generator. Account 24277’s 2023
+incident cured. Its subsequent unrelated charge-off had no source DOFD.
+<a
+href="downloads/Metro2_Field25_Source_Exceptions_25000.csv">Source
+exceptions CSV</a> · <a
+href="scale/index.html#account=24277">Account 24277</a></p>
+<p><strong>Handoff checks.</strong> Native fixtures exercised both cure
+referral reasons, zero to two trailing current months, a changed cure
+threshold, an account closing, a deletion, and an empty queue. The held
+package’s 24 export fields included original and proposed effective
+status, internal modeled payment rating and DOFD. Tests distinguished a
+legacy unknown from a documented clear and verified preserved and
+replaced values. The Field 25 tests used 67 controlled inputs, including
+37 positives. The 130 study exceptions matched an independent ledger
+across all 21 output fields. Missing or duplicate review IDs and
+attempted writes during export caused verification to fail.</p>
+<h2 id="prior-validation-and-matched-study-comparisons">Prior validation
+and matched study comparisons</h2>
+<p>The checks in this section describe evidence accumulated through the
+held release. They explain why the featured examples reproduced and
+where the independent challenges added coverage.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Module 1 generation</td>
+<td>Compared the original and revised 500-account outputs for all four
+generator tables. Independently rebuilt all 17,596 24-position
+snapshots, checked account history endpoints, repeated the run, and
+exercised invalid parameters and an interrupted rebuild.</td>
+</tr>
+<tr class="even">
+<td>Module 2 windows and treatments</td>
+<td>Account-matched the prior and revised engine on original histories
+and dates. Tested the latest severe event and subsequent evidence across
+successive cutoffs. Included a reversal without cure, a later
+delinquency, a second unresolved severe event, a second reversal,
+confirmed cure and an unrelated event after the closed window.</td>
+</tr>
+<tr class="odd">
+<td>Module 2 fields</td>
+<td>Independent SQL reconstructed the earliest qualifying cure, credit
+boundaries, original and proposed monthly history, status, rating,
+delinquency date, clear actions, field-change groups and review
+disposition. A separate Python check compared the field outputs.</td>
+</tr>
+<tr class="even">
+<td>Launcher and export</td>
+<td>Executed the packaged PowerShell launcher on Linux with PostgreSQL
+16.2. Checked name and path handling, refusal to reuse an existing
+database, run receipts, partial CSVs, duplicate IDs, policy identity and
+export compatibility against a legacy schema.</td>
+</tr>
+<tr class="odd">
+<td>Explorer and private site</td>
+<td>Compared the browser decoder to the complete dated database export.
+Executed the browser renderer against all 1,000 and all 25,000 account
+records with simulated controls. Exercised all 12 treatment/review
+combinations in each cohort. Sampled the interactive controls in a
+browser, including account 327 and an unresolved severe-event case.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="executed-populations">Executed populations</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Accounts</th>
+<th style="text-align: right;">Original account-months</th>
+<th style="text-align: right;">Confirmed cures</th>
+<th style="text-align: right;">Deletion proposals</th>
+<th style="text-align: right;">Monthly substitutions</th>
+<th style="text-align: right;">Open cure reviews</th>
+<th style="text-align: right;">Explicit delinquency-date clears</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">17,596</td>
+<td style="text-align: right;">290</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">212</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1,000</td>
+<td style="text-align: right;">35,395</td>
+<td style="text-align: right;">555</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">461</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: right;">100</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25,000</td>
+<td style="text-align: right;">873,193</td>
+<td style="text-align: right;">14,350</td>
+<td style="text-align: right;">466</td>
+<td style="text-align: right;">11,071</td>
+<td style="text-align: right;">3,048</td>
+<td style="text-align: right;">2,340</td>
+</tr>
+</tbody>
+</table>
+<p>The current 500-account run reproduces the earlier 47 explicit date
+clears and sends one status-95 account to missing-rating research. The
+spring public SQL had sparse date outputs and no explicit clear flag.
+The 14,350 qualifying current streaks in the 25,000-account study
+include 13,730 accounts whose reviewed history needed no correction and
+620 accounts receiving simple cleanup. That count measures observed
+streaks across the portfolio. A separate recount of the independently
+reproduced 25,000 rows found 4,312 of the 20,506 as-reported accounts
+had an adverse month somewhere in their original history. The
+as-reported outcome describes the decision for this incident.</p>
+<p>The matched reversal-policy replay reproduced the spring treatment
+and review counts on the same three populations, while also supplying
+explicit stored-field actions and dates for the severe event and its
+reversal. Comparing the 25,000-account candidate with the intervening
+private version, all 63 formerly deleted accounts return to
+severe-history cleanup. Seventeen need more post-issue history and 46
+have enough history but remain uncured. Their 640 proposed monthly
+corrections all fall in the affected windows. The other 24,937 accounts
+retain their treatment. An independent reconstruction checked the
+treatment, most recent severe month, first modeled reversal, changed
+months and cure disposition on all 873,193 original account-months. The
+underlying histories, bank dates and cure criteria matched account by
+account across versions.</p>
+<h3 id="recovery-failure-and-rerun-controls">Recovery, failure and rerun
+controls</h3>
+<p>The predecessor suite passed 27 fixed cases across 130 original
+months. The account 17899 control separately reconstructed the January 1
+snapshot through December, reproduced the retained February 1 snapshot
+through January, and tested 13 hypothetical follow-up and source-history
+cutoffs. Those continuations exercise original missing history, new
+delinquency, a new severe event, reversal and cure. Only the first two
+snapshots describe the historical example. Seventeen additional monthly
+snapshots exercised successive decisions with the original incident
+dates held fixed. Malformed source tests covered missing or duplicate
+months, non-month-start dates, inconsistent PHP, orphan histories,
+duplicate summaries and null statuses. A forced late error preserved the
+previous outputs. Tests deliberately altered derived results and
+verified detection in eight output dimensions. Eleven invalid
+saved-incident inputs failed while preserving the prior outputs. The
+packaged suite exercises alternative cure thresholds and dated follow-up
+with saved incident windows. Those initial tests used valid snapshot
+dates. They missed the contradictory dates identified in H3. The test
+databases are generated specifically for each run. The PowerShell study
+keeps its database for inspection. For direct SQL execution, open a
+dedicated DBeaver session with no unrelated pending transaction. The
+module scripts manage their own transactions.</p>
+<p><a href="downloads/Metro2_PowerShell_Study.zip">Regression suite and PowerShell
+instructions</a> · <a
+href="downloads/Metro2_25000_Results.zip">25,000-account results
+and verification receipts</a> · <a
+href="downloads/Metro2_PowerShell_Study.zip">PowerShell study
+kit</a></p>
+<h2 id="boundaries-that-remain">Boundaries that remain</h2>
+<ul>
+<li><strong>Monthly operations.</strong> A fresh study generates account
+incident dates. With the original source history and account summary
+updated in the same database, a reviewer can opt into rerunning Module 2
+with the prior fixed dates. Reassessment replaces the current snapshot
+only after checking saved incident dates and per-account cutoffs. An
+external archive of prior evidence and reviewer decisions supports
+historical reconstruction. Agreement of local copies cannot authenticate
+coordinated alteration of every copy. A deletion proposal clears this
+model’s cure-review flag. Bureau delivery, acknowledgments and any
+subsequent refurnishing decision are separate operational steps. <a
+href="downloads/Metro2_PowerShell_Study.zip">Rerun instructions</a></li>
+<li><strong>Reversal evidence.</strong> A numeric original history mark
+after the latest severe event serves as a proxy for reversal in
+synthetic data. The SQL records the first such observation. Confirm a
+real reversal against servicing records. An original <code>5</code>, for
+example, still describes delinquency and provides no qualifying current
+month for cure.</li>
+<li><strong>Reporting fields and causation.</strong> The generator uses
+fixed synthetic policies for status, rating and date of first
+delinquency. It does not establish whether an actual bank error caused a
+particular late payment. Its delinquency-date calculation looks for
+numeric delinquency in the latest uninterrupted adverse run. The Field
+25 source exception screen above covers retained accounts with known
+status/rating requirements, including closed accounts. A real correction
+needs servicing evidence and applicable furnishing guidance.</li>
+<li><strong>Population and calendar.</strong> The same account number
+can fall into a different base profile at a different population size.
+Comparisons in this audit pair the same population and configuration
+across code versions. The evaluated account months are historical
+observations. Cure confirmation is the last month needed to meet the
+configured threshold, including the third original current month in the
+default study or the fourth in the alternative study.</li>
+<li><strong>Test coverage.</strong> Native execution used PostgreSQL
+16.2 and PowerShell 7.7 on Linux. Windows PowerShell 5.1 compatibility
+was reviewed in source. The five-million-account default has no measured
+runtime or load-test result here. The spring dashboard separately
+illustrates 500 simulated accounts with a 10,000× display multiplier.
+Imported production feeds, bureau submissions and downstream bureau
+responses were outside the execution scope.</li>
+</ul>
+<p><strong>Source-D regression coverage.</strong> The independently
+recounted 25,000-account study had 484 accounts with an original
+<code>D</code> somewhere in history. None has an original <code>D</code>
+in the latest position. Seventy-four cleanup accounts have an earlier
+original <code>D</code>. The unchanged-latest-<code>D</code> guard
+therefore required controlled open, unclassified, closed and deletion
+cases. A native before/after comparison found zero row differences in
+the four Module 2 outputs on the 25,000-account population. The
+favorable latest-month election accounted for all 2,340 proposed date
+clears in that cohort.</p>
+<h2 id="source-trail">Source trail</h2>
+<p><a
+href="code/generator.html">Reviewed
+generator</a> · <a
+href="code/engine.html">Reviewed engine</a> ·
+<a href="#changelog">Code changelog</a> · <a
+href="downloads/Metro2_SQL_Changes.patch">Unified SQL diff</a></p>
+<p>The engine comments identify incident-date reuse, the severe-event
+and reversal dates and the distinction between an original and imposed
+<code>D</code>. The executed manifest records the source hashes. The
+account explorer preserves the recorded policy on older exports. <a
+href="code/engine.html">Source and comments</a></p>
+<h2 id="handoff-for-independent-review">Handoff for independent
+review</h2>
+<p>Start with the four case links above and match the dated evidence to
+each treatment. The review workbook contains the unresolved cases.
+Compare them with the established cure for account 175, then inspect
+account 987 in the 1,000-account replay for an unresolved charge-off
+selected for deletion. <a href="manual-review/index.html">Review
+handoff</a> · <a href="index.html#account=987">Account 987</a></p>
+<p>Use the <a
+href="downloads/Metro2_PowerShell_Study.zip">PowerShell study
+kit</a> to reproduce the population and the <a
+href="downloads/Metro2_PowerShell_Study.zip">regression suite</a> for both positive and
+negative cases. Compare the workbook and CSV membership with the
+database review flag, and inspect the separate Field 25 source
+exceptions. The <a href="downloads/Metro2_25000_Results.zip">study
+results</a> contain the run receipt for comparison. Record any
+difference in a source month, cure determination, treatment, proposed
+field action or queue assignment by population and account.</p>
+</section></main></body></html>
